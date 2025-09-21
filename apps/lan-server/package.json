@@ -8,6 +8,7 @@
     "build": "tsup src/index.ts --format esm,cjs --dts"
   },
   "dependencies": {
+    "@wedding_tool/schema": "workspace:*",
     "cors": "2.8.5",
     "express": "4.19.2",
     "socket.io": "4.7.5",

@@ -111,10 +111,17 @@ class SupabaseRealtimeClient implements RealtimeClient {
       this.dispatch('lottery:result', payload.payload);
     });
 
-    const { error } = await this.channel.subscribe();
-    if (error) {
-      throw error;
-    }
+    await new Promise<void>((resolve, reject) => {
+      this.channel?.subscribe((status) => {
+        if (status === 'SUBSCRIBED') {
+          resolve();
+        } else if (status === 'CHANNEL_ERROR') {
+          reject(new Error(`Failed to subscribe to channel ${channelName}`));
+        } else if (status === 'TIMED_OUT') {
+          reject(new Error(`Subscription to channel ${channelName} timed out`));
+        }
+      });
+    });
   }
 
   on<K extends keyof BroadcastMap>(event: K, handler: Handler<K>) {

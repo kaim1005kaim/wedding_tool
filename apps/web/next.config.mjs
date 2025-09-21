@@ -1,8 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  experimental: {
-    serverActions: true
-  }
+  transpilePackages: ['@wedding_tool/rt-adapter', '@wedding_tool/schema', '@wedding_tool/ui']
 };
 
 export default nextConfig;

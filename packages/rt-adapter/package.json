@@ -5,6 +5,7 @@
   "type": "module",
   "main": "src/index.ts",
   "dependencies": {
+    "@wedding_tool/schema": "workspace:*",
     "@supabase/supabase-js": "2.42.5",
     "socket.io-client": "4.7.5",
     "zod": "3.22.4"

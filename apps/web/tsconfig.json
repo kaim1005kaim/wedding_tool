@@ -1,7 +1,11 @@
 {
   "compilerOptions": {
     "target": "ES2021",
-    "lib": ["dom", "dom.iterable", "esnext"],
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "esnext"
+    ],
     "allowJs": false,
     "skipLibCheck": true,
     "esModuleInterop": true,
@@ -20,12 +24,40 @@
         "name": "next"
       }
     ],
-    "types": ["node", "@total-typescript/ts-reset"],
+    "types": [
+      "node",
+      "@total-typescript/ts-reset",
+      "react",
+      "react-dom"
+    ],
     "paths": {
-      "@ui/*": ["../../packages/ui/src/*"],
-      "@rt-adapter": ["../../packages/rt-adapter/src"]
+      "@wedding_tool/ui": [
+        "../../packages/ui/src/index.tsx"
+      ],
+      "@wedding_tool/ui/*": [
+        "../../packages/ui/src/*"
+      ],
+      "@wedding_tool/rt-adapter": [
+        "../../packages/rt-adapter/src/index.ts"
+      ],
+      "@wedding_tool/rt-adapter/*": [
+        "../../packages/rt-adapter/src/*"
+      ],
+      "@wedding_tool/schema": [
+        "../../packages/schema/src/index.ts"
+      ],
+      "@wedding_tool/schema/*": [
+        "../../packages/schema/src/*"
+      ]
     }
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx"],
-  "exclude": ["node_modules"]
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    ".next/types/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
 }

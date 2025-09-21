@@ -9,3 +9,4 @@ out
 coverage
 playwright-report
 artillery-report
+.vercel
