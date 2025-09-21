@@ -1,0 +1,10 @@
+{
+  "name": "@wedding_tool/schema",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "src/index.ts",
+  "dependencies": {
+    "zod": "3.22.4"
+  }
+}

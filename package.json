@@ -1,0 +1,22 @@
+{
+  "name": "wedding_tool",
+  "private": true,
+  "packageManager": "pnpm@8.15.5",
+  "scripts": {
+    "dev": "pnpm -C apps/web dev",
+    "dev:lan": "cross-env NEXT_PUBLIC_MODE=lan pnpm -C apps/lan-server dev & cross-env NEXT_PUBLIC_MODE=lan pnpm -C apps/web dev",
+    "build": "pnpm -C apps/web build",
+    "start": "pnpm -C apps/web start",
+    "migrate": "supabase db push",
+    "seed": "node infra/supabase/seed.mjs",
+    "test": "vitest",
+    "e2e": "playwright test",
+    "load": "artillery run infra/load/countup-70.yml"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.44.0",
+    "artillery": "2.0.0-33",
+    "cross-env": "7.0.3",
+    "vitest": "1.6.0"
+  }
+}

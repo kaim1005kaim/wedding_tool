@@ -1,0 +1,28 @@
+config:
+  target: "http://localhost:3000"
+  phases:
+    - duration: 60
+      arrivalRate: 70
+      name: steady-load
+  engines:
+    socketio: {}
+scenarios:
+  - name: countup-taps
+    engine: socketio
+    flow:
+      - emit:
+          channel: "event"
+          data:
+            type: "hello"
+            payload:
+              displayName: "ArtilleryUser-{{ $loopCount }}"
+      - loop:
+          count: 400
+          steps:
+            - think: 0.15
+            - emit:
+                channel: "event"
+                data:
+                  type: "tap:delta"
+                  payload:
+                    delta: 5
