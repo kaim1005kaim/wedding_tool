@@ -38,20 +38,22 @@ type QuizState = {
   answers: Map<string, number>;
 };
 
+type LotteryKind = 'all' | 'groom_friends' | 'bride_friends';
+
 type RoomState = {
   id: string;
   mode: Mode;
   phase: Phase;
   countdownEndsAt: number | null;
   players: Map<string, PlayerState>;
-  lotteryHistory: Record<'escort' | 'cake_groom' | 'cake_bride', Set<string>>;
+  lotteryHistory: Record<LotteryKind, Set<string>>;
   currentQuiz: QuizState | null;
 };
 
 const rooms = new Map<string, RoomState>();
 
 const PORT = parseInt(process.env.PORT ?? '5050', 10);
-const COUNTDOWN_DEFAULT_MS = 30_000;
+const COUNTDOWN_DEFAULT_MS = 10_000;
 const QUIZ_DEMO_BANK = [
   {
     question: 'ふたりの出会いはどこ？',
@@ -92,9 +94,9 @@ function getRoom(roomId: string): RoomState {
       countdownEndsAt: null,
       players: new Map(),
       lotteryHistory: {
-        escort: new Set(),
-        cake_groom: new Set(),
-        cake_bride: new Set()
+        all: new Set(),
+        groom_friends: new Set(),
+        bride_friends: new Set()
       },
       currentQuiz: null
     };
@@ -170,7 +172,7 @@ function broadcastQuizResult(io: Server, room: RoomState, quiz: QuizState) {
   broadcastState(io, room);
 }
 
-function broadcastLotteryResult(io: Server, room: RoomState, kind: 'escort' | 'cake_groom' | 'cake_bride', player: PlayerState) {
+function broadcastLotteryResult(io: Server, room: RoomState, kind: LotteryKind, player: PlayerState) {
   const payload = lotteryResultBroadcastSchema.parse({
     kind,
     player: {

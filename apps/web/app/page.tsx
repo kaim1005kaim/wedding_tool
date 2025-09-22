@@ -19,12 +19,6 @@ export default function LandingPage() {
 
         <div className="flex flex-wrap gap-4">
           <Link
-            href="/join/TEST"
-            className="rounded-xl bg-brand-terra-600 px-5 py-3 text-sm font-semibold text-white shadow-brand transition hover:bg-brand-terra-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-terra-400"
-          >
-            参加テストへ (TEST)
-          </Link>
-          <Link
             href="/admin"
             className="rounded-xl border border-brand-blue-200 px-5 py-3 text-sm font-semibold text-brand-blue-700 transition hover:bg-brand-blue-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-blue-400"
           >

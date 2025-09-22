@@ -5,7 +5,7 @@ import { verifyAdminToken } from '@/lib/auth/jwt';
 import { drawLottery } from '@/lib/server/room-engine';
 
 const bodySchema = z.object({
-  kind: z.enum(['escort', 'cake_groom', 'cake_bride'])
+  kind: z.enum(['all', 'groom_friends', 'bride_friends'])
 });
 
 export async function POST(request: Request, { params }: { params: { roomId: string } }) {

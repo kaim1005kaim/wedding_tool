@@ -12,13 +12,30 @@ import {
   Dice2,
   Dice3,
   Shuffle,
-  PauseCircle
+  PauseCircle,
+  Settings2
 } from 'lucide-react';
 import { useRealtimeClient } from '../lib/realtime-context';
 import { useRoomStore } from '../lib/store/room-store';
 import { appConfig } from '../lib/env';
 import { Section, PrimaryButton } from './brand';
 import type { LucideIcon } from 'lucide-react';
+
+type QuizSummary = {
+  id: string;
+  question: string;
+  ord: number | null;
+  created_at: string;
+};
+
+type LotteryCandidateSummary = {
+  id: string;
+  display_name: string;
+  group_tag: string | null;
+  created_at: string;
+};
+
+const CHOICE_LABELS = ['A', 'B', 'C', 'D'];
 
 export default function AdminRoom({ roomId }: { roomId: string }) {
   const [pin, setPin] = useState('');
@@ -29,6 +46,22 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
   const [adminToken, setAdminTokenState] = useState<string | null>(null);
   const [confirm, setConfirm] = useState<ConfirmState | null>(null);
   const [activeLogTab, setActiveLogTab] = useState<'logs' | 'lottery'>('logs');
+  const [manageOpen, setManageOpen] = useState(false);
+  const [manageTab, setManageTab] = useState<'quiz' | 'lottery'>('quiz');
+  const [manageMessage, setManageMessage] = useState<string | null>(null);
+  const [manageLoading, setManageLoading] = useState(false);
+  const [quizzes, setQuizzes] = useState<QuizSummary[]>([]);
+  const [lotteryCandidates, setLotteryCandidates] = useState<LotteryCandidateSummary[]>([]);
+  const [quizForm, setQuizForm] = useState({
+    question: '',
+    choices: ['', '', '', ''],
+    answerIndex: 0,
+    ord: ''
+  });
+  const [candidateForm, setCandidateForm] = useState({
+    displayName: '',
+    groupTag: 'all' as 'all' | 'groom_friends' | 'bride_friends'
+  });
   const client = useRealtimeClient();
   const mode = useRoomStore((state) => state.mode);
   const phase = useRoomStore((state) => state.phase);
@@ -87,6 +120,15 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
   useEffect(() => {
     void loadLogs();
   }, [loadLogs]);
+
+  useEffect(() => {
+    if (!manageOpen || !isCloudMode) return;
+    if (manageTab === 'quiz') {
+      void fetchQuizzes();
+    } else {
+      void fetchLotteryCandidates();
+    }
+  }, [manageOpen, manageTab, isCloudMode, fetchQuizzes, fetchLotteryCandidates]);
 
   const handleUnlock = async () => {
     if (pin.trim().length === 0) {
@@ -196,6 +238,135 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
     setConfirm(state);
   };
 
+  const fetchQuizzes = useCallback(async () => {
+    if (!isCloudMode || !adminToken) return;
+    try {
+      const response = await fetch(`/api/admin/rooms/${roomId}/manage/quizzes`, {
+        headers: {
+          Authorization: `Bearer ${adminToken}`
+        }
+      });
+      if (response.ok) {
+        const json = (await response.json()) as { quizzes: QuizSummary[] };
+        setQuizzes(json.quizzes ?? []);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  }, [adminToken, isCloudMode, roomId]);
+
+  const fetchLotteryCandidates = useCallback(async () => {
+    if (!isCloudMode || !adminToken) return;
+    try {
+      const response = await fetch(`/api/admin/rooms/${roomId}/manage/lottery`, {
+        headers: {
+          Authorization: `Bearer ${adminToken}`
+        }
+      });
+      if (response.ok) {
+        const json = (await response.json()) as { candidates: LotteryCandidateSummary[] };
+        setLotteryCandidates(json.candidates ?? []);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  }, [adminToken, isCloudMode, roomId]);
+
+  const openManagement = () => {
+    if (isCloudMode && !adminToken) {
+      setError('管理トークンがありません。再ログインしてください');
+      return;
+    }
+    setManageMessage(null);
+    setManageTab('quiz');
+    setManageOpen(true);
+    if (isCloudMode) {
+      void fetchQuizzes();
+      void fetchLotteryCandidates();
+    } else {
+      setQuizzes([]);
+      setLotteryCandidates([]);
+    }
+  };
+
+  const handleCreateQuiz = async () => {
+    if (!isCloudMode || !adminToken) return;
+    if (!quizForm.question.trim() || quizForm.choices.some((choice) => !choice.trim())) {
+      setManageMessage('全ての項目を入力してください');
+      return;
+    }
+
+    setManageLoading(true);
+    setManageMessage(null);
+    try {
+      const response = await fetch(`/api/admin/rooms/${roomId}/manage/quizzes`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${adminToken}`
+        },
+        body: JSON.stringify({
+          question: quizForm.question.trim(),
+          choices: quizForm.choices.map((choice) => choice.trim()),
+          answerIndex: quizForm.answerIndex,
+          ord: quizForm.ord ? Number.parseInt(quizForm.ord, 10) : undefined
+        })
+      });
+
+      if (!response.ok) {
+        const data = (await response.json().catch(() => ({}))) as { error?: string };
+        throw new Error(data.error ?? response.statusText);
+      }
+
+      const json = (await response.json()) as { quiz: QuizSummary };
+      setQuizzes((prev) => [...prev, json.quiz].sort((a, b) => (a.ord ?? 0) - (b.ord ?? 0)));
+      setQuizForm({ question: '', choices: ['', '', '', ''], answerIndex: 0, ord: '' });
+      setManageMessage('クイズを追加しました');
+    } catch (err) {
+      setManageMessage(err instanceof Error ? err.message : 'クイズの追加に失敗しました');
+    } finally {
+      setManageLoading(false);
+    }
+  };
+
+  const handleAddCandidate = async () => {
+    if (!isCloudMode || !adminToken) return;
+    if (!candidateForm.displayName.trim()) {
+      setManageMessage('名前を入力してください');
+      return;
+    }
+
+    setManageLoading(true);
+    setManageMessage(null);
+    try {
+      const response = await fetch(`/api/admin/rooms/${roomId}/manage/lottery`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${adminToken}`
+        },
+        body: JSON.stringify({
+          displayName: candidateForm.displayName.trim(),
+          groupTag: candidateForm.groupTag
+        })
+      });
+
+      if (!response.ok) {
+        const data = (await response.json().catch(() => ({}))) as { error?: string };
+        throw new Error(data.error ?? response.statusText);
+      }
+
+      const json = (await response.json()) as { candidate: LotteryCandidateSummary };
+      setLotteryCandidates((prev) => [json.candidate, ...prev]);
+      setCandidateForm({ displayName: '', groupTag: candidateForm.groupTag });
+      setManageMessage('抽選リストに追加しました');
+    } catch (err) {
+      setManageMessage(err instanceof Error ? err.message : '抽選リストの追加に失敗しました');
+    } finally {
+      setManageLoading(false);
+    }
+  };
+
   const handleReveal = () => {
     if (!activeQuiz) {
       setError('表示中のクイズがありません');
@@ -264,6 +435,12 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
           <StatusItem label="カウントダウン" value={`${Math.max(0, Math.ceil(countdownMs / 1000))} 秒`} icon={ListChecks} />
         </div>
 
+        <div className="mb-6 flex justify-end">
+          <AdminButton variant="secondary" icon={Settings2} onClick={openManagement}>
+            詳細設定
+          </AdminButton>
+        </div>
+
         {error && <p className="mb-4 text-sm text-error" role="alert">{error}</p>}
 
         <div className="grid gap-6 lg:grid-cols-2">
@@ -323,6 +500,178 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
             </div>
           </AdminCard>
         </div>
+
+        {manageOpen && (
+          <div className="fixed inset-0 z-40 flex items-center justify-center bg-ink/60 px-6">
+            <div className="glass-panel max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-2xl p-6 shadow-brand">
+              <div className="flex items-center justify-between">
+                <h2 className="text-xl font-semibold text-brand-terra-600">詳細設定</h2>
+                <button
+                  type="button"
+                  className="text-sm text-brand-blue-700 underline decoration-dashed"
+                  onClick={() => {
+                    setManageOpen(false);
+                    setManageMessage(null);
+                  }}
+                >
+                  閉じる
+                </button>
+              </div>
+              <div className="mt-4 inline-flex rounded-full bg-brand-blue-50 p-1 text-sm">
+                <TabButton label="クイズ作成" active={manageTab === 'quiz'} onClick={() => setManageTab('quiz')} />
+                <TabButton label="抽選リスト" active={manageTab === 'lottery'} onClick={() => setManageTab('lottery')} />
+              </div>
+              {!isCloudMode && (
+                <p className="mt-4 text-sm text-brand-blue-700/70">LANモードでは設定を閲覧のみ利用できます。クラウドモードで編集してください。</p>
+              )}
+              {manageMessage && <p className="mt-4 text-sm text-brand-terra-600">{manageMessage}</p>}
+              {manageTab === 'quiz' ? (
+                <div className="mt-6 space-y-6">
+                  <form
+                    className="space-y-4"
+                    onSubmit={(event) => {
+                      event.preventDefault();
+                      void handleCreateQuiz();
+                    }}
+                  >
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-brand-blue-700">問題文</label>
+                      <textarea
+                        className="w-full rounded-xl border border-brand-blue-200 bg-white px-4 py-3 text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-blue-400"
+                        value={quizForm.question}
+                        onChange={(event) => setQuizForm((prev) => ({ ...prev, question: event.target.value }))}
+                        rows={3}
+                        required
+                      />
+                    </div>
+                    <div className="grid gap-3 md:grid-cols-2">
+                      {quizForm.choices.map((choice, index) => (
+                        <div key={index} className="space-y-2">
+                          <label className="flex items-center justify-between text-sm font-medium text-brand-blue-700">
+                            <span>{`選択肢 ${CHOICE_LABELS[index]}`}</span>
+                            <span className="flex items-center gap-2 text-xs text-brand-blue-700/70">
+                              <input
+                                type="radio"
+                                name="quiz-answer"
+                                checked={quizForm.answerIndex === index}
+                                onChange={() => setQuizForm((prev) => ({ ...prev, answerIndex: index }))}
+                              />
+                              正解
+                            </span>
+                          </label>
+                          <input
+                            className="w-full rounded-xl border border-brand-blue-200 bg-white px-4 py-3 text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-blue-400"
+                            value={choice}
+                            onChange={(event) =>
+                              setQuizForm((prev) => ({
+                                ...prev,
+                                choices: prev.choices.map((item, itemIndex) => (itemIndex === index ? event.target.value : item))
+                              }))
+                            }
+                            required
+                          />
+                        </div>
+                      ))}
+                    </div>
+                    <div className="grid gap-3 md:grid-cols-2">
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium text-brand-blue-700">表示順 (任意)</label>
+                        <input
+                          className="w-full rounded-xl border border-brand-blue-200 bg-white px-4 py-3 text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-blue-400"
+                          value={quizForm.ord}
+                          onChange={(event) => setQuizForm((prev) => ({ ...prev, ord: event.target.value }))}
+                          type="number"
+                          min={1}
+                          placeholder="自動採番"
+                        />
+                      </div>
+                    <div className="flex items-end">
+                      <PrimaryButton type="submit" disabled={manageLoading || !isCloudMode}>
+                        クイズを追加
+                      </PrimaryButton>
+                    </div>
+                    </div>
+                  </form>
+                  <div className="space-y-2">
+                    <h3 className="text-sm font-semibold text-brand-blue-700">登録済みクイズ</h3>
+                    {quizzes.length === 0 ? (
+                      <p className="text-sm text-brand-blue-700/70">登録されたクイズはまだありません。</p>
+                    ) : (
+                      <ul className="space-y-2">
+                        {quizzes.map((quiz) => (
+                          <li key={quiz.id} className="rounded-xl bg-white/85 px-4 py-3 text-sm shadow-brand">
+                            <p className="font-semibold text-brand-blue-700">{quiz.question}</p>
+                            <p className="text-xs text-brand-blue-700/60">
+                              表示順: {quiz.ord ?? '-'} / 登録日: {new Date(quiz.created_at).toLocaleString('ja-JP')}
+                            </p>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                <div className="mt-6 space-y-6">
+                  <form
+                    className="space-y-4"
+                    onSubmit={(event) => {
+                      event.preventDefault();
+                      void handleAddCandidate();
+                    }}
+                  >
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-brand-blue-700">お名前</label>
+                      <input
+                        className="w-full rounded-xl border border-brand-blue-200 bg-white px-4 py-3 text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-blue-400"
+                        value={candidateForm.displayName}
+                        onChange={(event) => setCandidateForm((prev) => ({ ...prev, displayName: event.target.value }))}
+                        placeholder="例：山田 太郎"
+                        required
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-brand-blue-700">カテゴリ</label>
+                      <select
+                        className="w-full rounded-xl border border-brand-blue-200 bg-white px-4 py-3 text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-blue-400"
+                        value={candidateForm.groupTag}
+                        onChange={(event) =>
+                          setCandidateForm((prev) => ({
+                            ...prev,
+                            groupTag: event.target.value as 'all' | 'groom_friends' | 'bride_friends'
+                          }))
+                        }
+                      >
+                        <option value="all">全員対象</option>
+                        <option value="groom_friends">新郎友人</option>
+                        <option value="bride_friends">新婦友人</option>
+                      </select>
+                    </div>
+                    <PrimaryButton type="submit" disabled={manageLoading || !isCloudMode}>
+                      抽選リストに追加
+                    </PrimaryButton>
+                  </form>
+                  <div className="space-y-2">
+                    <h3 className="text-sm font-semibold text-brand-blue-700">登録済み候補</h3>
+                    {lotteryCandidates.length === 0 ? (
+                      <p className="text-sm text-brand-blue-700/70">登録された候補はまだありません。</p>
+                    ) : (
+                      <ul className="space-y-2">
+                        {lotteryCandidates.map((candidate) => (
+                          <li key={candidate.id} className="rounded-xl bg-white/85 px-4 py-3 text-sm shadow-brand">
+                            <p className="font-semibold text-brand-terra-600">{candidate.display_name}</p>
+                            <p className="text-xs text-brand-blue-700/60">
+                              {lotteryKindLabel(candidate.group_tag ?? 'all')} / 登録日: {new Date(candidate.created_at).toLocaleString('ja-JP')}
+                            </p>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
         {isCloudMode && (
           <AdminCard title="ログ / 抽選履歴" description="進行状況の確認" icon={ListChecks}>
@@ -387,7 +736,7 @@ type AdminButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   icon?: LucideIcon;
 };
 
-function AdminButton({ variant = 'primary', icon: Icon, className = '', children, ...props }: AdminButtonProps) {
+function AdminButton({ variant = 'primary', icon: Icon, className = '', children, type = 'button', ...props }: AdminButtonProps) {
   const base = 'flex h-12 items-center justify-center gap-2 rounded-xl font-semibold transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 disabled:opacity-60';
   const variantClass =
     variant === 'primary'
@@ -397,7 +746,7 @@ function AdminButton({ variant = 'primary', icon: Icon, className = '', children
         : 'bg-brand-blue-200 text-brand-blue-700 hover:bg-brand-blue-200/80 focus-visible:outline-brand-blue-400';
 
   return (
-    <button className={`${base} ${variantClass} ${className}`} {...props}>
+    <button type={type} className={`${base} ${variantClass} ${className}`} {...props}>
       {Icon && <Icon className="h-5 w-5" />}
       {children}
     </button>

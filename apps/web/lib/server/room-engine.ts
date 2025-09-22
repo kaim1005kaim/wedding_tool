@@ -150,7 +150,7 @@ export async function revealQuiz(roomId: string, quizId: string, awardedPoints =
   await upsertRoomSnapshot(roomId, { current_quiz: null });
 }
 
-export async function drawLottery(roomId: string, kind: 'escort' | 'cake_groom' | 'cake_bride') {
+export async function drawLottery(roomId: string, kind: 'all' | 'groom_friends' | 'bride_friends') {
   const client = getSupabaseServiceRoleClient();
   const { error } = await client.rpc('draw_lottery', {
     p_room_id: roomId,

@@ -47,7 +47,7 @@ export default function AdminEntryPage() {
           className="w-full rounded border border-slate-600 bg-slate-900 px-4 py-3 text-center text-lg uppercase"
           value={roomCode}
           onChange={(e) => setRoomCode(e.target.value.toUpperCase())}
-          placeholder="例: TEST"
+          placeholder="例: AB12"
           disabled={loading}
         />
 
@@ -62,11 +62,6 @@ export default function AdminEntryPage() {
         </Button>
       </form>
 
-      <div className="mt-8 space-y-2 text-sm text-slate-400">
-        <p>デモ環境の場合:</p>
-        <p className="font-mono">ルームコード: TEST</p>
-        <p className="font-mono">PIN: 1234</p>
-      </div>
     </main>
   );
 }
