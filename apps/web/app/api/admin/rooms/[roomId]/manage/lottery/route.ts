@@ -23,10 +23,10 @@ export async function GET(request: Request, { params }: { params: { roomId: stri
   const client = getSupabaseServiceRoleClient();
   const { data, error } = await client
     .from('players')
-    .select('id, display_name, group_tag, created_at')
+    .select('id, display_name, group_tag')
     .eq('room_id', params.roomId)
     .not('group_tag', 'is', null)
-    .order('created_at', { ascending: false });
+    .order('display_name', { ascending: true });
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
@@ -58,7 +58,7 @@ export async function POST(request: Request, { params }: { params: { roomId: str
       group_tag: groupTag,
       is_present: true
     })
-    .select('id, display_name, group_tag, created_at')
+    .select('id, display_name, group_tag')
     .single();
 
   if (error || !data) {

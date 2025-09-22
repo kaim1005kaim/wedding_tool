@@ -26,7 +26,7 @@ export async function GET(_request: Request, { params }: { params: { roomId: str
   const client = getSupabaseServiceRoleClient();
   const { data, error } = await client
     .from('quizzes')
-    .select('id, question, ord, created_at')
+    .select('id, question, ord')
     .eq('room_id', params.roomId)
     .order('ord', { ascending: true });
 
@@ -74,7 +74,7 @@ export async function POST(request: Request, { params }: { params: { roomId: str
       answer_index: answerIndex,
       ord: finalOrd
     })
-    .select('id, question, ord, created_at')
+    .select('id, question, ord')
     .single();
 
   if (error || !data) {
