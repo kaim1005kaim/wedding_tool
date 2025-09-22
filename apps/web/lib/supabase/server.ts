@@ -56,6 +56,8 @@ export async function upsertRoomSnapshot(
     leaderboard: partial.leaderboard ?? existing?.leaderboard ?? [],
     current_quiz:
       partial.current_quiz !== undefined ? partial.current_quiz ?? null : existing?.current_quiz ?? null,
+    quiz_result:
+      partial.quiz_result !== undefined ? partial.quiz_result ?? null : existing?.quiz_result ?? null,
     lottery_result:
       partial.lottery_result !== undefined
         ? partial.lottery_result ?? null

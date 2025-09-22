@@ -1,12 +1,5 @@
 import { getSupabaseServiceRoleClient, upsertRoomSnapshot } from '@/lib/supabase/server';
-import {
-  appendAuditLog,
-  ensureRoomSnapshot,
-  ensureScoreRecord,
-  incrementPlayerScore,
-  recomputeLeaderboard,
-  updateSnapshotLeaderboard
-} from '@/lib/server/rooms';
+import { appendAuditLog, ensureRoomSnapshot, updateSnapshotLeaderboard } from '@/lib/server/rooms';
 
 type SupabaseRow<T> = T extends { data: infer U } ? U : never;
 
@@ -54,22 +47,30 @@ export async function stopGame(roomId: string) {
 
 export async function applyTapDelta(roomId: string, playerId: string, delta: number) {
   const clamped = Math.max(1, Math.min(30, delta));
-  await ensureScoreRecord(roomId, playerId);
-  await incrementPlayerScore(roomId, playerId, clamped);
-  await recomputeLeaderboard(roomId);
+  const client = getSupabaseServiceRoleClient();
+  const { error } = await client.rpc('apply_tap_delta', {
+    p_room_id: roomId,
+    p_player_id: playerId,
+    p_delta: clamped
+  });
+
+  if (error) {
+    throw error;
+  }
 }
 
 export async function submitQuizAnswer(roomId: string, quizId: string, playerId: string, choiceIndex: number) {
   const client = getSupabaseServiceRoleClient();
-  await client.from('answers').upsert(
-    {
-      room_id: roomId,
-      quiz_id: quizId,
-      player_id: playerId,
-      choice_index: choiceIndex
-    },
-    { onConflict: 'quiz_id,player_id' }
-  );
+  const { error } = await client.rpc('record_quiz_answer', {
+    p_room_id: roomId,
+    p_quiz_id: quizId,
+    p_player_id: playerId,
+    p_choice: choiceIndex
+  });
+
+  if (error) {
+    throw error;
+  }
 }
 
 export async function showQuiz(roomId: string, quizId: string, deadlineTs: number) {
@@ -136,128 +137,29 @@ export async function showNextQuiz(roomId: string, deadlineMs = DEFAULT_COUNTDOW
 
 export async function revealQuiz(roomId: string, quizId: string, awardedPoints = 10) {
   const client = getSupabaseServiceRoleClient();
-
-  const { data: quiz, error: quizError } = await client
-    .from('quizzes')
-    .select('*')
-    .eq('id', quizId)
-    .eq('room_id', roomId)
-    .maybeSingle();
-
-  if (quizError || !quiz) {
-    throw new Error('Quiz not found');
-  }
-
-  const existingAward = await client
-    .from('awarded_quizzes')
-    .select('*')
-    .eq('quiz_id', quizId)
-    .maybeSingle();
-
-  if (existingAward.data) {
-    throw new Error('Quiz already revealed');
-  }
-
-  const { data: answers } = await client
-    .from('answers')
-    .select('player_id, choice_index, players:players(display_name)')
-    .eq('quiz_id', quizId);
-
-  const perChoiceCounts = [0, 0, 0, 0];
-  const awarded: { playerId: string; delta: number }[] = [];
-
-  (answers ?? []).forEach((answer: any) => {
-    perChoiceCounts[answer.choice_index] += 1;
-    if (answer.choice_index === quiz.answer_index) {
-      awarded.push({ playerId: answer.player_id, delta: awardedPoints });
-    }
+  const { error } = await client.rpc('reveal_quiz', {
+    p_room_id: roomId,
+    p_quiz_id: quizId,
+    p_points: awardedPoints
   });
 
-  for (const winner of awarded) {
-    await incrementPlayerScore(roomId, winner.playerId, winner.delta);
+  if (error) {
+    throw error;
   }
 
-  await client.from('awarded_quizzes').insert({ quiz_id: quizId, room_id: roomId, awarded_at: new Date().toISOString() });
-
-  await recomputeLeaderboard(roomId);
-
-  await upsertRoomSnapshot(roomId, {
-    quiz_result: {
-      quizId,
-      correctIndex: quiz.answer_index,
-      perChoiceCounts,
-      awarded
-    }
-  });
-
-  await appendAuditLog(roomId, 'quiz:reveal', { quizId, awardedPoints, winners: awarded.map((w) => w.playerId) });
+  await upsertRoomSnapshot(roomId, { current_quiz: null });
 }
 
 export async function drawLottery(roomId: string, kind: 'escort' | 'cake_groom' | 'cake_bride') {
   const client = getSupabaseServiceRoleClient();
-
-  const { data: existing } = await client
-    .from('lottery_picks')
-    .select('player_id')
-    .eq('room_id', roomId)
-    .eq('kind', kind)
-    .maybeSingle();
-
-  if (existing) {
-    throw new Error(`Lottery ${kind} already drawn`);
-  }
-
-  const { data: players, error: playersError } = await client
-    .from('players')
-    .select('id, display_name, table_no, seat_no, is_present')
-    .eq('room_id', roomId)
-    .eq('is_present', true);
-
-  if (playersError) {
-    throw playersError;
-  }
-
-  const { data: picks } = await client
-    .from('lottery_picks')
-    .select('player_id')
-    .eq('room_id', roomId);
-
-  const taken = new Set((picks ?? []).map((row) => row.player_id));
-  const candidates = (players ?? []).filter((player: any) => !taken.has(player.id));
-
-  if (candidates.length === 0) {
-    throw new Error('No eligible players for lottery');
-  }
-
-  const winner = candidates[Math.floor(Math.random() * candidates.length)];
-
-  const { error: insertError } = await client
-    .from('lottery_picks')
-    .insert({ room_id: roomId, kind, player_id: winner.id });
-
-  if (insertError) {
-    throw insertError;
-  }
-
-  await upsertRoomSnapshot(roomId, {
-    lottery_result: {
-      kind,
-      player: {
-        id: winner.id,
-        name: winner.display_name,
-        table_no: winner.table_no ?? null,
-        seat_no: winner.seat_no ?? null
-      }
-    }
+  const { error } = await client.rpc('draw_lottery', {
+    p_room_id: roomId,
+    p_kind: kind
   });
 
-  await appendAuditLog(roomId, 'lottery:draw', {
-    kind,
-    winner: {
-      id: winner.id,
-      name: winner.display_name
-    }
-  });
+  if (error) {
+    throw error;
+  }
 }
 
 export async function refreshLeaderboardSnapshot(roomId: string, limit = 20) {
