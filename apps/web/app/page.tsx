@@ -12,14 +12,14 @@ export default function LandingPage() {
         へアクセスしてください。
       </p>
       <div className="flex flex-wrap items-center justify-center gap-4 text-sm text-slate-300">
-        <Link className="rounded bg-brand px-4 py-2 font-medium text-white" href="/join/demo">
-          参加テストへ
+        <Link className="rounded bg-brand px-4 py-2 font-medium text-white" href="/join/TEST">
+          参加テストへ (TEST)
         </Link>
-        <Link className="rounded border border-slate-500 px-4 py-2" href="/admin/demo-room">
+        <Link className="rounded border border-slate-500 px-4 py-2" href="/admin">
           管理画面
         </Link>
-        <Link className="rounded border border-slate-500 px-4 py-2" href="/projector/demo-room">
-          投影画面
+        <Link className="rounded border border-slate-500 px-4 py-2" href="/projector/8337598d-bf83-41e5-a06d-3843e119d00a">
+          投影画面 (TEST)
         </Link>
       </div>
     </main>

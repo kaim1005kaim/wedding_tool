@@ -44,23 +44,28 @@ create table if not exists awarded_quizzes (
 );
 
 alter table if exists room_snapshots enable row level security;
-create policy if not exists rs_public_read on room_snapshots
+drop policy if exists rs_public_read on room_snapshots;
+create policy rs_public_read on room_snapshots
   for select using (true);
 
 alter table if exists room_admins enable row level security;
-create policy if not exists ra_server_only on room_admins
+drop policy if exists ra_server_only on room_admins;
+create policy ra_server_only on room_admins
   for all using (false) with check (false);
 
 alter table if exists player_sessions enable row level security;
-create policy if not exists ps_server_only on player_sessions
+drop policy if exists ps_server_only on player_sessions;
+create policy ps_server_only on player_sessions
   for all using (false) with check (false);
 
 alter table if exists admin_audit_logs enable row level security;
-create policy if not exists al_server_only on admin_audit_logs
+drop policy if exists al_server_only on admin_audit_logs;
+create policy al_server_only on admin_audit_logs
   for all using (false) with check (false);
 
 alter table if exists awarded_quizzes enable row level security;
-create policy if not exists aq_server_only on awarded_quizzes
+drop policy if exists aq_server_only on awarded_quizzes;
+create policy aq_server_only on awarded_quizzes
   for all using (false) with check (false);
 
 comment on table room_snapshots is 'Sanitized room state broadcast snapshots for realtime subscribers.';
