@@ -63,7 +63,15 @@ export default function JoinRoom({ code }: { code: string }) {
     setError(null);
     try {
       if (isCloudMode) {
-        const response = await fetch(`/api/rooms/${code}/join`, {
+        // First, get room ID from room code
+        const lookupResponse = await fetch(`/api/rooms/lookup?code=${encodeURIComponent(code)}`);
+        if (!lookupResponse.ok) {
+          throw new Error('ルームが見つかりません');
+        }
+        const { roomId } = await lookupResponse.json() as { roomId: string };
+
+        // Then join with the room ID
+        const response = await fetch(`/api/rooms/${roomId}/join`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'

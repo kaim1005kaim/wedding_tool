@@ -1,6 +1,5 @@
 import type { Metadata } from 'next';
-import RoomRuntime from '../../../components/room-runtime';
-import JoinRoom from '../../../components/join-room';
+import JoinPageClient from './page-client';
 
 type PageProps = {
   params: { code: string };
@@ -13,9 +12,5 @@ export function generateMetadata({ params }: PageProps): Metadata {
 }
 
 export default function JoinPage({ params }: PageProps) {
-  return (
-    <RoomRuntime roomId={params.code}>
-      <JoinRoom code={params.code} />
-    </RoomRuntime>
-  );
+  return <JoinPageClient code={params.code} />;
 }
