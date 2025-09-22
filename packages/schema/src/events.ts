@@ -47,6 +47,11 @@ export const quizResultBroadcastSchema = z.object({
   }))
 });
 
+export const lotteryResultBroadcastSchema = z.object({
+  kind: lotteryDrawEventSchema.shape.kind,
+  player: playerIdentifierSchema
+});
+
 export const stateUpdateBroadcastSchema = z.object({
   mode: z.enum(['countup', 'quiz', 'lottery', 'idle']),
   phase: z.enum(['idle', 'running', 'ended']),
@@ -60,12 +65,10 @@ export const stateUpdateBroadcastSchema = z.object({
       rank: z.number().int().min(1),
       delta: z.number().int()
     })
-  )
-});
-
-export const lotteryResultBroadcastSchema = z.object({
-  kind: lotteryDrawEventSchema.shape.kind,
-  player: playerIdentifierSchema
+  ),
+  activeQuiz: quizShowBroadcastSchema.nullable().optional(),
+  quizResult: quizResultBroadcastSchema.nullable().optional(),
+  lotteryResult: lotteryResultBroadcastSchema.nullable().optional()
 });
 
 export const realtimePayloads = {

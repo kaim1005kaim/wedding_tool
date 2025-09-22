@@ -51,7 +51,8 @@ create table if not exists lottery_picks (
   room_id uuid references rooms(id) on delete cascade,
   kind text not null,
   player_id uuid references players(id),
-  created_at timestamptz default now()
+  created_at timestamptz default now(),
+  unique(room_id, kind)
 );
 
 alter publication supabase_realtime add table rooms;

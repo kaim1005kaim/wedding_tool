@@ -1,5 +1,6 @@
 import '@total-typescript/ts-reset';
 import './globals.css';
+import '../lib/sentry.client.config';
 import type { Metadata } from 'next';
 import Providers from './providers';
 

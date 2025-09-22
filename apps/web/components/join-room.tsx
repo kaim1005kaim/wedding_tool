@@ -1,9 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Button } from '@wedding_tool/ui';
 import { useRealtimeClient } from '../lib/realtime-context';
 import { useRoomStore } from '../lib/store/room-store';
+import { appConfig } from '../lib/env';
 
 export default function JoinRoom({ code }: { code: string }) {
   const [name, setName] = useState('');
@@ -14,18 +15,91 @@ export default function JoinRoom({ code }: { code: string }) {
   const client = useRealtimeClient();
   const mode = useRoomStore((state) => state.mode);
   const leaderboard = useRoomStore((state) => state.leaderboard);
+  const playerToken = useRoomStore((state) => state.playerToken);
+  const setPlayerAuth = useRoomStore((state) => state.setPlayerAuth);
+  const clearPlayerAuth = useRoomStore((state) => state.clearPlayerAuth);
+
+  const isCloudMode = appConfig.mode === 'cloud';
+
+  const storageKey = useMemo(() => `wedding_tool:${code}:player`, [code]);
+  const fingerprintKey = 'wedding_tool:device_id';
+
+  useEffect(() => {
+    if (!isCloudMode) return;
+    if (typeof window === 'undefined') return;
+    const stored = window.localStorage.getItem(storageKey);
+    if (stored) {
+      try {
+        const { playerId, token, expiresAt } = JSON.parse(stored) as {
+          playerId: string;
+          token: string;
+          expiresAt: number;
+        };
+        if (expiresAt > Date.now()) {
+          setPlayerAuth({ playerId, token });
+          setRegistered(true);
+          return;
+        }
+      } catch (err) {
+        // ignore parse errors, fallthrough to cleanup
+      }
+      window.localStorage.removeItem(storageKey);
+      clearPlayerAuth();
+      setRegistered(false);
+    }
+  }, [isCloudMode, storageKey, setPlayerAuth, clearPlayerAuth]);
+
+  const getDeviceFingerprint = () => {
+    if (typeof window === 'undefined') return undefined;
+    let fingerprint = window.localStorage.getItem(fingerprintKey);
+    if (!fingerprint) {
+      fingerprint = `${navigator.userAgent}-${crypto.randomUUID()}`;
+      window.localStorage.setItem(fingerprintKey, fingerprint);
+    }
+    return fingerprint;
+  };
 
   const handleJoin = async () => {
     setError(null);
     try {
-      await client.emit({
-        type: 'hello',
-        payload: {
-          displayName: name.trim(),
-          tableNo: tableNo.trim() || undefined,
-          seatNo: seatNo.trim() || undefined
+      if (isCloudMode) {
+        const response = await fetch(`/api/rooms/${code}/join`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            displayName: name.trim(),
+            tableNo: tableNo.trim() || undefined,
+            seatNo: seatNo.trim() || undefined,
+            deviceFingerprint: getDeviceFingerprint()
+          })
+        });
+
+        if (!response.ok) {
+          const data = (await response.json().catch(() => ({}))) as { error?: string };
+          throw new Error(data.error ?? response.statusText);
         }
-      });
+
+        const { token, playerId, expiresAt } = (await response.json()) as {
+          token: string;
+          playerId: string;
+          expiresAt: number;
+        };
+        setPlayerAuth({ playerId, token });
+        if (typeof window !== 'undefined') {
+          window.localStorage.setItem(storageKey, JSON.stringify({ token, playerId, expiresAt }));
+        }
+      } else {
+        await client.emit({
+          type: 'hello',
+          payload: {
+            displayName: name.trim(),
+            tableNo: tableNo.trim() || undefined,
+            seatNo: seatNo.trim() || undefined
+          }
+        });
+      }
       setRegistered(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : '参加に失敗しました');
@@ -35,10 +109,28 @@ export default function JoinRoom({ code }: { code: string }) {
 
   const handleTap = async () => {
     try {
-      await client.emit({
-        type: 'tap:delta',
-        payload: { delta: 1 }
-      });
+      if (isCloudMode) {
+        if (!playerToken) {
+          throw new Error('参加手続きを完了してください');
+        }
+        const response = await fetch(`/api/rooms/${code}/tap`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${playerToken}`
+          },
+          body: JSON.stringify({ delta: 1 })
+        });
+        if (!response.ok) {
+          const data = (await response.json().catch(() => ({}))) as { error?: string };
+          throw new Error(data.error ?? response.statusText);
+        }
+      } else {
+        await client.emit({
+          type: 'tap:delta',
+          payload: { delta: 1 }
+        });
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : '送信に失敗しました');
     }

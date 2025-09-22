@@ -26,6 +26,8 @@ export type RoomStoreState = {
   activeQuiz: QuizShowPayload | null;
   quizResult: QuizResultPayload | null;
   lotteryResult: LotteryResultPayload | null;
+  playerId: string | null;
+  playerToken: string | null;
 };
 
 export type RoomStoreActions = {
@@ -35,6 +37,8 @@ export type RoomStoreActions = {
   setQuizResult: (payload: QuizResultPayload | null) => void;
   setLotteryResult: (payload: LotteryResultPayload | null) => void;
   clearTransient: () => void;
+  setPlayerAuth: (auth: { playerId: string; token: string }) => void;
+  clearPlayerAuth: () => void;
 };
 
 const initialState: RoomStoreState = {
@@ -46,7 +50,9 @@ const initialState: RoomStoreState = {
   leaderboard: [],
   activeQuiz: null,
   quizResult: null,
-  lotteryResult: null
+  lotteryResult: null,
+  playerId: null,
+  playerToken: null
 };
 
 export const useRoomStore = create<RoomStoreState & RoomStoreActions>((set) => ({
@@ -58,10 +64,21 @@ export const useRoomStore = create<RoomStoreState & RoomStoreActions>((set) => (
       phase: payload.phase,
       serverTime: payload.serverTime,
       countdownMs: payload.countdownMs,
-      leaderboard: payload.leaderboard
+      leaderboard: payload.leaderboard.map((entry) => ({
+        playerId: entry.playerId,
+        displayName: entry.displayName,
+        totalPoints: entry.totalPoints,
+        rank: entry.rank,
+        delta: entry.delta ?? 0
+      })),
+      activeQuiz: payload.activeQuiz ?? null,
+      quizResult: payload.quizResult ?? null,
+      lotteryResult: payload.lotteryResult ?? null
     }),
   setActiveQuiz: (payload) => set({ activeQuiz: payload, quizResult: null }),
   setQuizResult: (payload) => set({ quizResult: payload }),
   setLotteryResult: (payload) => set({ lotteryResult: payload }),
-  clearTransient: () => set({ activeQuiz: null, quizResult: null, lotteryResult: null })
+  clearTransient: () => set({ activeQuiz: null, quizResult: null, lotteryResult: null }),
+  setPlayerAuth: ({ playerId, token }) => set({ playerId, playerToken: token }),
+  clearPlayerAuth: () => set({ playerId: null, playerToken: null })
 }));

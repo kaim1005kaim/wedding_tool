@@ -8,6 +8,7 @@ import {
   quizAnswerEventSchema,
   quizResultBroadcastSchema,
   quizShowBroadcastSchema,
+  roomSnapshotSchema,
   stateUpdateBroadcastSchema,
   tapDeltaEventSchema
 } from '@wedding_tool/schema';
@@ -71,6 +72,7 @@ export type RealtimeClientOptions = SupabaseRealtimeOptions | SocketRealtimeOpti
 class SupabaseRealtimeClient implements RealtimeClient {
   private client: SupabaseClient;
   private channel: ReturnType<SupabaseClient['channel']> | null = null;
+  private snapshotChannel: ReturnType<SupabaseClient['channel']> | null = null;
   private handlers = new Map<keyof BroadcastMap, Set<Handler<keyof BroadcastMap>>>();
 
   constructor(private readonly options: SupabaseRealtimeOptions) {
@@ -84,9 +86,7 @@ class SupabaseRealtimeClient implements RealtimeClient {
   }
 
   async join(roomId: string) {
-    if (this.channel) {
-      await this.channel.unsubscribe();
-    }
+    await this.teardown();
 
     const channelName = `room:${roomId}`;
     this.channel = this.client.channel(channelName, {
@@ -122,6 +122,83 @@ class SupabaseRealtimeClient implements RealtimeClient {
         }
       });
     });
+
+    this.snapshotChannel = this.client.channel(`${channelName}:snapshot`);
+
+    this.snapshotChannel.on(
+      'postgres_changes',
+      {
+        event: '*',
+        schema: 'public',
+        table: 'room_snapshots',
+        filter: `room_id=eq.${roomId}`
+      },
+      (payload) => {
+        const snapshotData = payload.new ?? payload.old;
+        if (!snapshotData) return;
+        const parsed = roomSnapshotSchema.safeParse(snapshotData);
+        if (!parsed.success) {
+          console.error('[Realtime] Invalid room snapshot payload', parsed.error);
+          return;
+        }
+
+        const snapshot = parsed.data;
+        const leaderboard = (snapshot.leaderboard ?? []).map((entry, index) => ({
+          playerId: entry.playerId,
+          displayName: entry.name,
+          totalPoints: entry.points,
+          rank: entry.rank ?? index + 1,
+          delta: 0
+        }));
+
+        this.dispatch('state:update', {
+          mode: (snapshot.mode as BroadcastMap['state:update']['mode']) ?? 'idle',
+          phase: (snapshot.phase as BroadcastMap['state:update']['phase']) ?? 'idle',
+          serverTime: Date.now(),
+          countdownMs: snapshot.countdown_ms ?? 0,
+          leaderboard,
+          activeQuiz: snapshot.current_quiz
+            ? {
+                quizId: snapshot.current_quiz.quizId,
+                question: snapshot.current_quiz.question,
+                choices: snapshot.current_quiz.choices ?? [],
+                deadlineTs: snapshot.current_quiz.deadlineTs
+              }
+            : null,
+          quizResult: snapshot.quiz_result
+            ? {
+                quizId: snapshot.quiz_result.quizId,
+                correctIndex: snapshot.quiz_result.correctIndex,
+                perChoiceCounts: snapshot.quiz_result.perChoiceCounts,
+                awarded: snapshot.quiz_result.awarded
+              }
+            : null,
+          lotteryResult: snapshot.lottery_result && snapshot.lottery_result.player
+            ? {
+                kind: snapshot.lottery_result.kind,
+                player: {
+                  id: snapshot.lottery_result.player.id,
+                  name: snapshot.lottery_result.player.name,
+                  table_no: snapshot.lottery_result.player.table_no ?? null,
+                  seat_no: snapshot.lottery_result.player.seat_no ?? null
+                }
+              }
+            : null
+        });
+      }
+    );
+
+    await new Promise<void>((resolve, reject) => {
+      this.snapshotChannel?.subscribe((status) => {
+        if (status === 'SUBSCRIBED') {
+          resolve();
+        } else if (status === 'CHANNEL_ERROR') {
+          reject(new Error(`Failed to subscribe to snapshot channel for room ${roomId}`));
+        } else if (status === 'TIMED_OUT') {
+          reject(new Error(`Snapshot channel for room ${roomId} timed out`));
+        }
+      });
+    });
   }
 
   on<K extends keyof BroadcastMap>(event: K, handler: Handler<K>) {
@@ -139,10 +216,7 @@ class SupabaseRealtimeClient implements RealtimeClient {
   }
 
   async close() {
-    if (this.channel) {
-      await this.channel.unsubscribe();
-      this.channel = null;
-    }
+    await this.teardown();
   }
 
   private dispatch<K extends keyof BroadcastMap>(event: K, payload: unknown) {
@@ -156,6 +230,18 @@ class SupabaseRealtimeClient implements RealtimeClient {
     const handlers = this.handlers.get(event);
     if (!handlers) return;
     handlers.forEach((handler) => handler(parseResult.data as BroadcastMap[K]));
+  }
+
+  private async teardown() {
+    if (this.channel) {
+      await this.channel.unsubscribe();
+      this.channel = null;
+    }
+
+    if (this.snapshotChannel) {
+      await this.snapshotChannel.unsubscribe();
+      this.snapshotChannel = null;
+    }
   }
 }
 

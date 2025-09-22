@@ -16,4 +16,93 @@ export const playerSchema = z.object({
 
 export type Player = z.infer<typeof playerSchema>;
 
+export const leaderboardEntrySchema = z.object({
+  playerId: z.string().uuid(),
+  name: z.string(),
+  points: z.number().int().nonnegative(),
+  rank: z.number().int().min(1).optional()
+});
+
+export const roomSnapshotSchema = z.object({
+  room_id: z.string().uuid(),
+  mode: roomModeSchema.optional().default('idle'),
+  phase: roomPhaseSchema.optional().default('idle'),
+  countdown_ms: z.number().int().nonnegative().default(0),
+  leaderboard: z.array(leaderboardEntrySchema).default([]),
+  current_quiz: z
+    .object({
+      quizId: z.string().uuid(),
+      question: z.string(),
+      choices: z.array(z.string()).length(4),
+      deadlineTs: z.number().int()
+    })
+    .nullable()
+    .optional(),
+  quiz_result: z
+    .object({
+      quizId: z.string().uuid(),
+      correctIndex: z.number().int().min(0).max(3),
+      perChoiceCounts: z.array(z.number().int().nonnegative()).length(4),
+      awarded: z.array(
+        z.object({
+          playerId: z.string().uuid(),
+          delta: z.number().int()
+        })
+      )
+    })
+    .nullable()
+    .optional(),
+  lottery_result: z
+    .object({
+      kind: z.enum(['escort', 'cake_groom', 'cake_bride']),
+      player: z
+        .object({
+          id: z.string().uuid(),
+          name: z.string(),
+          table_no: z.string().nullable().optional(),
+          seat_no: z.string().nullable().optional()
+        })
+        .nullable()
+    })
+    .nullable()
+    .optional(),
+  updated_at: z.string().datetime().optional()
+});
+
+export const roomAdminSchema = z.object({
+  room_id: z.string().uuid(),
+  pin_hash: z.string(),
+  disabled: z.boolean().default(false),
+  updated_at: z.string().datetime().optional()
+});
+
+export const playerSessionSchema = z.object({
+  id: z.string().uuid(),
+  room_id: z.string().uuid(),
+  player_id: z.string().uuid(),
+  device_fingerprint: z.string().nullable().optional(),
+  created_at: z.string().datetime().optional()
+});
+
+export const adminAuditLogSchema = z.object({
+  id: z.number().int().optional(),
+  room_id: z.string().uuid(),
+  actor: z.string(),
+  action: z.string(),
+  payload: z.record(z.any()).nullable().optional(),
+  created_at: z.string().datetime().optional()
+});
+
+export const awardedQuizSchema = z.object({
+  quiz_id: z.string().uuid(),
+  room_id: z.string().uuid(),
+  awarded_at: z.string().datetime().optional()
+});
+
+export type RoomSnapshot = z.infer<typeof roomSnapshotSchema>;
+export type RoomAdmin = z.infer<typeof roomAdminSchema>;
+export type PlayerSession = z.infer<typeof playerSessionSchema>;
+export type AdminAuditLog = z.infer<typeof adminAuditLogSchema>;
+export type AwardedQuiz = z.infer<typeof awardedQuizSchema>;
+
 export * from './events';

@@ -31,6 +31,9 @@
       "react-dom"
     ],
     "paths": {
+      "@/*": [
+        "./*"
+      ],
       "@wedding_tool/ui": [
         "../../packages/ui/src/index.tsx"
       ],
