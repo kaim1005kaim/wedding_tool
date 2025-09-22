@@ -470,6 +470,12 @@ function lotteryKindLabel(kind: string) {
       return '新郎友人';
     case 'bride_friends':
       return '新婦友人';
+    case 'escort':
+      return 'エスコート';
+    case 'cake_groom':
+      return 'ケーキ（新郎）';
+    case 'cake_bride':
+      return 'ケーキ（新婦）';
     default:
       return kind;
   }

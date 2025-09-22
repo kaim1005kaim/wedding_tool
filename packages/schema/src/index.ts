@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { lotteryResultBroadcastSchema } from './events';
 export { z };
 
 export const roomModeSchema = z.enum(['idle', 'countup', 'quiz', 'lottery']);
@@ -52,20 +53,7 @@ export const roomSnapshotSchema = z.object({
     })
     .nullable()
     .optional(),
-  lottery_result: z
-    .object({
-      kind: z.enum(['all', 'groom_friends', 'bride_friends']),
-      player: z
-        .object({
-          id: z.string().uuid(),
-          name: z.string(),
-          table_no: z.string().nullable().optional(),
-          seat_no: z.string().nullable().optional()
-        })
-        .nullable()
-    })
-    .nullable()
-    .optional(),
+  lottery_result: lotteryResultBroadcastSchema.nullable().optional(),
   updated_at: z.union([z.string().datetime(), z.string()]).optional()
 });
 
