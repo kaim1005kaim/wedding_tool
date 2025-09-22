@@ -210,7 +210,7 @@ export default function JoinRoom({ code }: { code: string }) {
 
   return (
     <main className="min-h-screen px-6 py-10">
-      <Section title="参加登録" subtitle={`ルームコード: ${code.toUpperCase()}`}>
+      <Section title="参加登録">
         <div className="mb-4 flex items-center justify-between rounded-xl bg-brand-blue-50/60 px-4 py-2 text-sm">
           <div className="flex items-center gap-2">
             <span className={`h-3 w-3 rounded-full ${connectionConfig[connection].dot}`} aria-hidden="true" />
@@ -220,11 +220,11 @@ export default function JoinRoom({ code }: { code: string }) {
         </div>
 
         {registered ? (
-          <div className="glass-panel rounded-2xl border border-white/40 px-6 py-5 shadow-brand" aria-live="polite">
+          <div className="glass-panel rounded-2xl border border-white/40 px-6 py-5 text-center shadow-brand" aria-live="polite">
             <p className="text-lg font-semibold">{displayName} さん、ゲーム開始までお待ちください。</p>
           </div>
         ) : (
-          <div className="rounded-2xl bg-white/80 p-6 text-sm text-brand-blue-700/80">
+          <div className="rounded-2xl bg-white/80 p-6 text-center text-sm text-brand-blue-700/80">
             画面中央のモーダルで本名（姓と名）を入力し、「参加する」を押してください。
           </div>
         )}
@@ -238,9 +238,9 @@ export default function JoinRoom({ code }: { code: string }) {
 
       {registered && (
         <div className="mt-8 space-y-6">
-          <div className="rounded-2xl bg-white/70 p-6 shadow-brand">
+          <div className="rounded-2xl bg-white/70 p-6 text-center shadow-brand">
             <h2 className="text-xl font-semibold text-brand-blue-700">タップチャレンジ</h2>
-            <p className="mt-2 text-sm text-brand-blue-700/80">
+            <p className="mt-3 text-sm leading-relaxed text-brand-blue-700/80">
               {mode === 'countup'
                 ? phase === 'running'
                   ? '画面全体に表示される TAP ボタンをテンポ良くタップして、スコアを伸ばしましょう。'
@@ -253,7 +253,7 @@ export default function JoinRoom({ code }: { code: string }) {
             </p>
           </div>
 
-          <div className="rounded-2xl bg-brand-blue-50/70 p-6 shadow-brand">
+          <div className="rounded-2xl bg-brand-blue-50/70 p-6 text-center shadow-brand">
             <h2 className="text-xl font-semibold text-brand-blue-700">現在のランキング</h2>
             {leaderboard.length === 0 ? (
               <p className="mt-3 text-sm text-brand-blue-700/70">ランキングはまだ表示されていません。</p>
@@ -262,7 +262,7 @@ export default function JoinRoom({ code }: { code: string }) {
                 {leaderboard.slice(0, 10).map((entry) => (
                   <li
                     key={entry.playerId}
-                    className="flex items-center justify-between rounded-xl bg-white/80 px-4 py-3 text-sm shadow-brand"
+                    className="flex flex-col items-center gap-1 rounded-xl bg-white/80 px-4 py-3 text-sm shadow-brand"
                   >
                     <span className="font-medium">
                       {entry.rank}. {entry.displayName}

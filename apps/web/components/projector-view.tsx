@@ -7,7 +7,7 @@ import type { LeaderboardEntry, RoomStoreState } from '../lib/store/room-store';
 
 const CHOICE_LABELS = ['A', 'B', 'C', 'D'];
 
-export default function ProjectorView({ roomId }: { roomId: string }) {
+export default function ProjectorView({ roomId: _roomId }: { roomId: string }) {
   const mode = useRoomStore((state) => state.mode);
   const countdownMs = useRoomStore((state) => state.countdownMs);
   const leaderboard = useRoomStore((state) => state.leaderboard);
@@ -28,11 +28,11 @@ export default function ProjectorView({ roomId }: { roomId: string }) {
   }, [lotteryResult?.player?.id]);
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-ecru px-4 py-6 text-ink">
-      <div className="relative aspect-video w-full max-w-6xl overflow-hidden rounded-[2rem] shadow-brand">
+    <main className="flex min-h-screen items-center justify-center bg-ecru px-3 py-4 text-ink">
+      <div className="relative aspect-video w-full max-w-[min(1800px,100vw-24px)] overflow-hidden rounded-[2rem] shadow-brand">
         <div className="absolute inset-0 pointer-events-none bg-gradient-to-br from-brand-blue-50 via-transparent to-brand-terra-50" />
-        <div className="relative flex h-full flex-col gap-6 px-10 py-8">
-          <Header mode={mode} countdownMs={countdownMs} roomId={roomId} />
+        <div className="relative flex h-full flex-col gap-6 px-12 py-10">
+          <Header mode={mode} countdownMs={countdownMs} />
           <div className="flex-1 overflow-hidden">
             <AnimatePresence mode="wait">{renderSection(mode, topTen, activeQuiz, quizResult, lotteryResult, isSpinning, lotteryKey)}</AnimatePresence>
           </div>
@@ -42,7 +42,7 @@ export default function ProjectorView({ roomId }: { roomId: string }) {
   );
 }
 
-function Header({ mode, countdownMs, roomId }: { mode: string; countdownMs: number; roomId: string }) {
+function Header({ mode, countdownMs }: { mode: string; countdownMs: number }) {
   return (
     <motion.header
       key={`header-${mode}`}
@@ -50,18 +50,22 @@ function Header({ mode, countdownMs, roomId }: { mode: string; countdownMs: numb
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
       transition={{ duration: 0.5, ease: 'easeOut' }}
-      className="glass-panel rounded-2xl px-8 py-6 shadow-brand"
+      className="glass-panel rounded-2xl px-10 py-8 shadow-brand"
     >
-      <div className="flex flex-col gap-2 text-brand-blue-700/80 md:flex-row md:items-end md:justify-between">
-        <div>
-          <p className="text-xs uppercase tracking-[0.35em]">Wedding Party Game</p>
-          <h1 className="text-4xl font-serif text-brand-terra-600">Room {roomId}</h1>
+      <div className="flex flex-col gap-4 text-center text-brand-blue-700/80 md:flex-row md:items-center md:justify-between md:text-left">
+        <div className="space-y-2">
+          <p className="text-sm uppercase tracking-[0.4em]">Wedding Party Game</p>
+          <h1 className="text-5xl font-serif text-brand-terra-600 leading-tight">Let&apos;s Celebrate!</h1>
         </div>
-        <div className="text-sm">
-          <p className="text-xs uppercase tracking-[0.3em]">Current Mode</p>
-          <p className="text-2xl font-semibold text-brand-blue-700">{labelForMode(mode)}</p>
-          <p className="mt-1 text-xs uppercase tracking-[0.3em]">Countdown</p>
-          <p className="text-2xl font-semibold text-brand-blue-700">{Math.max(0, Math.ceil(countdownMs / 1000))} 秒</p>
+        <div className="flex flex-col items-center gap-3 text-sm md:items-end">
+          <div className="text-center md:text-right">
+            <p className="text-xs uppercase tracking-[0.35em]">Current Mode</p>
+            <p className="text-3xl font-semibold text-brand-blue-700">{labelForMode(mode)}</p>
+          </div>
+          <div className="text-center md:text-right">
+            <p className="text-xs uppercase tracking-[0.35em]">Countdown</p>
+            <p className="text-4xl font-semibold text-brand-blue-700">{Math.max(0, Math.ceil(countdownMs / 1000))} 秒</p>
+          </div>
         </div>
       </div>
     </motion.header>
@@ -100,12 +104,12 @@ function CountupBoard({ entries }: { entries: LeaderboardEntry[] }) {
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -30 }}
       transition={{ duration: 0.5, ease: 'easeOut' }}
-      className="grid h-full gap-5 lg:grid-cols-2"
+      className="grid h-full gap-6 lg:grid-cols-2"
     >
       {columns.map((column, colIndex) => (
-        <div key={colIndex} className="glass-panel flex flex-col rounded-2xl p-6 shadow-brand">
-          <h2 className="text-xl font-semibold text-brand-blue-700">タップスコア</h2>
-          <div className="mt-4 flex-1 space-y-3 overflow-hidden">
+        <div key={colIndex} className="glass-panel flex flex-col rounded-2xl p-8 shadow-brand">
+          <h2 className="text-3xl font-semibold text-brand-blue-700">タップスコア</h2>
+          <div className="mt-5 flex-1 space-y-4 overflow-hidden">
             <AnimatePresence initial={false}>
               {column.map((entry) => (
                 <motion.div
@@ -115,7 +119,7 @@ function CountupBoard({ entries }: { entries: LeaderboardEntry[] }) {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -15 }}
                   transition={{ duration: 0.3 }}
-                  className={`flex items-center justify-between rounded-xl px-4 py-3 text-lg shadow-brand ${entry.rank <= 3 ? 'bg-brand-blue-50 border border-brand-terra-200' : 'bg-white/85'}`}
+                  className={`flex items-center justify-between rounded-xl px-6 py-4 text-2xl shadow-brand ${entry.rank <= 3 ? 'bg-brand-blue-50 border border-brand-terra-200' : 'bg-white/85'}`}
                 >
                   <span className="font-medium text-brand-blue-700">
                     {entry.rank}. {entry.displayName}
@@ -138,17 +142,17 @@ function IdleBoard({ leaderboard }: { leaderboard: LeaderboardEntry[] }) {
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.95 }}
       transition={{ duration: 0.5, ease: 'easeOut' }}
-      className="glass-panel rounded-2xl p-6 text-center shadow-brand"
+      className="glass-panel rounded-2xl p-10 text-center shadow-brand"
     >
-      <h2 className="text-2xl font-semibold text-brand-blue-700">まもなくゲームが始まります</h2>
-      <p className="mt-3 text-brand-blue-700/70">最新のランキングを確認して、ウォームアップしておきましょう。</p>
-      <div className="mt-6 grid gap-3 md:grid-cols-2">
+      <h2 className="text-4xl font-semibold text-brand-blue-700">まもなくゲームが始まります</h2>
+      <p className="mt-4 text-lg text-brand-blue-700/80">最新のランキングをチェックして気持ちを温めておきましょう。</p>
+      <div className="mt-8 grid gap-4 md:grid-cols-2">
         {leaderboard.slice(0, 6).map((entry) => (
-          <div key={entry.playerId} className="rounded-xl bg-white/85 px-4 py-3 text-left shadow-brand">
-            <span className="font-medium text-brand-blue-700">
+          <div key={entry.playerId} className="rounded-xl bg-white/85 px-6 py-4 text-left shadow-brand">
+            <span className="text-xl font-medium text-brand-blue-700">
               {entry.rank}. {entry.displayName}
             </span>
-            <span className="ml-2 text-sm text-brand-blue-700/70">{entry.totalPoints} pt</span>
+            <span className="ml-2 text-base text-brand-blue-700/70">{entry.totalPoints} pt</span>
           </div>
         ))}
       </div>
@@ -172,40 +176,40 @@ function QuizBoard({ activeQuiz, quizResult }: QuizPanelProps) {
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -30 }}
       transition={{ duration: 0.5, ease: 'easeOut' }}
-      className="glass-panel grid h-full gap-6 rounded-2xl p-6 shadow-brand lg:grid-cols-2"
+      className="glass-panel grid h-full gap-8 rounded-2xl p-10 shadow-brand lg:grid-cols-2"
     >
-      <div className="space-y-4">
-        <h2 className="text-xl font-semibold text-brand-blue-700">クイズ</h2>
+      <div className="space-y-6">
+        <h2 className="text-4xl font-semibold text-brand-blue-700">クイズ</h2>
         {activeQuiz ? (
           <>
-            <p className="text-base font-medium text-brand-blue-700/90">{activeQuiz.question}</p>
-            <ul className="space-y-2">
+            <p className="text-2xl font-medium leading-relaxed text-brand-blue-700/90">{activeQuiz.question}</p>
+            <ul className="space-y-3">
               {activeQuiz.choices.map((choice, index) => (
                 <li
                   key={choice}
-                  className={`rounded-xl px-4 py-3 text-sm shadow-brand ${quizResult && index === correctIndex ? 'bg-brand-terra-50 border border-brand-terra-200 text-brand-terra-700' : 'bg-white/80 text-brand-blue-700'}`}
+                  className={`rounded-2xl px-6 py-4 text-xl shadow-brand ${quizResult && index === correctIndex ? 'bg-brand-terra-50 border border-brand-terra-200 text-brand-terra-700' : 'bg-white/80 text-brand-blue-700'}`}
                 >
                   <span className="font-semibold">{CHOICE_LABELS[index]}</span>
-                  <span className="ml-3">{choice}</span>
+                  <span className="ml-4">{choice}</span>
                 </li>
               ))}
             </ul>
           </>
         ) : (
-          <p className="text-sm text-brand-blue-700/70">次のクイズを準備中です。</p>
+          <p className="text-xl text-brand-blue-700/70">次のクイズを準備中です。</p>
         )}
       </div>
-      <div className="space-y-3">
+      <div className="space-y-4">
         {quizResult ? (
           counts.map((count, index) => {
             const ratio = Math.round((count / total) * 100);
             return (
               <div key={index} className="space-y-1">
-                <div className="flex items-center justify-between text-xs text-brand-blue-700/70">
+                <div className="flex items-center justify-between text-base text-brand-blue-700/70">
                   <span>{CHOICE_LABELS[index]}</span>
                   <span>{count}票</span>
                 </div>
-                <div className="h-4 overflow-hidden rounded-full bg-brand-blue-50">
+                <div className="h-6 overflow-hidden rounded-full bg-brand-blue-50">
                   <motion.div
                     key={`${index}-${count}`}
                     initial={{ width: 0 }}
@@ -218,7 +222,7 @@ function QuizBoard({ activeQuiz, quizResult }: QuizPanelProps) {
             );
           })
         ) : (
-          <p className="text-sm text-brand-blue-700/70">回答結果は正解公開後に表示されます。</p>
+          <p className="text-xl text-brand-blue-700/70">回答結果は正解公開後に表示されます。</p>
         )}
       </div>
     </motion.section>
@@ -237,22 +241,22 @@ function LotteryBoard({ lotteryResult, isSpinning }: LotteryPanelProps) {
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.95 }}
       transition={{ duration: 0.5, ease: 'easeOut' }}
-      className="glass-panel flex h-full flex-col items-center justify-center gap-6 rounded-2xl px-6 py-12 text-center shadow-brand"
+      className="glass-panel flex h-full flex-col items-center justify-center gap-8 rounded-2xl px-10 py-16 text-center shadow-brand"
     >
-      <span className="text-sm uppercase tracking-[0.35em] text-brand-blue-700/70">Lottery</span>
+      <span className="text-base uppercase tracking-[0.4em] text-brand-blue-700/70">Lottery</span>
       {lotteryResult ? (
         <motion.div
           key={lotteryResult.player.id}
           initial={{ rotate: 0, scale: 0.9, opacity: 0 }}
           animate={{ rotate: isSpinning ? [0, 360, 360] : 0, scale: 1, opacity: 1 }}
           transition={{ duration: isSpinning ? 3 : 0.5, ease: 'easeOut' }}
-          className="rounded-full bg-brand-terra-50 px-8 py-6 shadow-brand"
+          className="rounded-[3rem] bg-brand-terra-50 px-12 py-10 shadow-brand"
         >
-          <p className="text-xs uppercase tracking-[0.35em] text-brand-terra-600">{lotteryResult.kind}</p>
-          <p className="mt-3 text-4xl font-serif text-brand-terra-700">{lotteryResult.player.name}</p>
+          <p className="text-sm uppercase tracking-[0.45em] text-brand-terra-600">{lotteryResult.kind}</p>
+          <p className="mt-4 text-6xl font-serif text-brand-terra-700">{lotteryResult.player.name}</p>
         </motion.div>
       ) : (
-        <p className="text-brand-blue-700/70">抽選結果が表示されるまで今しばらくお待ちください。</p>
+        <p className="text-2xl text-brand-blue-700/70">抽選結果が表示されるまで今しばらくお待ちください。</p>
       )}
     </motion.section>
   );
