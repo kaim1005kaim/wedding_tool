@@ -18,6 +18,7 @@ const sans = Noto_Sans_JP({
 });
 
 const serif = Playfair_Display({
+  subsets: ['latin'],
   weight: ['500', '700'],
   display: 'swap',
   variable: '--font-serif'
