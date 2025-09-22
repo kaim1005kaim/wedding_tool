@@ -261,7 +261,10 @@ function LotteryBoard({ lotteryResult, isSpinning, leaderboard }: LotteryPanelPr
 
   useEffect(() => {
     const currentResult = lotteryResult;
-    const winnerId = currentResult?.player?.id ?? null;
+    if (!currentResult?.player) {
+      return;
+    }
+    const winnerId = currentResult.player.id;
     if (!winnerId || winnerId === prevWinnerRef.current) {
       return;
     }
