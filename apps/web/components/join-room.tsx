@@ -28,6 +28,7 @@ export default function JoinRoom({ code }: { code: string }) {
   const runtimeRoomId = useRoomStore((state) => state.roomId);
   const phase = useRoomStore((state) => state.phase);
   const countdownMs = useRoomStore((state) => state.countdownMs);
+  const serverTime = useRoomStore((state) => state.serverTime);
 
   const isCloudMode = appConfig.mode === 'cloud';
 
@@ -281,6 +282,7 @@ export default function JoinRoom({ code }: { code: string }) {
           mode={mode}
           phase={phase}
           countdownMs={countdownMs}
+          serverTime={serverTime}
           leaderboard={leaderboard}
           onTap={handleTap}
         />
@@ -370,21 +372,30 @@ type CountupOverlayProps = {
   mode: RoomView;
   phase: 'idle' | 'running' | 'ended';
   countdownMs: number;
+  serverTime: number;
   leaderboard: LeaderboardEntry[];
   onTap: () => Promise<void> | void;
 };
 
-function CountupOverlay({ mode, phase, countdownMs, leaderboard, onTap }: CountupOverlayProps) {
+function CountupOverlay({ mode, phase, countdownMs, serverTime, leaderboard, onTap }: CountupOverlayProps) {
   const [localCountdown, setLocalCountdown] = useState<number | null>(null);
   const [flash, setFlash] = useState(false);
   const [showResults, setShowResults] = useState(false);
   const [sparkles, setSparkles] = useState<Array<{ id: string; left: number; top: number }>>([]);
+  const [phaseEndTime, setPhaseEndTime] = useState<number | null>(null);
+  const [timeLeftSeconds, setTimeLeftSeconds] = useState<number | null>(null);
+  const [isActive, setIsActive] = useState(false);
+  const [isFinished, setIsFinished] = useState(false);
   const prevPhaseRef = useRef<typeof phase>();
 
   useEffect(() => {
     const prev = prevPhaseRef.current;
     if (mode !== 'countup') {
       setLocalCountdown(null);
+      setPhaseEndTime(null);
+      setTimeLeftSeconds(null);
+      setIsActive(false);
+      setIsFinished(false);
       setShowResults(false);
       prevPhaseRef.current = phase;
       return;
@@ -392,11 +403,26 @@ function CountupOverlay({ mode, phase, countdownMs, leaderboard, onTap }: Countu
 
     if (phase === 'running' && prev !== 'running') {
       setLocalCountdown(3);
+      setPhaseEndTime(null);
+      setTimeLeftSeconds(null);
+      setIsActive(false);
+      setIsFinished(false);
       setShowResults(false);
     }
 
     if (phase === 'ended' && prev !== 'ended') {
       setShowResults(true);
+      setIsActive(false);
+      setIsFinished(true);
+      setPhaseEndTime(null);
+      setTimeLeftSeconds(null);
+    }
+
+    if (phase === 'idle' && prev !== 'idle') {
+      setIsActive(false);
+      setIsFinished(false);
+      setPhaseEndTime(null);
+      setTimeLeftSeconds(null);
     }
 
     prevPhaseRef.current = phase;
@@ -414,12 +440,72 @@ function CountupOverlay({ mode, phase, countdownMs, leaderboard, onTap }: Countu
     return () => window.clearTimeout(timer);
   }, [localCountdown]);
 
+  useEffect(() => {
+    if (mode !== 'countup') return;
+    if (phase !== 'running') return;
+    if (localCountdown !== null) return;
+    if (isFinished) return;
+
+    if (countdownMs <= 0) {
+      setIsActive(false);
+      setIsFinished(true);
+      setShowResults(true);
+      setPhaseEndTime(null);
+      setTimeLeftSeconds(0);
+      return;
+    }
+
+    const now = Date.now();
+    const drift = serverTime > 0 ? now - serverTime : 0;
+    const adjustedMs = Math.max(0, countdownMs - drift);
+    if (adjustedMs <= 0) {
+      setIsActive(false);
+      setIsFinished(true);
+      setShowResults(true);
+      setPhaseEndTime(null);
+      setTimeLeftSeconds(0);
+      return;
+    }
+
+    const target = now + adjustedMs;
+    setPhaseEndTime((previous) => {
+      if (previous && Math.abs(previous - target) < 200) {
+        return previous;
+      }
+      return target;
+    });
+    setTimeLeftSeconds(Math.ceil(adjustedMs / 1000));
+    setIsActive(true);
+  }, [mode, phase, localCountdown, countdownMs, serverTime, isFinished]);
+
+  useEffect(() => {
+    if (mode !== 'countup') return;
+    if (!phaseEndTime || !isActive || phase !== 'running') return;
+
+    const tick = () => {
+      const remainingMs = phaseEndTime - Date.now();
+      const seconds = Math.max(0, Math.ceil(remainingMs / 1000));
+      setTimeLeftSeconds(seconds);
+      if (remainingMs <= 0) {
+        setIsActive(false);
+        setIsFinished(true);
+        setShowResults(true);
+        setPhaseEndTime(null);
+      }
+    };
+
+    tick();
+    const id = window.setInterval(tick, 100);
+    return () => window.clearInterval(id);
+  }, [mode, phase, phaseEndTime, isActive]);
+
   if (mode !== 'countup') {
     return null;
   }
 
-  const disabled = phase !== 'running' || localCountdown !== null;
-  const remainingSeconds = Math.max(0, Math.ceil(countdownMs / 1000));
+  const disabled = phase !== 'running' || localCountdown !== null || !isActive;
+  const showPad = phase === 'running' && (localCountdown !== null || !isFinished);
+  const displaySeconds = isActive && timeLeftSeconds !== null ? timeLeftSeconds : '';
 
   const handleTap = () => {
     if (disabled) return;
@@ -441,7 +527,6 @@ function CountupOverlay({ mode, phase, countdownMs, leaderboard, onTap }: Countu
   };
 
   const topThree = leaderboard.slice(0, 3);
-  const showPad = phase !== 'ended';
 
   return (
     <>
@@ -452,13 +537,15 @@ function CountupOverlay({ mode, phase, countdownMs, leaderboard, onTap }: Countu
           disabled={disabled}
           className="fixed inset-0 z-30 flex select-none items-center justify-center bg-brand-blue-50 transition active:bg-brand-blue-200 disabled:cursor-not-allowed disabled:opacity-60"
         >
-        <div className="pointer-events-none absolute top-16 text-5xl font-semibold text-brand-blue-700 drop-shadow">
-          {phase === 'running' ? remainingSeconds : ''}
+        <div className="pointer-events-none absolute top-12 text-[min(14vw,6rem)] font-semibold text-brand-blue-700 drop-shadow">
+          {displaySeconds}
         </div>
         {localCountdown !== null ? (
-          <span className="text-6xl font-serif font-semibold text-brand-blue-700 drop-shadow">{localCountdown}</span>
-        ) : phase === 'running' ? (
-          <span className="text-5xl font-semibold text-brand-blue-700 drop-shadow">TAP!</span>
+          <span className="text-[min(40vw,18rem)] font-serif font-semibold leading-none text-brand-blue-700 drop-shadow">
+            {localCountdown}
+          </span>
+        ) : isActive ? (
+          <span className="text-[min(18vw,7rem)] font-semibold text-brand-blue-700 drop-shadow">TAP!</span>
         ) : (
           <span className="text-3xl font-semibold text-brand-blue-700">開始を待っています</span>
         )}
@@ -499,11 +586,6 @@ function CountupOverlay({ mode, phase, countdownMs, leaderboard, onTap }: Countu
               閉じる
             </PrimaryButton>
           </div>
-        </div>
-      )}
-      {phase === 'running' && countdownMs > 0 && localCountdown === null && (
-        <div className="pointer-events-none fixed bottom-6 right-6 z-40 rounded-xl bg-white/80 px-4 py-2 text-sm text-brand-blue-700 shadow-brand">
-          残り {Math.ceil(countdownMs / 1000)} 秒
         </div>
       )}
     </>

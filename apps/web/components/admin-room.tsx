@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { ButtonHTMLAttributes } from 'react';
 import {
   Gauge,
@@ -62,6 +62,17 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
     displayName: '',
     groupTag: 'all' as 'all' | 'groom_friends' | 'bride_friends'
   });
+  const autoStopRef = useRef<NodeJS.Timeout | null>(null);
+  const COUNTUP_DURATION_MS = 10_000;
+  const COUNTDOWN_LEAD_MS = 3_000;
+
+  useEffect(() => {
+    return () => {
+      if (autoStopRef.current) {
+        clearTimeout(autoStopRef.current);
+      }
+    };
+  }, []);
   const client = useRealtimeClient();
   const mode = useRoomStore((state) => state.mode);
   const phase = useRoomStore((state) => state.phase);
@@ -465,12 +476,31 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
             </div>
           </AdminCard>
 
-          <AdminCard title="ゲーム制御" description="タップチャレンジは開始後10秒で自動終了します" icon={Play}>
+          <AdminCard title="ゲーム制御" description="タップチャレンジは3秒カウント後に10秒で自動終了します" icon={Play}>
             <div className="grid gap-3 sm:grid-cols-2">
-              <AdminButton icon={Play} onClick={() => send({ type: 'game:start', payload: undefined })}>
+              <AdminButton icon={Play} onClick={async () => {
+                if (autoStopRef.current) {
+                  clearTimeout(autoStopRef.current);
+                }
+                await send({ type: 'game:start', payload: undefined });
+                autoStopRef.current = setTimeout(() => {
+                  void send({ type: 'game:stop', payload: undefined });
+                  autoStopRef.current = null;
+                }, COUNTDOWN_LEAD_MS + COUNTUP_DURATION_MS + 500);
+              }}>
                 スタート (10秒)
               </AdminButton>
-              <AdminButton variant="secondary" icon={Square} onClick={() => send({ type: 'game:stop', payload: undefined })}>
+              <AdminButton
+                variant="secondary"
+                icon={Square}
+                onClick={() => {
+                  if (autoStopRef.current) {
+                    clearTimeout(autoStopRef.current);
+                    autoStopRef.current = null;
+                  }
+                  void send({ type: 'game:stop', payload: undefined });
+                }}
+              >
                 緊急停止
               </AdminButton>
             </div>
