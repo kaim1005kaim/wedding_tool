@@ -182,14 +182,16 @@ function QuizBoard({ activeQuiz, quizResult }: QuizPanelProps) {
         {activeQuiz ? (
           <>
             <p className="text-2xl font-medium leading-relaxed text-brand-blue-700/90">{activeQuiz.question}</p>
-            <ul className="space-y-3">
+            <ul className="grid gap-4 md:grid-cols-2">
               {activeQuiz.choices.map((choice, index) => (
                 <li
                   key={choice}
-                  className={`rounded-2xl px-6 py-4 text-xl shadow-brand ${quizResult && index === correctIndex ? 'bg-brand-terra-50 border border-brand-terra-200 text-brand-terra-700' : 'bg-white/80 text-brand-blue-700'}`}
+                  className={`rounded-2xl px-8 py-6 text-2xl shadow-brand ${quizResult && index === correctIndex ? 'bg-brand-terra-50 border border-brand-terра-200 text-brand-terра-700' : 'bg-white/80 text-brand-blue-700'}`}
                 >
-                  <span className="font-semibold">{CHOICE_LABELS[index]}</span>
-                  <span className="ml-4">{choice}</span>
+                  <div className="flex items-center gap-4">
+                    <span className="text-3xl font-semibold">{CHOICE_LABELS[index]}</span>
+                    <span className="flex-1 truncate text-left">{choice}</span>
+                  </div>
                 </li>
               ))}
             </ul>
