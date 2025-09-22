@@ -20,27 +20,39 @@ const requestSchema = z.object({
 
 export async function POST(request: Request, { params }: { params: { roomId: string } }) {
   try {
+    console.log('[Join API] Starting request for room:', params.roomId);
+
     const json = await request.json();
+    console.log('[Join API] Request body:', JSON.stringify(json));
+
     const { displayName, tableNo, seatNo, deviceFingerprint } = requestSchema.parse(json);
     const roomId = params.roomId;
 
+    console.log('[Join API] Ensuring room snapshot...');
     await ensureRoomSnapshot(roomId);
+    console.log('[Join API] Room snapshot ensured');
 
     let playerId: string | undefined;
 
     if (deviceFingerprint) {
+      console.log('[Join API] Looking for existing session with fingerprint:', deviceFingerprint);
       playerId = await findPlayerSessionByFingerprint(roomId, deviceFingerprint);
+      console.log('[Join API] Found existing player:', playerId);
     }
 
     if (playerId) {
+      console.log('[Join API] Updating existing player...');
       await updatePlayer(playerId, {
         display_name: displayName,
         table_no: tableNo ?? null,
         seat_no: seatNo ?? null
       });
+      console.log('[Join API] Player updated');
     } else {
+      console.log('[Join API] Creating new player...');
       const player = await upsertPlayer({ roomId, displayName, tableNo, seatNo });
       playerId = player.id;
+      console.log('[Join API] New player created:', playerId);
     }
 
     if (!playerId) {
@@ -59,23 +71,36 @@ export async function POST(request: Request, { params }: { params: { roomId: str
     const { token, expiresAt } = await signPlayerToken(roomId, playerId);
 
     return NextResponse.json({ token, playerId, expiresAt });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Join API error:', error);
     console.error('Full error details:', JSON.stringify(error, null, 2));
 
-    // Return more detailed error information
-    const errorMessage = error instanceof Error
-      ? error.message
-      : 'Failed to join room';
+    // Extract error information from various error types
+    let errorMessage = 'Failed to join room';
+    let errorDetails = null;
+    let errorCode = null;
 
-    const errorDetails = error instanceof Error && 'details' in error
-      ? (error as any).details
-      : null;
+    if (error instanceof Error) {
+      errorMessage = error.message;
+
+      // Check for Supabase error format
+      if ('code' in error) {
+        errorCode = error.code;
+      }
+      if ('details' in error) {
+        errorDetails = error.details;
+      }
+    } else if (typeof error === 'object' && error !== null) {
+      errorMessage = error.message || JSON.stringify(error);
+      errorCode = error.code || null;
+      errorDetails = error.details || error;
+    }
 
     return NextResponse.json(
       {
         error: errorMessage,
         details: errorDetails,
+        code: errorCode,
         timestamp: new Date().toISOString()
       },
       { status: 500 }
