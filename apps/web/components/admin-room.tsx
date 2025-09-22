@@ -13,7 +13,7 @@ import {
   Dice3,
   Shuffle,
   PauseCircle,
-  Settings2
+  Settings
 } from 'lucide-react';
 import { useRealtimeClient } from '../lib/realtime-context';
 import { useRoomStore } from '../lib/store/room-store';
@@ -436,9 +436,13 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
         </div>
 
         <div className="mb-6 flex justify-end">
-          <AdminButton variant="secondary" icon={Settings2} onClick={openManagement}>
-            詳細設定
-          </AdminButton>
+          <AdminButton
+            variant="secondary"
+            icon={Settings}
+            onClick={openManagement}
+            className="w-12 justify-center px-3"
+            aria-label="詳細設定"
+          />
         </div>
 
         {error && <p className="mb-4 text-sm text-error" role="alert">{error}</p>}
