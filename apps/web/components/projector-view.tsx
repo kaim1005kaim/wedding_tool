@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useRoomStore } from '../lib/store/room-store';
 import type { LeaderboardEntry, RoomStoreState } from '../lib/store/room-store';
@@ -86,7 +86,7 @@ function renderSection(
     case 'quiz':
       return <QuizBoard key={`quiz-${quizResult?.quizId ?? activeQuiz?.quizId ?? 'waiting'}`} activeQuiz={activeQuiz} quizResult={quizResult} />;
     case 'lottery':
-      return <LotteryBoard key={lotteryKey} lotteryResult={lotteryResult} isSpinning={isSpinning} />;
+      return <LotteryBoard key={lotteryKey} lotteryResult={lotteryResult} isSpinning={isSpinning} leaderboard={leaderboard} />;
     default:
       return <IdleBoard key="idle" leaderboard={leaderboard} />;
   }
@@ -144,7 +144,7 @@ function IdleBoard({ leaderboard }: { leaderboard: LeaderboardEntry[] }) {
       className="glass-panel rounded-2xl p-10 text-center shadow-brand"
     >
       <h2 className="text-4xl font-semibold text-brand-blue-700">まもなくゲームが始まります</h2>
-      <p className="mt-4 text-lg text-brand-blue-700/80">最新のランキングをチェックして気持ちを温めておきましょう。</p>
+      <p className="mt-4 text-lg text-brand-blue-700/80">スマホの画面を確認してください。</p>
       <div className="mt-8 grid gap-4 md:grid-cols-2">
         {leaderboard.slice(0, 6).map((entry) => (
           <div key={entry.playerId} className="rounded-xl bg-white/85 px-6 py-4 text-left shadow-brand">
@@ -231,31 +231,136 @@ function QuizBoard({ activeQuiz, quizResult }: QuizPanelProps) {
 type LotteryPanelProps = {
   lotteryResult: RoomStoreState['lotteryResult'];
   isSpinning: boolean;
+  leaderboard: LeaderboardEntry[];
 };
 
-function LotteryBoard({ lotteryResult, isSpinning }: LotteryPanelProps) {
+function LotteryBoard({ lotteryResult, isSpinning, leaderboard }: LotteryPanelProps) {
+  const [displayName, setDisplayName] = useState<string | null>(null);
+  const [displayKind, setDisplayKind] = useState<string | null>(null);
+  const [isRevealing, setIsRevealing] = useState(false);
+  const prevWinnerRef = useRef<string | null>(null);
+  const revealTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const sequenceTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const clearTimers = useCallback(() => {
+    if (revealTimeoutRef.current) {
+      clearTimeout(revealTimeoutRef.current);
+      revealTimeoutRef.current = null;
+    }
+    if (sequenceTimeoutRef.current) {
+      clearTimeout(sequenceTimeoutRef.current);
+      sequenceTimeoutRef.current = null;
+    }
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      clearTimers();
+    };
+  }, [clearTimers]);
+
+  useEffect(() => {
+    const winnerId = lotteryResult?.player?.id ?? null;
+    if (!winnerId || winnerId === prevWinnerRef.current) {
+      return;
+    }
+
+    prevWinnerRef.current = winnerId;
+    clearTimers();
+    setIsRevealing(false);
+    setDisplayName(null);
+    setDisplayKind(null);
+
+    const finalName = lotteryResult.player.name;
+    const candidatePool = Array.from(
+      new Set(
+        leaderboard
+          .map((entry) => entry.displayName)
+          .filter((name): name is string => Boolean(name && name.trim().length > 0 && name !== finalName))
+      )
+    );
+    if (candidatePool.length === 0) {
+      candidatePool.push('???');
+    }
+
+    const fakeCount = Math.min(6, candidatePool.length);
+    const fakeNames: string[] = [];
+    for (let i = 0; i < fakeCount; i += 1) {
+      const randomName = candidatePool[Math.floor(Math.random() * candidatePool.length)];
+      fakeNames.push(randomName);
+    }
+
+    if (Math.random() < 0.65 && fakeNames.length > 1) {
+      const slipIndex = Math.floor(Math.random() * fakeNames.length);
+      fakeNames.splice(slipIndex, 0, finalName);
+    }
+
+    const sequence = [...fakeNames, finalName];
+    let step = 0;
+
+    setIsRevealing(true);
+    setDisplayKind(labelForLotteryKind(lotteryResult.kind));
+
+    const runStep = () => {
+      const name = sequence[step];
+      setDisplayName(name);
+      const isFinal = step === sequence.length - 1;
+      step += 1;
+
+      if (isFinal) {
+        sequenceTimeoutRef.current = null;
+        revealTimeoutRef.current = setTimeout(() => {
+          setIsRevealing(false);
+          setDisplayName(null);
+          setDisplayKind(null);
+        }, 5000);
+        return;
+      }
+
+      const delay = 220 + Math.random() * 160;
+      sequenceTimeoutRef.current = setTimeout(runStep, delay);
+    };
+
+    runStep();
+
+    return () => {
+      clearTimers();
+    };
+  }, [clearTimers, leaderboard, lotteryResult]);
+
+  const waiting = !displayName && !isRevealing;
+
   return (
     <motion.section
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.95 }}
       transition={{ duration: 0.5, ease: 'easeOut' }}
-      className="glass-panel flex h-full flex-col items-center justify-center gap-8 rounded-2xl px-10 py-16 text-center shadow-brand"
+      className="glass-panel flex h-full flex-col items-center justify-center gap-10 rounded-2xl px-12 py-20 text-center shadow-brand"
     >
-      <span className="text-base uppercase tracking-[0.4em] text-brand-blue-700/70">Lottery</span>
-      {lotteryResult ? (
-        <motion.div
-          key={lotteryResult.player.id}
-          initial={{ rotate: 0, scale: 0.9, opacity: 0 }}
-          animate={{ rotate: isSpinning ? [0, 360, 360] : 0, scale: 1, opacity: 1 }}
-          transition={{ duration: isSpinning ? 3 : 0.5, ease: 'easeOut' }}
-          className="rounded-[3rem] bg-brand-terra-50 px-12 py-10 shadow-brand"
-        >
-          <p className="text-sm uppercase tracking-[0.45em] text-brand-terra-600">{lotteryResult.kind}</p>
-          <p className="mt-4 text-6xl font-serif text-brand-terra-700">{lotteryResult.player.name}</p>
-        </motion.div>
+      <span className="text-xl uppercase tracking-[0.45em] text-brand-blue-700/70">Lottery</span>
+      {waiting ? (
+        <div className="space-y-6 text-brand-blue-700/70">
+          <p className="text-3xl font-semibold text-brand-blue-700">抽選カテゴリを選んでください</p>
+          <div className="flex flex-col items-center gap-4 text-2xl">
+            <span>・全員対象</span>
+            <span>・新郎友人</span>
+            <span>・新婦友人</span>
+          </div>
+        </div>
       ) : (
-        <p className="text-2xl text-brand-blue-700/70">抽選結果が表示されるまで今しばらくお待ちください。</p>
+        <motion.div
+          key={displayName ?? 'lottery-waiting'}
+          initial={{ rotate: 0, scale: 0.85, opacity: 0 }}
+          animate={{ rotate: isSpinning ? [0, 360, 360] : 0, scale: 1, opacity: 1 }}
+          transition={{ duration: isSpinning ? 3 : 0.6, ease: 'easeOut' }}
+          className="rounded-[3.5rem] bg-brand-terra-50 px-16 py-14 shadow-brand"
+        >
+          {displayKind ? (
+            <p className="text-lg uppercase tracking-[0.5em] text-brand-terra-600">{displayKind}</p>
+          ) : null}
+          <p className="mt-6 text-[min(12vw,11rem)] font-serif font-bold text-brand-terra-700">{displayName}</p>
+        </motion.div>
       )}
     </motion.section>
   );
@@ -271,5 +376,24 @@ function labelForMode(mode: string) {
       return '抽選';
     default:
       return '待機中';
+  }
+}
+
+function labelForLotteryKind(kind: string | undefined) {
+  switch (kind) {
+    case 'all':
+      return '全員対象';
+    case 'groom_friends':
+      return '新郎友人';
+    case 'bride_friends':
+      return '新婦友人';
+    case 'escort':
+      return 'エスコート';
+    case 'cake_groom':
+      return 'ケーキ (新郎)';
+    case 'cake_bride':
+      return 'ケーキ (新婦)';
+    default:
+      return '抽選';
   }
 }
