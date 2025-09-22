@@ -35,36 +35,17 @@ export default function JoinRoom({ code }: { code: string }) {
   const fingerprintKey = 'wedding_tool:device_id';
 
   useEffect(() => {
-    if (!isCloudMode || typeof window === 'undefined') return;
-    const stored = window.localStorage.getItem(storageKey);
-    if (stored) {
-      try {
-        const { playerId, token, expiresAt } = JSON.parse(stored) as {
-          playerId: string;
-          token: string;
-          expiresAt: number;
-        };
-        if (expiresAt > Date.now()) {
-          setPlayerAuth({ playerId, token });
-          setRegistered(true);
-          setDisplayName(window.localStorage.getItem(`${storageKey}:name`) ?? '');
-          const cachedRoom = window.localStorage.getItem(`${storageKey}:room`);
-          if (cachedRoom) {
-            setRoomId(cachedRoom);
-          }
-          setShowModal(false);
-          return;
-        }
-      } catch (err) {
-        // ignore parse errors
-      }
-      window.localStorage.removeItem(storageKey);
-      window.localStorage.removeItem(`${storageKey}:name`);
-      window.localStorage.removeItem(`${storageKey}:room`);
-      clearPlayerAuth();
-      setRegistered(false);
+    if (typeof window === 'undefined') return;
+    const storedName = window.localStorage.getItem(`${storageKey}:name`);
+    if (storedName) {
+      const parts = storedName.split(' ');
+      setLastName(parts.at(0) ?? storedName);
+      setFirstName(parts.slice(1).join(' '));
     }
-  }, [isCloudMode, storageKey, setPlayerAuth, clearPlayerAuth]);
+    clearPlayerAuth();
+    setRegistered(false);
+    setShowModal(true);
+  }, [storageKey, clearPlayerAuth]);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -153,9 +134,9 @@ export default function JoinRoom({ code }: { code: string }) {
         };
         setPlayerAuth({ playerId, token });
         if (typeof window !== 'undefined') {
-          window.localStorage.setItem(storageKey, JSON.stringify({ token, playerId, expiresAt }));
           window.localStorage.setItem(`${storageKey}:name`, fullName);
           window.localStorage.setItem(`${storageKey}:room`, fetchedRoomId);
+          window.localStorage.setItem(storageKey, JSON.stringify({ playerId, token, expiresAt }));
         }
       } else {
         await client.emit({
