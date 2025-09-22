@@ -376,14 +376,17 @@ function CountupOverlay({ mode, phase, countdownMs, leaderboard, onTap }: Countu
 
   const topThree = leaderboard.slice(0, 3);
 
+  const showPad = phase !== 'ended';
+
   return (
     <>
-      <button
-        type="button"
-        onPointerDown={handleTap}
-        disabled={disabled}
-        className="fixed inset-0 z-30 flex select-none items-center justify-center bg-brand-blue-50 transition active:bg-brand-blue-200 disabled:cursor-not-allowed disabled:opacity-60"
-      >
+      {showPad && (
+        <button
+          type="button"
+          onPointerDown={handleTap}
+          disabled={disabled}
+          className="fixed inset-0 z-30 flex select-none items-center justify-center bg-brand-blue-50 transition active:bg-brand-blue-200 disabled:cursor-not-allowed disabled:opacity-60"
+        >
         {localCountdown !== null ? (
           <span className="text-6xl font-serif font-semibold text-brand-blue-700 drop-shadow">{localCountdown}</span>
         ) : phase === 'running' ? (
@@ -398,7 +401,8 @@ function CountupOverlay({ mode, phase, countdownMs, leaderboard, onTap }: Countu
             +1
           </span>
         )}
-      </button>
+        </button>
+      )}
       {showResults && topThree.length > 0 && (
         <div className="fixed inset-0 z-40 flex items-center justify-center bg-ink/60 px-6">
           <div className="glass-panel w-full max-w-xl rounded-2xl p-8 shadow-brand">
