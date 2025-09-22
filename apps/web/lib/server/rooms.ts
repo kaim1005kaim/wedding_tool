@@ -130,6 +130,7 @@ export async function ensureRoomSnapshot(roomId: string): Promise<RoomSnapshot> 
       .maybeSingle();
 
     if (error) {
+      console.error('Error fetching room snapshot:', error);
       throw error;
     }
 
@@ -137,10 +138,14 @@ export async function ensureRoomSnapshot(roomId: string): Promise<RoomSnapshot> 
       const parsed = roomSnapshotSchema.safeParse(data);
       if (parsed.success) {
         return parsed.data;
+      } else {
+        console.error('Room snapshot validation error:', parsed.error);
+        // Try to fix and continue instead of failing
       }
     }
   } catch (error) {
-    // ignore missing rows
+    console.error('ensureRoomSnapshot error:', error);
+    // Continue to create a new snapshot
   }
 
   return upsertRoomSnapshot(roomId, {});

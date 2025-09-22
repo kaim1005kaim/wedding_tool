@@ -19,43 +19,51 @@ const requestSchema = z.object({
 });
 
 export async function POST(request: Request, { params }: { params: { roomId: string } }) {
-  const json = await request.json();
-  const { displayName, tableNo, seatNo, deviceFingerprint } = requestSchema.parse(json);
-  const roomId = params.roomId;
+  try {
+    const json = await request.json();
+    const { displayName, tableNo, seatNo, deviceFingerprint } = requestSchema.parse(json);
+    const roomId = params.roomId;
 
-  await ensureRoomSnapshot(roomId);
+    await ensureRoomSnapshot(roomId);
 
-  let playerId: string | undefined;
+    let playerId: string | undefined;
 
-  if (deviceFingerprint) {
-    playerId = await findPlayerSessionByFingerprint(roomId, deviceFingerprint);
-  }
+    if (deviceFingerprint) {
+      playerId = await findPlayerSessionByFingerprint(roomId, deviceFingerprint);
+    }
 
-  if (playerId) {
-    await updatePlayer(playerId, {
-      display_name: displayName,
-      table_no: tableNo ?? null,
-      seat_no: seatNo ?? null
+    if (playerId) {
+      await updatePlayer(playerId, {
+        display_name: displayName,
+        table_no: tableNo ?? null,
+        seat_no: seatNo ?? null
+      });
+    } else {
+      const player = await upsertPlayer({ roomId, displayName, tableNo, seatNo });
+      playerId = player.id;
+    }
+
+    if (!playerId) {
+      return NextResponse.json({ error: 'Failed to register player' }, { status: 500 });
+    }
+
+    await upsertPlayerSession({
+      room_id: roomId,
+      player_id: playerId,
+      device_fingerprint: deviceFingerprint ?? null
     });
-  } else {
-    const player = await upsertPlayer({ roomId, displayName, tableNo, seatNo });
-    playerId = player.id;
+
+    await ensureScoreRecord(roomId, playerId);
+    await recomputeLeaderboard(roomId);
+
+    const { token, expiresAt } = await signPlayerToken(roomId, playerId);
+
+    return NextResponse.json({ token, playerId, expiresAt });
+  } catch (error) {
+    console.error('Join API error:', error);
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : 'Failed to join room' },
+      { status: 500 }
+    );
   }
-
-  if (!playerId) {
-    return NextResponse.json({ error: 'Failed to register player' }, { status: 500 });
-  }
-
-  await upsertPlayerSession({
-    room_id: roomId,
-    player_id: playerId,
-    device_fingerprint: deviceFingerprint ?? null
-  });
-
-  await ensureScoreRecord(roomId, playerId);
-  await recomputeLeaderboard(roomId);
-
-  const { token, expiresAt } = await signPlayerToken(roomId, playerId);
-
-  return NextResponse.json({ token, playerId, expiresAt });
 }
