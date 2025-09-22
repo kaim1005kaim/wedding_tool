@@ -1,10 +1,11 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRealtimeClient } from '../lib/realtime-context';
 import { useRoomStore } from '../lib/store/room-store';
 import { appConfig } from '../lib/env';
 import { Section, PrimaryButton } from './brand';
+import type { LeaderboardEntry, RoomView } from '../lib/store/room-store';
 
 export default function JoinRoom({ code }: { code: string }) {
   const [name, setName] = useState('');
@@ -20,6 +21,8 @@ export default function JoinRoom({ code }: { code: string }) {
   const setPlayerAuth = useRoomStore((state) => state.setPlayerAuth);
   const clearPlayerAuth = useRoomStore((state) => state.clearPlayerAuth);
   const runtimeRoomId = useRoomStore((state) => state.roomId);
+  const phase = useRoomStore((state) => state.phase);
+  const countdownMs = useRoomStore((state) => state.countdownMs);
 
   const isCloudMode = appConfig.mode === 'cloud';
 
@@ -194,7 +197,7 @@ export default function JoinRoom({ code }: { code: string }) {
   return (
     <main className="min-h-screen px-6 py-10">
       <Section title="参加登録" subtitle={`ルームコード: ${code.toUpperCase()}`}>
-        <div className="flex items-center justify-between rounded-xl bg-brand-blue-50/60 px-4 py-2 text-sm mb-4">
+        <div className="mb-4 flex items-center justify-between rounded-xl bg-brand-blue-50/60 px-4 py-2 text-sm">
           <div className="flex items-center gap-2">
             <span className={`h-3 w-3 rounded-full ${connectionConfig[connection].dot}`} aria-hidden="true" />
             <span>{connectionConfig[connection].label}</span>
@@ -239,9 +242,7 @@ export default function JoinRoom({ code }: { code: string }) {
             <PrimaryButton type="submit" disabled={name.trim().length === 0}>
               参加する
             </PrimaryButton>
-            <p className="text-sm text-brand-blue-700/80">
-              お名前を入力し、「参加する」を押してください。ゲームの操作はこのページから行えます。
-            </p>
+            <p className="text-sm text-brand-blue-700/80">お名前を入力し、「参加する」を押してください。ゲームの操作はこのページから行えます。</p>
           </form>
         ) : (
           <div className="space-y-6" aria-live="polite">
@@ -260,18 +261,15 @@ export default function JoinRoom({ code }: { code: string }) {
               <h2 className="text-xl font-semibold text-brand-blue-700">タップチャレンジ</h2>
               <p className="mt-2 text-sm text-brand-blue-700/80">
                 {mode === 'countup'
-                  ? '巨大な TAP ボタンが表示されたら、リズミカルにタップしてスコアを伸ばしましょう。'
+                  ? phase === 'running'
+                    ? 'テンポよくタップして、チームを盛り上げましょう！'
+                    : '合図が出るまでそのままお待ちください。スタート直前にカウントダウンが表示されます。'
                   : mode === 'quiz'
                     ? 'クイズが表示されたら、画面の指示に従って回答してください。'
                     : mode === 'lottery'
                       ? '抽選の結果発表をお待ちください。'
                       : 'まもなくゲームが始まります。'}
               </p>
-              {mode === 'countup' && (
-                <PrimaryButton type="button" onClick={handleTap} className="mt-4 h-16 text-xl">
-                  TAP!
-                </PrimaryButton>
-              )}
             </div>
 
             <div className="rounded-2xl bg-brand-blue-50/70 p-6">
@@ -302,6 +300,146 @@ export default function JoinRoom({ code }: { code: string }) {
           </div>
         )}
       </Section>
+      {registered && (
+        <CountupOverlay
+          mode={mode}
+          phase={phase}
+          countdownMs={countdownMs}
+          leaderboard={leaderboard}
+          onTap={handleTap}
+        />
+      )}
     </main>
   );
+}
+
+type CountupOverlayProps = {
+  mode: RoomView;
+  phase: 'idle' | 'running' | 'ended';
+  countdownMs: number;
+  leaderboard: LeaderboardEntry[];
+  onTap: () => Promise<void> | void;
+};
+
+function CountupOverlay({ mode, phase, countdownMs, leaderboard, onTap }: CountupOverlayProps) {
+  const [localCountdown, setLocalCountdown] = useState<number | null>(null);
+  const [flash, setFlash] = useState(false);
+  const [showResults, setShowResults] = useState(false);
+  const prevPhaseRef = useRef<typeof phase>();
+
+  useEffect(() => {
+    const prev = prevPhaseRef.current;
+    if (mode !== 'countup') {
+      setLocalCountdown(null);
+      setShowResults(false);
+      prevPhaseRef.current = phase;
+      return;
+    }
+
+    if (phase === 'running' && prev !== 'running') {
+      setLocalCountdown(3);
+      setShowResults(false);
+    }
+
+    if (phase === 'ended' && prev !== 'ended') {
+      setShowResults(true);
+    }
+
+    prevPhaseRef.current = phase;
+  }, [mode, phase]);
+
+  useEffect(() => {
+    if (localCountdown === null) return;
+    if (localCountdown <= 0) {
+      setLocalCountdown(null);
+      return;
+    }
+    const timer = window.setTimeout(() => {
+      setLocalCountdown((value) => (value !== null ? value - 1 : null));
+    }, 1000);
+    return () => window.clearTimeout(timer);
+  }, [localCountdown]);
+
+  if (mode !== 'countup') {
+    return null;
+  }
+
+  const disabled = phase !== 'running' || localCountdown !== null;
+
+  const handleTap = () => {
+    if (disabled) return;
+    navigator.vibrate?.(10);
+    setFlash(true);
+    window.setTimeout(() => setFlash(false), 150);
+    void onTap();
+  };
+
+  const topThree = leaderboard.slice(0, 3);
+
+  return (
+    <>
+      <button
+        type="button"
+        onPointerDown={handleTap}
+        disabled={disabled}
+        className="fixed inset-0 z-30 flex select-none items-center justify-center bg-brand-blue-50 transition active:bg-brand-blue-200 disabled:cursor-not-allowed disabled:opacity-60"
+      >
+        {localCountdown !== null ? (
+          <span className="text-6xl font-serif font-semibold text-brand-blue-700 drop-shadow">{localCountdown}</span>
+        ) : phase === 'running' ? (
+          <span className="text-5xl font-semibold text-brand-blue-700 drop-shadow">TAP!</span>
+        ) : phase === 'ended' ? (
+          <span className="text-3xl font-semibold text-brand-blue-700">お疲れさまでした</span>
+        ) : (
+          <span className="text-3xl font-semibold text-brand-blue-700">開始を待っています</span>
+        )}
+        {flash && (
+          <span className="pointer-events-none absolute inset-x-0 top-1/4 text-center text-4xl font-bold text-brand-terra-600 opacity-90 animate-ping">
+            +1
+          </span>
+        )}
+      </button>
+      {showResults && topThree.length > 0 && (
+        <div className="fixed inset-0 z-40 flex items-center justify-center bg-ink/60 px-6">
+          <div className="glass-panel w-full max-w-xl rounded-2xl p-8 shadow-brand">
+            <h2 className="text-2xl font-semibold text-brand-terra-600">TOP 3</h2>
+            <ul className="mt-6 space-y-3">
+              {topThree.map((entry, index) => (
+                <li
+                  key={entry.playerId}
+                  className="flex items-center justify-between rounded-xl bg-white/80 px-4 py-3 text-lg shadow-brand"
+                >
+                  <span className="font-semibold">
+                    {medalForRank(index + 1)} {entry.displayName}
+                  </span>
+                  <span className="font-bold text-brand-terra-600">{entry.totalPoints} pt</span>
+                </li>
+              ))}
+            </ul>
+            <PrimaryButton type="button" className="mt-6" onClick={() => setShowResults(false)}>
+              閉じる
+            </PrimaryButton>
+          </div>
+        </div>
+      )}
+      {phase === 'running' && countdownMs > 0 && localCountdown === null && (
+        <div className="pointer-events-none fixed bottom-6 right-6 z-40 rounded-xl bg-white/80 px-4 py-2 text-sm text-brand-blue-700 shadow-brand">
+          残り {Math.ceil(countdownMs / 1000)} 秒
+        </div>
+      )}
+    </>
+  );
+}
+
+function medalForRank(rank: number) {
+  switch (rank) {
+    case 1:
+      return '🥇';
+    case 2:
+      return '🥈';
+    case 3:
+      return '🥉';
+    default:
+      return `${rank}.`;
+  }
 }
