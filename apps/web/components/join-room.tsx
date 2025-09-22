@@ -123,7 +123,12 @@ export default function JoinRoom({ code }: { code: string }) {
         });
 
         if (!response.ok) {
-          const data = (await response.json().catch(() => ({}))) as { error?: string };
+          const data = (await response.json().catch(() => ({}))) as {
+            error?: string;
+            details?: any;
+            timestamp?: string;
+          };
+          console.error('Join API response:', data);
           throw new Error(data.error ?? response.statusText);
         }
 

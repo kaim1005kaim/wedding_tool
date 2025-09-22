@@ -61,8 +61,23 @@ export async function POST(request: Request, { params }: { params: { roomId: str
     return NextResponse.json({ token, playerId, expiresAt });
   } catch (error) {
     console.error('Join API error:', error);
+    console.error('Full error details:', JSON.stringify(error, null, 2));
+
+    // Return more detailed error information
+    const errorMessage = error instanceof Error
+      ? error.message
+      : 'Failed to join room';
+
+    const errorDetails = error instanceof Error && 'details' in error
+      ? (error as any).details
+      : null;
+
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Failed to join room' },
+      {
+        error: errorMessage,
+        details: errorDetails,
+        timestamp: new Date().toISOString()
+      },
       { status: 500 }
     );
   }
