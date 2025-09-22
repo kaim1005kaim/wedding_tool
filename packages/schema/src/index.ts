@@ -66,14 +66,14 @@ export const roomSnapshotSchema = z.object({
     })
     .nullable()
     .optional(),
-  updated_at: z.string().datetime().optional()
+  updated_at: z.union([z.string().datetime(), z.string()]).optional()
 });
 
 export const roomAdminSchema = z.object({
   room_id: z.string().uuid(),
   pin_hash: z.string(),
   disabled: z.boolean().default(false),
-  updated_at: z.string().datetime().optional()
+  updated_at: z.union([z.string().datetime(), z.string()]).optional()
 });
 
 export const playerSessionSchema = z.object({

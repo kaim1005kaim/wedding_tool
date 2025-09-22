@@ -24,6 +24,7 @@
     "@playwright/test": "1.44.0",
     "artillery": "2.0.0-33",
     "cross-env": "7.0.3",
+    "node-fetch": "^3.3.2",
     "vitest": "1.6.0"
   }
 }

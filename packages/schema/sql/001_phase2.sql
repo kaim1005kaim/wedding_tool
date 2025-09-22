@@ -80,21 +80,26 @@ as $$
 declare
   entries jsonb;
 begin
-  select jsonb_agg(jsonb_build_object(
-           'playerId', s.player_id,
-           'name', p.display_name,
-           'points', s.total_points,
-           'rank', row_number() over (order by s.total_points desc, s.last_update_at asc)
-         ))
-    into entries
-  from (
-    select player_id, total_points, last_update_at
-    from scores
-    where room_id = p_room_id
-    order by total_points desc, last_update_at asc
+  with ranked_scores as (
+    select
+      s.player_id,
+      s.total_points,
+      p.display_name,
+      row_number() over (order by s.total_points desc, s.last_update_at asc) as rank
+    from scores s
+    join players p on p.id = s.player_id
+    where s.room_id = p_room_id
+    order by s.total_points desc, s.last_update_at asc
     limit p_limit
-  ) s
-  join players p on p.id = s.player_id;
+  )
+  select jsonb_agg(jsonb_build_object(
+    'playerId', player_id,
+    'name', display_name,
+    'points', total_points,
+    'rank', rank
+  ) order by rank)
+  into entries
+  from ranked_scores;
 
   insert into room_snapshots(room_id, leaderboard, updated_at)
   values (p_room_id, coalesce(entries, '[]'::jsonb), now())
