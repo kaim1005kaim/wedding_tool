@@ -391,8 +391,6 @@ function CountupOverlay({ mode, phase, countdownMs, leaderboard, onTap }: Countu
           <span className="text-6xl font-serif font-semibold text-brand-blue-700 drop-shadow">{localCountdown}</span>
         ) : phase === 'running' ? (
           <span className="text-5xl font-semibold text-brand-blue-700 drop-shadow">TAP!</span>
-        ) : phase === 'ended' ? (
-          <span className="text-3xl font-semibold text-brand-blue-700">お疲れさまでした</span>
         ) : (
           <span className="text-3xl font-semibold text-brand-blue-700">開始を待っています</span>
         )}
