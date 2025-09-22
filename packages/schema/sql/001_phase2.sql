@@ -67,3 +67,291 @@ comment on table room_snapshots is 'Sanitized room state broadcast snapshots for
 comment on table room_admins is 'Per-room admin PIN hashes and flags.';
 comment on table player_sessions is 'Participant session linking for device reconnects.';
 comment on table admin_audit_logs is 'Operational audit log for admin actions.';
+
+create or replace function refresh_room_leaderboard(p_room_id uuid, p_limit int default 20)
+returns void
+language plpgsql
+as $$
+declare
+  entries jsonb;
+begin
+  select jsonb_agg(jsonb_build_object(
+           'playerId', s.player_id,
+           'name', p.display_name,
+           'points', s.total_points,
+           'rank', row_number() over (order by s.total_points desc, s.last_update_at asc)
+         ))
+    into entries
+  from (
+    select player_id, total_points, last_update_at
+    from scores
+    where room_id = p_room_id
+    order by total_points desc, last_update_at asc
+    limit p_limit
+  ) s
+  join players p on p.id = s.player_id;
+
+  insert into room_snapshots(room_id, leaderboard, updated_at)
+  values (p_room_id, coalesce(entries, '[]'::jsonb), now())
+  on conflict (room_id)
+  do update set leaderboard = coalesce(entries, '[]'::jsonb), updated_at = now();
+end;
+$$;
+
+create or replace function apply_tap_delta(p_room_id uuid, p_player_id uuid, p_delta integer)
+returns void
+language plpgsql
+as $$
+declare
+  clamped integer := greatest(1, least(30, p_delta));
+begin
+  insert into scores(room_id, player_id, total_points, last_update_at)
+  values (p_room_id, p_player_id, clamped, now())
+  on conflict (room_id, player_id)
+  do update set total_points = scores.total_points + clamped, last_update_at = now();
+
+  perform refresh_room_leaderboard(p_room_id);
+end;
+$$;
+
+create or replace function record_quiz_answer(p_room_id uuid, p_quiz_id uuid, p_player_id uuid, p_choice integer)
+returns void
+language plpgsql
+as $$
+begin
+  insert into answers(room_id, quiz_id, player_id, choice_index)
+  values (p_room_id, p_quiz_id, p_player_id, p_choice)
+  on conflict (quiz_id, player_id) do update set choice_index = excluded.choice_index;
+end;
+$$;
+
+create or replace function draw_lottery(p_room_id uuid, p_kind text)
+returns jsonb
+language plpgsql
+as $$
+declare
+  winner record;
+begin
+  if exists (select 1 from lottery_picks where room_id = p_room_id and kind = p_kind) then
+    raise exception 'Lottery % already drawn', p_kind;
+  end if;
+
+  with candidates as (
+    select p.id, p.display_name, p.table_no, p.seat_no
+    from players p
+    where p.room_id = p_room_id
+      and coalesce(p.is_present, true)
+      and not exists (select 1 from lottery_picks lp where lp.room_id = p_room_id and lp.player_id = p.id)
+  )
+  select id, display_name, table_no, seat_no into winner
+  from candidates
+  order by random()
+  limit 1;
+
+  if winner is null then
+    raise exception 'No eligible players for lottery';
+  end if;
+
+  insert into lottery_picks(room_id, kind, player_id)
+  values (p_room_id, p_kind, winner.id);
+
+  insert into room_snapshots(room_id, lottery_result, updated_at)
+  values (
+    p_room_id,
+    jsonb_build_object(
+      'kind', p_kind,
+      'player', jsonb_build_object(
+        'id', winner.id,
+        'name', winner.display_name,
+        'table_no', winner.table_no,
+        'seat_no', winner.seat_no
+      )
+    ),
+    now()
+  )
+  on conflict (room_id)
+  do update set lottery_result = excluded.lottery_result, updated_at = now();
+
+  return jsonb_build_object(
+    'kind', p_kind,
+    'player', jsonb_build_object(
+      'id', winner.id,
+      'name', winner.display_name,
+      'table_no', winner.table_no,
+      'seat_no', winner.seat_no
+    )
+  );
+end;
+$$;
+
+create or replace function reveal_quiz(p_room_id uuid, p_quiz_id uuid, p_points integer default 10)
+returns jsonb
+language plpgsql
+as $$
+declare
+  quiz_data quizzes%rowtype;
+  answer record;
+  per_choice integer[] := array[0,0,0,0];
+  awarded jsonb := '[]'::jsonb;
+begin
+  select * into quiz_data from quizzes where id = p_quiz_id and room_id = p_room_id;
+  if quiz_data is null then
+    raise exception 'Quiz % not found', p_quiz_id;
+  end if;
+
+  if exists (select 1 from awarded_quizzes where quiz_id = p_quiz_id) then
+    raise exception 'Quiz already revealed';
+  end if;
+
+  for answer in
+    select player_id, choice_index from answers where quiz_id = p_quiz_id
+  loop
+    per_choice[answer.choice_index + 1] := per_choice[answer.choice_index + 1] + 1;
+    if answer.choice_index = quiz_data.answer_index then
+      insert into scores(room_id, player_id, total_points, last_update_at)
+      values (p_room_id, answer.player_id, p_points, now())
+      on conflict (room_id, player_id)
+      do update set total_points = scores.total_points + p_points, last_update_at = now();
+
+      awarded := awarded || jsonb_build_object('playerId', answer.player_id, 'delta', p_points);
+    end if;
+  end loop;
+
+  insert into awarded_quizzes(quiz_id, room_id, awarded_at)
+  values (p_quiz_id, p_room_id, now());
+
+  perform refresh_room_leaderboard(p_room_id);
+
+  insert into room_snapshots(room_id, quiz_result, updated_at)
+  values (
+    p_room_id,
+    jsonb_build_object(
+      'quizId', p_quiz_id,
+      'correctIndex', quiz_data.answer_index,
+      'perChoiceCounts', per_choice,
+      'awarded', awarded
+    ),
+    now()
+  )
+  on conflict (room_id)
+  do update set quiz_result = excluded.quiz_result, updated_at = now();
+
+  return jsonb_build_object(
+    'quizId', p_quiz_id,
+    'correctIndex', quiz_data.answer_index,
+    'perChoiceCounts', per_choice,
+    'awarded', awarded
+  );
+end;
+$$;
+
+create or replace function draw_lottery(p_room_id uuid, p_kind text)
+returns jsonb
+language plpgsql
+as $$
+declare
+  winner record;
+  result jsonb;
+begin
+  if exists (select 1 from lottery_picks where room_id = p_room_id and kind = p_kind) then
+    raise exception 'Lottery % already drawn', p_kind;
+  end if;
+
+  with candidates as (
+    select p.id, p.display_name, p.table_no, p.seat_no
+    from players p
+    where p.room_id = p_room_id
+      and coalesce(p.is_present, true)
+      and not exists (select 1 from lottery_picks lp where lp.room_id = p_room_id and lp.player_id = p.id)
+  )
+  select id, display_name, table_no, seat_no into winner
+  from candidates
+  order by random()
+  limit 1;
+
+  if winner is null then
+    raise exception 'No eligible players for lottery';
+  end if;
+
+  insert into lottery_picks(room_id, kind, player_id)
+  values (p_room_id, p_kind, winner.id);
+
+  result := jsonb_build_object(
+    'kind', p_kind,
+    'player', jsonb_build_object(
+      'id', winner.id,
+      'name', winner.display_name,
+      'table_no', winner.table_no,
+      'seat_no', winner.seat_no
+    )
+  );
+
+  insert into room_snapshots(room_id, lottery_result, updated_at)
+  values (p_room_id, result, now())
+  on conflict (room_id)
+  do update set lottery_result = excluded.lottery_result, updated_at = now();
+
+  insert into admin_audit_logs(room_id, actor, action, payload, created_at)
+  values (p_room_id, 'server', 'lottery:draw', result, now());
+
+  return result;
+end;
+$$;
+
+create or replace function reveal_quiz(p_room_id uuid, p_quiz_id uuid, p_points integer default 10)
+returns jsonb
+language plpgsql
+as $$
+declare
+  quiz_data quizzes%rowtype;
+  answer record;
+  per_choice integer[] := array[0,0,0,0];
+  awarded jsonb := '[]'::jsonb;
+  result jsonb;
+begin
+  select * into quiz_data from quizzes where id = p_quiz_id and room_id = p_room_id;
+  if quiz_data is null then
+    raise exception 'Quiz % not found', p_quiz_id;
+  end if;
+
+  if exists (select 1 from awarded_quizzes where quiz_id = p_quiz_id) then
+    raise exception 'Quiz already revealed';
+  end if;
+
+  for answer in
+    select player_id, choice_index from answers where quiz_id = p_quiz_id
+  loop
+    per_choice[answer.choice_index + 1] := per_choice[answer.choice_index + 1] + 1;
+    if answer.choice_index = quiz_data.answer_index then
+      insert into scores(room_id, player_id, total_points, last_update_at)
+      values (p_room_id, answer.player_id, p_points, now())
+      on conflict (room_id, player_id)
+      do update set total_points = scores.total_points + p_points, last_update_at = now();
+
+      awarded := awarded || jsonb_build_object('playerId', answer.player_id, 'delta', p_points);
+    end if;
+  end loop;
+
+  insert into awarded_quizzes(quiz_id, room_id, awarded_at)
+  values (p_quiz_id, p_room_id, now());
+
+  perform refresh_room_leaderboard(p_room_id);
+
+  result := jsonb_build_object(
+    'quizId', p_quiz_id,
+    'correctIndex', quiz_data.answer_index,
+    'perChoiceCounts', per_choice,
+    'awarded', awarded
+  );
+
+  insert into room_snapshots(room_id, quiz_result, updated_at)
+  values (p_room_id, result, now())
+  on conflict (room_id)
+  do update set quiz_result = excluded.quiz_result, updated_at = now();
+
+  insert into admin_audit_logs(room_id, actor, action, payload, created_at)
+  values (p_room_id, 'server', 'quiz:reveal', result, now());
+
+  return result;
+end;
+$$;
