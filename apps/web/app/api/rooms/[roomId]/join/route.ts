@@ -74,14 +74,23 @@ export async function POST(request: Request, { params }: { params: { roomId: str
   } catch (error: any) {
     console.error('Join API error:', error);
     console.error('Full error details:', JSON.stringify(error, null, 2));
+    console.error('Error stack:', error?.stack);
+    console.error('Error name:', error?.name);
+    console.error('Error message:', error?.message);
+    console.error('Error code:', error?.code);
+    console.error('Error details:', error?.details);
+    console.error('Error hint:', error?.hint);
 
     // Extract error information from various error types
     let errorMessage = 'Failed to join room';
     let errorDetails = null;
     let errorCode = null;
+    let errorHint = null;
+    let errorStack = null;
 
     if (error instanceof Error) {
       errorMessage = error.message;
+      errorStack = error.stack;
 
       // Check for Supabase error format
       if ('code' in error) {
@@ -90,10 +99,14 @@ export async function POST(request: Request, { params }: { params: { roomId: str
       if ('details' in error) {
         errorDetails = error.details;
       }
+      if ('hint' in error) {
+        errorHint = (error as any).hint;
+      }
     } else if (typeof error === 'object' && error !== null) {
       errorMessage = error.message || JSON.stringify(error);
       errorCode = error.code || null;
       errorDetails = error.details || error;
+      errorHint = error.hint || null;
     }
 
     return NextResponse.json(
@@ -101,6 +114,8 @@ export async function POST(request: Request, { params }: { params: { roomId: str
         error: errorMessage,
         details: errorDetails,
         code: errorCode,
+        hint: errorHint,
+        stack: process.env.NODE_ENV === 'development' ? errorStack : undefined,
         timestamp: new Date().toISOString()
       },
       { status: 500 }
