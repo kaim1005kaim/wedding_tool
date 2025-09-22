@@ -125,14 +125,14 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
     }
   };
 
-  const send = async (event: Parameters<typeof client.emit>[0]) => {
+  const send = async (event: Parameters<typeof client.emit>[0], overrideBody?: Record<string, unknown>) => {
     try {
       if (isCloudMode) {
         if (!adminToken) {
           throw new Error('管理トークンがありません。再ログインしてください');
         }
         const url = resolveAdminEndpoint(roomId, event);
-        const payload = buildPayload(event.type, event.payload ?? {});
+        const payload = overrideBody ?? buildPayload(event.type, event.payload ?? {});
         const hasBody = Object.keys(payload).length > 0;
         const response = await fetch(url, {
           method: 'POST',
@@ -207,7 +207,7 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
       confirmLabel: '公開する',
       variant: 'danger',
       onConfirm: () => {
-        void send({ type: 'quiz:reveal', payload: { quizId: activeQuiz.quizId } });
+        void send({ type: 'quiz:reveal', payload: undefined }, { quizId: activeQuiz.quizId });
       }
     });
   };
