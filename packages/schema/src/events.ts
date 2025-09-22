@@ -27,7 +27,7 @@ export const modeSwitchEventSchema = z.object({
 });
 
 export const lotteryDrawEventSchema = z.object({
-  kind: z.enum(['escort', 'cake_groom', 'cake_bride'])
+  kind: z.enum(['all', 'groom_friends', 'bride_friends'])
 });
 
 export const quizShowBroadcastSchema = z.object({

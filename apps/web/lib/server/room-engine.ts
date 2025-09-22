@@ -3,7 +3,7 @@ import { appendAuditLog, ensureRoomSnapshot, updateSnapshotLeaderboard } from '@
 
 type SupabaseRow<T> = T extends { data: infer U } ? U : never;
 
-const DEFAULT_COUNTDOWN_MS = 30_000;
+const DEFAULT_COUNTDOWN_MS = 10_000;
 
 export async function switchRoomMode(roomId: string, to: 'countup' | 'quiz' | 'lottery' | 'idle') {
   const client = getSupabaseServiceRoleClient();

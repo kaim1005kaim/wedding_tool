@@ -43,3 +43,21 @@ body {
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.65), rgba(255, 255, 255, 0.5));
   backdrop-filter: saturate(120%) blur(8px);
 }
+
+@keyframes sparkle-pop {
+  0% {
+    transform: scale(0.6) translateY(0);
+    opacity: 0.9;
+  }
+  60% {
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1.4) translateY(-40px);
+    opacity: 0;
+  }
+}
+
+.sparkle-pop {
+  animation: sparkle-pop 0.6s ease-out forwards;
+}

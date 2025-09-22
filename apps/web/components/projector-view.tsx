@@ -28,11 +28,15 @@ export default function ProjectorView({ roomId }: { roomId: string }) {
   }, [lotteryResult?.player?.id]);
 
   return (
-    <main className="relative min-h-screen overflow-hidden bg-ecru text-ink">
-      <div className="absolute inset-0 pointer-events-none bg-gradient-to-br from-brand-blue-50 via-transparent to-brand-terra-50" />
-      <div className="relative mx-auto flex min-h-screen w-full max-w-6xl flex-col gap-10 px-8 py-12">
-        <Header mode={mode} countdownMs={countdownMs} roomId={roomId} />
-        <AnimatePresence mode="wait">{renderSection(mode, topTen, activeQuiz, quizResult, lotteryResult, isSpinning, lotteryKey)}</AnimatePresence>
+    <main className="flex min-h-screen items-center justify-center bg-ecru px-4 py-6 text-ink">
+      <div className="relative aspect-video w-full max-w-6xl overflow-hidden rounded-[2rem] shadow-brand">
+        <div className="absolute inset-0 pointer-events-none bg-gradient-to-br from-brand-blue-50 via-transparent to-brand-terra-50" />
+        <div className="relative flex h-full flex-col gap-6 px-10 py-8">
+          <Header mode={mode} countdownMs={countdownMs} roomId={roomId} />
+          <div className="flex-1 overflow-hidden">
+            <AnimatePresence mode="wait">{renderSection(mode, topTen, activeQuiz, quizResult, lotteryResult, isSpinning, lotteryKey)}</AnimatePresence>
+          </div>
+        </div>
       </div>
     </main>
   );
@@ -96,12 +100,12 @@ function CountupBoard({ entries }: { entries: LeaderboardEntry[] }) {
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -30 }}
       transition={{ duration: 0.5, ease: 'easeOut' }}
-      className="grid gap-6 lg:grid-cols-2"
+      className="grid h-full gap-5 lg:grid-cols-2"
     >
       {columns.map((column, colIndex) => (
-        <div key={colIndex} className="glass-panel rounded-2xl p-6 shadow-brand">
+        <div key={colIndex} className="glass-panel flex flex-col rounded-2xl p-6 shadow-brand">
           <h2 className="text-xl font-semibold text-brand-blue-700">タップスコア</h2>
-          <div className="mt-4 space-y-3">
+          <div className="mt-4 flex-1 space-y-3 overflow-hidden">
             <AnimatePresence initial={false}>
               {column.map((entry) => (
                 <motion.div
@@ -168,7 +172,7 @@ function QuizBoard({ activeQuiz, quizResult }: QuizPanelProps) {
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -30 }}
       transition={{ duration: 0.5, ease: 'easeOut' }}
-      className="glass-panel grid gap-6 rounded-2xl p-6 shadow-brand lg:grid-cols-2"
+      className="glass-panel grid h-full gap-6 rounded-2xl p-6 shadow-brand lg:grid-cols-2"
     >
       <div className="space-y-4">
         <h2 className="text-xl font-semibold text-brand-blue-700">クイズ</h2>
@@ -224,7 +228,6 @@ function QuizBoard({ activeQuiz, quizResult }: QuizPanelProps) {
 type LotteryPanelProps = {
   lotteryResult: RoomStoreState['lotteryResult'];
   isSpinning: boolean;
-  lotteryKey: number;
 };
 
 function LotteryBoard({ lotteryResult, isSpinning }: LotteryPanelProps) {
@@ -234,7 +237,7 @@ function LotteryBoard({ lotteryResult, isSpinning }: LotteryPanelProps) {
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.95 }}
       transition={{ duration: 0.5, ease: 'easeOut' }}
-      className="glass-panel flex flex-col items-center justify-center gap-6 rounded-2xl px-6 py-12 text-center shadow-brand"
+      className="glass-panel flex h-full flex-col items-center justify-center gap-6 rounded-2xl px-6 py-12 text-center shadow-brand"
     >
       <span className="text-sm uppercase tracking-[0.35em] text-brand-blue-700/70">Lottery</span>
       {lotteryResult ? (

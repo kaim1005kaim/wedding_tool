@@ -212,7 +212,7 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
     });
   };
 
-  const handleLottery = (kind: 'escort' | 'cake_groom' | 'cake_bride') => {
+  const handleLottery = (kind: 'all' | 'groom_friends' | 'bride_friends') => {
     openConfirm({
       title: '抽選を実行しますか？',
       description: '抽選はやり直しできません。',
@@ -284,13 +284,13 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
             </div>
           </AdminCard>
 
-          <AdminCard title="ゲーム制御" description="計測の開始と終了" icon={Play}>
+          <AdminCard title="ゲーム制御" description="タップチャレンジは開始後10秒で自動終了します" icon={Play}>
             <div className="grid gap-3 sm:grid-cols-2">
               <AdminButton icon={Play} onClick={() => send({ type: 'game:start', payload: undefined })}>
-                開始
+                スタート (10秒)
               </AdminButton>
               <AdminButton variant="secondary" icon={Square} onClick={() => send({ type: 'game:stop', payload: undefined })}>
-                終了
+                緊急停止
               </AdminButton>
             </div>
           </AdminCard>
@@ -309,16 +309,16 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
             )}
           </AdminCard>
 
-          <AdminCard title="抽選" description="各演出の抽選を実行" icon={Dice1}>
+          <AdminCard title="抽選" description="候補リストからランダムに選出します" icon={Dice1}>
             <div className="grid gap-3 sm:grid-cols-3">
-              <AdminButton variant="secondary" icon={Dice1} onClick={() => handleLottery('escort')}>
-                エスコート
+              <AdminButton variant="secondary" icon={Dice1} onClick={() => handleLottery('all')}>
+                全員対象
               </AdminButton>
-              <AdminButton variant="secondary" icon={Dice2} onClick={() => handleLottery('cake_groom')}>
-                ケーキ（新郎）
+              <AdminButton variant="secondary" icon={Dice2} onClick={() => handleLottery('groom_friends')}>
+                新郎友人
               </AdminButton>
-              <AdminButton variant="secondary" icon={Dice3} onClick={() => handleLottery('cake_bride')}>
-                ケーキ（新婦）
+              <AdminButton variant="secondary" icon={Dice3} onClick={() => handleLottery('bride_friends')}>
+                新婦友人
               </AdminButton>
             </div>
           </AdminCard>
@@ -452,7 +452,7 @@ function LotteryList({
       {entries.map((entry, index) => (
         <li key={`${entry.kind}-${index}`} className="rounded-xl bg-brand-terra-50 p-4 shadow-brand">
           <div className="flex items-center justify-between">
-            <span className="font-semibold text-brand-terra-600">{entry.kind}</span>
+            <span className="font-semibold text-brand-terra-600">{lotteryKindLabel(entry.kind)}</span>
             <span className="text-xs text-brand-blue-700/60">{new Date(entry.created_at).toLocaleString()}</span>
           </div>
           <p className="mt-2 text-lg font-semibold text-ink">{entry.players?.display_name ?? '未登録'}</p>
@@ -460,6 +460,19 @@ function LotteryList({
       ))}
     </ul>
   );
+}
+
+function lotteryKindLabel(kind: string) {
+  switch (kind) {
+    case 'all':
+      return '全員対象';
+    case 'groom_friends':
+      return '新郎友人';
+    case 'bride_friends':
+      return '新婦友人';
+    default:
+      return kind;
+  }
 }
 
 function ConfirmDialog({ state, onClose }: { state: ConfirmState | null; onClose: () => void }) {

@@ -373,6 +373,7 @@ function CountupOverlay({ mode, phase, countdownMs, leaderboard, onTap }: Countu
   const [localCountdown, setLocalCountdown] = useState<number | null>(null);
   const [flash, setFlash] = useState(false);
   const [showResults, setShowResults] = useState(false);
+  const [sparkles, setSparkles] = useState<Array<{ id: string; left: number; top: number }>>([]);
   const prevPhaseRef = useRef<typeof phase>();
 
   useEffect(() => {
@@ -413,6 +414,7 @@ function CountupOverlay({ mode, phase, countdownMs, leaderboard, onTap }: Countu
   }
 
   const disabled = phase !== 'running' || localCountdown !== null;
+  const remainingSeconds = Math.max(0, Math.ceil(countdownMs / 1000));
 
   const handleTap = () => {
     if (disabled) return;
@@ -420,6 +422,17 @@ function CountupOverlay({ mode, phase, countdownMs, leaderboard, onTap }: Countu
     setFlash(true);
     window.setTimeout(() => setFlash(false), 150);
     void onTap();
+
+    const sparkleId = typeof crypto !== 'undefined' && 'randomUUID' in crypto ? crypto.randomUUID() : Math.random().toString(36).slice(2);
+    const sparkle = {
+      id: sparkleId,
+      left: 30 + Math.random() * 40,
+      top: 40 + Math.random() * 20
+    };
+    setSparkles((prev) => [...prev, sparkle]);
+    window.setTimeout(() => {
+      setSparkles((prev) => prev.filter((item) => item.id !== sparkle.id));
+    }, 600);
   };
 
   const topThree = leaderboard.slice(0, 3);
@@ -434,18 +447,30 @@ function CountupOverlay({ mode, phase, countdownMs, leaderboard, onTap }: Countu
           disabled={disabled}
           className="fixed inset-0 z-30 flex select-none items-center justify-center bg-brand-blue-50 transition active:bg-brand-blue-200 disabled:cursor-not-allowed disabled:opacity-60"
         >
-          {localCountdown !== null ? (
-            <span className="text-6xl font-serif font-semibold text-brand-blue-700 drop-shadow">{localCountdown}</span>
-          ) : phase === 'running' ? (
-            <span className="text-5xl font-semibold text-brand-blue-700 drop-shadow">TAP!</span>
-          ) : (
-            <span className="text-3xl font-semibold text-brand-blue-700">開始を待っています</span>
-          )}
-          {flash && (
-            <span className="pointer-events-none absolute inset-x-0 top-1/4 text-center text-4xl font-bold text-brand-terra-600 opacity-90 animate-ping">
-              +1
-            </span>
-          )}
+        <div className="pointer-events-none absolute top-16 text-5xl font-semibold text-brand-blue-700 drop-shadow">
+          {phase === 'running' ? remainingSeconds : ''}
+        </div>
+        {localCountdown !== null ? (
+          <span className="text-6xl font-serif font-semibold text-brand-blue-700 drop-shadow">{localCountdown}</span>
+        ) : phase === 'running' ? (
+          <span className="text-5xl font-semibold text-brand-blue-700 drop-shadow">TAP!</span>
+        ) : (
+          <span className="text-3xl font-semibold text-brand-blue-700">開始を待っています</span>
+        )}
+        {flash && (
+          <span className="pointer-events-none absolute inset-x-0 top-1/4 text-center text-4xl font-bold text-brand-terra-600 opacity-90 animate-ping">
+            +1
+          </span>
+        )}
+        {sparkles.map((sparkle) => (
+          <span
+            key={sparkle.id}
+            className="pointer-events-none absolute text-3xl text-brand-terra-600 sparkle-pop"
+            style={{ left: `${sparkle.left}%`, top: `${sparkle.top}%` }}
+          >
+            ✨
+          </span>
+        ))}
         </button>
       )}
       {showResults && topThree.length > 0 && (

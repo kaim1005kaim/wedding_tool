@@ -54,7 +54,7 @@ export const roomSnapshotSchema = z.object({
     .optional(),
   lottery_result: z
     .object({
-      kind: z.enum(['escort', 'cake_groom', 'cake_bride']),
+      kind: z.enum(['all', 'groom_friends', 'bride_friends']),
       player: z
         .object({
           id: z.string().uuid(),
