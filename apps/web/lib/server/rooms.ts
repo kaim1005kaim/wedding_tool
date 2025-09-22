@@ -80,11 +80,17 @@ export async function upsertPlayerSession(session: Omit<PlayerSession, 'id' | 'c
   const client = getSupabaseServiceRoleClient();
   const { error } = await client
     .from('player_sessions')
-    .upsert({
-      room_id: session.room_id,
-      player_id: session.player_id,
-      device_fingerprint: session.device_fingerprint ?? null
-    });
+    .upsert(
+      {
+        room_id: session.room_id,
+        player_id: session.player_id,
+        device_fingerprint: session.device_fingerprint ?? null
+      },
+      {
+        onConflict: 'room_id,player_id',
+        ignoreDuplicates: false
+      }
+    );
 
   if (error) {
     throw error;
