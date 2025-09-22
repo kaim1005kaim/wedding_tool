@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useRealtimeClient } from '../lib/realtime-context';
 import { useRoomStore } from '../lib/store/room-store';
 import { appConfig } from '../lib/env';
@@ -8,6 +8,9 @@ import { Section, PrimaryButton } from './brand';
 import type { LeaderboardEntry, RoomView } from '../lib/store/room-store';
 
 type ConnectionStatus = 'good' | 'warn' | 'bad';
+
+const START_BANNER_DURATION_MS = 800;
+const STOP_BANNER_DURATION_MS = 1000;
 
 export default function JoinRoom({ code }: { code: string }) {
   const [lastName, setLastName] = useState('');
@@ -28,7 +31,6 @@ export default function JoinRoom({ code }: { code: string }) {
   const runtimeRoomId = useRoomStore((state) => state.roomId);
   const phase = useRoomStore((state) => state.phase);
   const countdownMs = useRoomStore((state) => state.countdownMs);
-  const serverTime = useRoomStore((state) => state.serverTime);
 
   const isCloudMode = appConfig.mode === 'cloud';
 
@@ -282,7 +284,6 @@ export default function JoinRoom({ code }: { code: string }) {
           mode={mode}
           phase={phase}
           countdownMs={countdownMs}
-          serverTime={serverTime}
           leaderboard={leaderboard}
           onTap={handleTap}
         />
@@ -372,61 +373,113 @@ type CountupOverlayProps = {
   mode: RoomView;
   phase: 'idle' | 'running' | 'ended';
   countdownMs: number;
-  serverTime: number;
   leaderboard: LeaderboardEntry[];
   onTap: () => Promise<void> | void;
 };
 
-function CountupOverlay({ mode, phase, countdownMs, serverTime, leaderboard, onTap }: CountupOverlayProps) {
+function CountupOverlay({ mode, phase, countdownMs, leaderboard, onTap }: CountupOverlayProps) {
   const [localCountdown, setLocalCountdown] = useState<number | null>(null);
   const [flash, setFlash] = useState(false);
   const [showResults, setShowResults] = useState(false);
   const [sparkles, setSparkles] = useState<Array<{ id: string; left: number; top: number }>>([]);
   const [phaseEndTime, setPhaseEndTime] = useState<number | null>(null);
   const [timeLeftSeconds, setTimeLeftSeconds] = useState<number | null>(null);
-  const [isActive, setIsActive] = useState(false);
+  const [isTimerRunning, setIsTimerRunning] = useState(false);
   const [isFinished, setIsFinished] = useState(false);
+  const [banner, setBanner] = useState<'start' | 'stop' | null>(null);
   const prevPhaseRef = useRef<typeof phase>();
+  const startDelayRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const stopDelayRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const finishTriggeredRef = useRef(false);
+
+  const clearStartDelay = useCallback(() => {
+    if (startDelayRef.current !== null) {
+      clearTimeout(startDelayRef.current);
+      startDelayRef.current = null;
+    }
+  }, []);
+
+  const clearStopDelay = useCallback(() => {
+    if (stopDelayRef.current !== null) {
+      clearTimeout(stopDelayRef.current);
+      stopDelayRef.current = null;
+    }
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      clearStartDelay();
+      clearStopDelay();
+    };
+  }, [clearStartDelay, clearStopDelay]);
+
+  const triggerFinish = useCallback(() => {
+    if (finishTriggeredRef.current) {
+      return;
+    }
+    finishTriggeredRef.current = true;
+    clearStartDelay();
+    setIsTimerRunning(false);
+    setIsFinished(true);
+    setPhaseEndTime(null);
+    setTimeLeftSeconds(0);
+    setBanner('stop');
+    clearStopDelay();
+    stopDelayRef.current = setTimeout(() => {
+      setShowResults(true);
+      setBanner(null);
+      stopDelayRef.current = null;
+    }, STOP_BANNER_DURATION_MS);
+  }, [clearStartDelay, clearStopDelay]);
 
   useEffect(() => {
     const prev = prevPhaseRef.current;
     if (mode !== 'countup') {
+      clearStartDelay();
+      clearStopDelay();
+      finishTriggeredRef.current = false;
       setLocalCountdown(null);
       setPhaseEndTime(null);
       setTimeLeftSeconds(null);
-      setIsActive(false);
+      setIsTimerRunning(false);
       setIsFinished(false);
+      setBanner(null);
       setShowResults(false);
       prevPhaseRef.current = phase;
       return;
     }
 
     if (phase === 'running' && prev !== 'running') {
+      clearStartDelay();
+      clearStopDelay();
+      finishTriggeredRef.current = false;
       setLocalCountdown(3);
       setPhaseEndTime(null);
       setTimeLeftSeconds(null);
-      setIsActive(false);
+      setIsTimerRunning(false);
       setIsFinished(false);
+      setBanner(null);
       setShowResults(false);
     }
 
     if (phase === 'ended' && prev !== 'ended') {
-      setShowResults(true);
-      setIsActive(false);
-      setIsFinished(true);
-      setPhaseEndTime(null);
-      setTimeLeftSeconds(null);
+      triggerFinish();
     }
 
     if (phase === 'idle' && prev !== 'idle') {
-      setIsActive(false);
+      clearStartDelay();
+      clearStopDelay();
+      finishTriggeredRef.current = false;
+      setIsTimerRunning(false);
       setIsFinished(false);
+      setBanner(null);
       setPhaseEndTime(null);
       setTimeLeftSeconds(null);
+      setShowResults(false);
     }
 
     prevPhaseRef.current = phase;
-  }, [mode, phase]);
+  }, [mode, phase, clearStartDelay, clearStopDelay, triggerFinish]);
 
   useEffect(() => {
     if (localCountdown === null) return;
@@ -445,67 +498,63 @@ function CountupOverlay({ mode, phase, countdownMs, serverTime, leaderboard, onT
     if (phase !== 'running') return;
     if (localCountdown !== null) return;
     if (isFinished) return;
+    if (isTimerRunning) return;
+
+    setBanner('start');
+    clearStartDelay();
+    startDelayRef.current = setTimeout(() => {
+      setBanner(null);
+      setIsTimerRunning(true);
+      startDelayRef.current = null;
+    }, START_BANNER_DURATION_MS);
+  }, [mode, phase, localCountdown, isFinished, isTimerRunning, clearStartDelay]);
+
+  useEffect(() => {
+    if (!isTimerRunning || mode !== 'countup' || phase !== 'running') {
+      return;
+    }
 
     if (countdownMs <= 0) {
-      setIsActive(false);
-      setIsFinished(true);
-      setShowResults(true);
-      setPhaseEndTime(null);
-      setTimeLeftSeconds(0);
+      triggerFinish();
       return;
     }
 
     const now = Date.now();
-    const drift = serverTime > 0 ? now - serverTime : 0;
-    const adjustedMs = Math.max(0, countdownMs - drift);
-    if (adjustedMs <= 0) {
-      setIsActive(false);
-      setIsFinished(true);
-      setShowResults(true);
-      setPhaseEndTime(null);
-      setTimeLeftSeconds(0);
-      return;
-    }
-
-    const target = now + adjustedMs;
+    const target = now + countdownMs;
     setPhaseEndTime((previous) => {
-      if (previous && Math.abs(previous - target) < 200) {
-        return previous;
+      if (!previous) {
+        return target;
       }
-      return target;
+      return target < previous ? target : previous;
     });
-    setTimeLeftSeconds(Math.ceil(adjustedMs / 1000));
-    setIsActive(true);
-  }, [mode, phase, localCountdown, countdownMs, serverTime, isFinished]);
+    setTimeLeftSeconds(Math.max(0, Math.ceil(countdownMs / 1000)));
+  }, [isTimerRunning, mode, phase, countdownMs, triggerFinish]);
 
   useEffect(() => {
     if (mode !== 'countup') return;
-    if (!phaseEndTime || !isActive || phase !== 'running') return;
+    if (!phaseEndTime || !isTimerRunning || phase !== 'running') return;
 
     const tick = () => {
       const remainingMs = phaseEndTime - Date.now();
-      const seconds = Math.max(0, Math.ceil(remainingMs / 1000));
-      setTimeLeftSeconds(seconds);
       if (remainingMs <= 0) {
-        setIsActive(false);
-        setIsFinished(true);
-        setShowResults(true);
-        setPhaseEndTime(null);
+        triggerFinish();
+        return;
       }
+      setTimeLeftSeconds(Math.max(0, Math.ceil(remainingMs / 1000)));
     };
 
     tick();
-    const id = window.setInterval(tick, 100);
-    return () => window.clearInterval(id);
-  }, [mode, phase, phaseEndTime, isActive]);
+    const id = setInterval(tick, 100);
+    return () => clearInterval(id);
+  }, [mode, phase, phaseEndTime, isTimerRunning, triggerFinish]);
 
   if (mode !== 'countup') {
     return null;
   }
 
-  const disabled = phase !== 'running' || localCountdown !== null || !isActive;
-  const showPad = phase === 'running' && (localCountdown !== null || !isFinished);
-  const displaySeconds = isActive && timeLeftSeconds !== null ? timeLeftSeconds : '';
+  const disabled = phase !== 'running' || localCountdown !== null || !isTimerRunning || banner === 'stop';
+  const showPad = !showResults && (phase === 'running' || banner === 'stop');
+  const displaySeconds = isTimerRunning && banner !== 'stop' && timeLeftSeconds !== null ? timeLeftSeconds : '';
 
   const handleTap = () => {
     if (disabled) return;
@@ -540,11 +589,19 @@ function CountupOverlay({ mode, phase, countdownMs, serverTime, leaderboard, onT
         <div className="pointer-events-none absolute top-12 text-[min(14vw,6rem)] font-semibold text-brand-blue-700 drop-shadow">
           {displaySeconds}
         </div>
-        {localCountdown !== null ? (
+        {banner === 'start' ? (
+          <span className="text-[min(26vw,12rem)] font-semibold uppercase tracking-widest text-brand-terra-600 drop-shadow">
+            START!
+          </span>
+        ) : banner === 'stop' ? (
+          <span className="text-[min(26vw,12rem)] font-semibold uppercase tracking-widest text-brand-terra-600 drop-shadow">
+            STOP!
+          </span>
+        ) : localCountdown !== null ? (
           <span className="text-[min(40vw,18rem)] font-serif font-semibold leading-none text-brand-blue-700 drop-shadow">
             {localCountdown}
           </span>
-        ) : isActive ? (
+        ) : isTimerRunning ? (
           <span className="text-[min(18vw,7rem)] font-semibold text-brand-blue-700 drop-shadow">TAP!</span>
         ) : (
           <span className="text-3xl font-semibold text-brand-blue-700">開始を待っています</span>
