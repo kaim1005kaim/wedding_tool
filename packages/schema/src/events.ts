@@ -23,7 +23,7 @@ export const helloEventSchema = z.object({
 });
 
 export const modeSwitchEventSchema = z.object({
-  to: z.enum(['countup', 'quiz', 'lottery'])
+  to: z.enum(['idle', 'countup', 'quiz', 'lottery'])
 });
 
 export const lotteryDrawEventSchema = z.object({
