@@ -48,7 +48,8 @@ cp .env.example .env
 # Apply all SQL migrations (includes realtime publication setup)
 pnpm migrate
 
-# Optionally seed demo data (room TEST, PIN 1234)
+# Optionally seed demo data (configure 
+# `SEED_ROOM_CODE`/`SEED_ADMIN_PIN` to match your environment)
 pnpm seed
 
 # Start Next.js in cloud mode
@@ -57,8 +58,8 @@ pnpm dev
 
 ### Cloud Workflow Highlights
 
-- Access admin console: open `http://localhost:3000/admin`, enter a room code (e.g. `TEST`), then log in with the room PIN.
-- Player join screen: `http://localhost:3000/join/TEST` – players enter name/table/seat and receive an auth token tied to the Supabase room ID.
+- Access admin console: open `http://localhost:3000/admin`,入力したいルームコードを指定してログインします。
+- Player join screen: `http://localhost:3000/join/<ルームコード>` – 参加者は姓・名を入力してモバイルから参加します。
 - Real-time updates: `supabase/migrations/002_enable_realtime.sql` ensures `room_snapshots` changes broadcast via Supabase Realtime, so mode switches, quizzes, etc. propagate instantly to connected clients.
 
 ### LAN fallback mode

@@ -121,15 +121,6 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
     void loadLogs();
   }, [loadLogs]);
 
-  useEffect(() => {
-    if (!manageOpen || !isCloudMode) return;
-    if (manageTab === 'quiz') {
-      void fetchQuizzes();
-    } else {
-      void fetchLotteryCandidates();
-    }
-  }, [manageOpen, manageTab, isCloudMode, fetchQuizzes, fetchLotteryCandidates]);
-
   const handleUnlock = async () => {
     if (pin.trim().length === 0) {
       setError('PINを入力してください');
@@ -271,6 +262,15 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
       console.error(err);
     }
   }, [adminToken, isCloudMode, roomId]);
+
+  useEffect(() => {
+    if (!manageOpen || !isCloudMode) return;
+    if (manageTab === 'quiz') {
+      void fetchQuizzes();
+    } else {
+      void fetchLotteryCandidates();
+    }
+  }, [manageOpen, manageTab, isCloudMode, fetchQuizzes, fetchLotteryCandidates]);
 
   const openManagement = () => {
     if (isCloudMode && !adminToken) {

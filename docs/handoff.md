@@ -8,7 +8,7 @@
   - Player routes for join/tap/quiz-answer with rate limiting and delta clamping.
 - Updated realtime client / Zustand store so UI relies solely on `room_snapshots` (cloud vs. LAN is switched automatically).
 - Built cloud-ready admin & join screens: JWT login, audit/lottery panels, REST fallbacks; LAN mode still uses Socket.IO.
-- Completed `infra/supabase/seed.mjs` to provision a TEST room, PIN, demo players/quizzes, and initial snapshots.
+- Completed `infra/supabase/seed.mjs` to provision a demo room (configurable via env vars) with sample PIN, players, quizzes, and initial snapshots.
 - Introduced minimal Sentry setup (client & server configs, `next.config.mjs` integration) – enable via `NEXT_PUBLIC_SENTRY_DSN`.
 - Verified `pnpm -C apps/web build` succeeds after changes.
 
@@ -32,7 +32,8 @@
    ```bash
    pnpm install
    pnpm migrate
-   pnpm seed # creates TEST room, PIN=1234, demo data
+   # Optional: set SEED_ROOM_CODE / SEED_ADMIN_PIN before seeding
+   pnpm seed
    ```
 2. **Run locally (cloud mode)**
    - Provide Supabase env vars + `APP_JWT_SECRET` in `.env`.
