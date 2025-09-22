@@ -1,12 +1,14 @@
 import type { ButtonHTMLAttributes, PropsWithChildren } from 'react';
 
-export function Section({ title, subtitle, children }: PropsWithChildren<{ title: string; subtitle?: string }>) {
+export function Section({ title, subtitle, children }: PropsWithChildren<{ title?: string; subtitle?: string }>) {
   return (
-    <section className="mx-auto w-full max-w-3xl p-6">
-      <div className="glass-panel rounded-2xl shadow-brand p-6 mb-4">
-        <h1 className="text-2xl font-semibold tracking-wide">{title}</h1>
-        {subtitle ? <p className="text-sm mt-1 text-brand-blue-700/80">{subtitle}</p> : null}
-      </div>
+    <section className="mx-auto w-full max-w-3xl px-6 py-4">
+      {(title || subtitle) && (
+        <div className="glass-panel mb-6 rounded-2xl p-6 text-center shadow-brand">
+          {title ? <h1 className="text-3xl font-semibold tracking-wide text-brand-blue-700">{title}</h1> : null}
+          {subtitle ? <p className="mt-2 text-sm text-brand-blue-700/80">{subtitle}</p> : null}
+        </div>
+      )}
       {children}
     </section>
   );

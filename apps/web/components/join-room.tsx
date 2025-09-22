@@ -210,7 +210,7 @@ export default function JoinRoom({ code }: { code: string }) {
 
   return (
     <main className="min-h-screen px-6 py-10">
-      <Section title="参加登録">
+      <Section>
         <div className="mb-4 flex items-center justify-between rounded-xl bg-brand-blue-50/60 px-4 py-2 text-sm">
           <div className="flex items-center gap-2">
             <span className={`h-3 w-3 rounded-full ${connectionConfig[connection].dot}`} aria-hidden="true" />

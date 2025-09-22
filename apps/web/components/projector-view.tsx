@@ -54,8 +54,7 @@ function Header({ mode, countdownMs }: { mode: string; countdownMs: number }) {
     >
       <div className="flex flex-col gap-4 text-center text-brand-blue-700/80 md:flex-row md:items-center md:justify-between md:text-left">
         <div className="space-y-2">
-          <p className="text-sm uppercase tracking-[0.4em]">Wedding Party Game</p>
-          <h1 className="text-5xl font-serif text-brand-terra-600 leading-tight">Let&apos;s Celebrate!</h1>
+          <p className="text-6xl font-serif font-semibold tracking-wide text-brand-terra-600 md:text-7xl">Wedding Party Game</p>
         </div>
         <div className="flex flex-col items-center gap-3 text-sm md:items-end">
           <div className="text-center md:text-right">
