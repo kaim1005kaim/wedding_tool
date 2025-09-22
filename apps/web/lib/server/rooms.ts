@@ -56,7 +56,8 @@ export async function upsertPlayer({
       room_id: roomId,
       display_name: displayName,
       table_no: tableNo ?? null,
-      seat_no: seatNo ?? null
+      seat_no: seatNo ?? null,
+      group_tag: 'all'
     })
     .select()
     .single();
