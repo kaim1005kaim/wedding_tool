@@ -260,7 +260,8 @@ function LotteryBoard({ lotteryResult, isSpinning, leaderboard }: LotteryPanelPr
   }, [clearTimers]);
 
   useEffect(() => {
-    const winnerId = lotteryResult?.player?.id ?? null;
+    const currentResult = lotteryResult;
+    const winnerId = currentResult?.player?.id ?? null;
     if (!winnerId || winnerId === prevWinnerRef.current) {
       return;
     }
@@ -271,7 +272,7 @@ function LotteryBoard({ lotteryResult, isSpinning, leaderboard }: LotteryPanelPr
     setDisplayName(null);
     setDisplayKind(null);
 
-    const finalName = lotteryResult.player.name;
+    const finalName = currentResult.player.name;
     const candidatePool = Array.from(
       new Set(
         leaderboard
@@ -299,7 +300,7 @@ function LotteryBoard({ lotteryResult, isSpinning, leaderboard }: LotteryPanelPr
     let step = 0;
 
     setIsRevealing(true);
-    setDisplayKind(labelForLotteryKind(lotteryResult.kind));
+    setDisplayKind(labelForLotteryKind(currentResult.kind));
 
     const runStep = () => {
       const name = sequence[step];
