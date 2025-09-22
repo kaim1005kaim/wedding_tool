@@ -15,7 +15,7 @@ const requestSchema = z.object({
   displayName: z.string().min(1).max(32),
   tableNo: z.string().max(8).optional().nullable(),
   seatNo: z.string().max(8).optional().nullable(),
-  deviceFingerprint: z.string().max(128).optional()
+  deviceFingerprint: z.string().max(256).optional() // Increased limit for safety
 });
 
 export async function POST(request: Request, { params }: { params: { roomId: string } }) {

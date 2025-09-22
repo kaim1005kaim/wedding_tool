@@ -53,10 +53,12 @@ export default function JoinRoom({ code }: { code: string }) {
     if (typeof window === 'undefined') return undefined;
     let fingerprint = window.localStorage.getItem(fingerprintKey);
     if (!fingerprint) {
-      fingerprint = `${navigator.userAgent}-${crypto.randomUUID()}`;
+      // Use only UUID to ensure it fits in 128 chars
+      fingerprint = crypto.randomUUID();
       window.localStorage.setItem(fingerprintKey, fingerprint);
     }
-    return fingerprint;
+    // Ensure it's not too long (max 128 chars)
+    return fingerprint.substring(0, 128);
   };
 
   const handleJoin = async () => {
