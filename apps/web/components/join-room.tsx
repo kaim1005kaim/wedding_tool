@@ -1,24 +1,25 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { Button } from '@wedding_tool/ui';
 import { useRealtimeClient } from '../lib/realtime-context';
 import { useRoomStore } from '../lib/store/room-store';
 import { appConfig } from '../lib/env';
+import { Section, PrimaryButton } from './brand';
 
 export default function JoinRoom({ code }: { code: string }) {
   const [name, setName] = useState('');
-  const [tableNo, setTableNo] = useState('');
-  const [seatNo, setSeatNo] = useState('');
   const [registered, setRegistered] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [roomId, setRoomId] = useState<string | null>(null);
+  const [displayName, setDisplayName] = useState('');
+  const [connection, setConnection] = useState<'good' | 'warn' | 'bad'>('good');
   const client = useRealtimeClient();
   const mode = useRoomStore((state) => state.mode);
   const leaderboard = useRoomStore((state) => state.leaderboard);
   const playerToken = useRoomStore((state) => state.playerToken);
   const setPlayerAuth = useRoomStore((state) => state.setPlayerAuth);
   const clearPlayerAuth = useRoomStore((state) => state.clearPlayerAuth);
+  const runtimeRoomId = useRoomStore((state) => state.roomId);
 
   const isCloudMode = appConfig.mode === 'cloud';
 
@@ -39,26 +40,59 @@ export default function JoinRoom({ code }: { code: string }) {
         if (expiresAt > Date.now()) {
           setPlayerAuth({ playerId, token });
           setRegistered(true);
+          setDisplayName(window.localStorage.getItem(`${storageKey}:name`) ?? '');
+          const cachedRoom = window.localStorage.getItem(`${storageKey}:room`);
+          if (cachedRoom) {
+            setRoomId(cachedRoom);
+          }
           return;
         }
       } catch (err) {
-        // ignore parse errors, fallthrough to cleanup
+        // ignore parse errors
       }
       window.localStorage.removeItem(storageKey);
+      window.localStorage.removeItem(`${storageKey}:name`);
+      window.localStorage.removeItem(`${storageKey}:room`);
       clearPlayerAuth();
       setRegistered(false);
     }
   }, [isCloudMode, storageKey, setPlayerAuth, clearPlayerAuth]);
 
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const getStatus = (): 'good' | 'warn' | 'bad' => {
+      if (!navigator.onLine) return 'bad';
+      const connectionInfo = (navigator as any).connection;
+      const type = connectionInfo?.effectiveType as string | undefined;
+      if (type === '2g' || type === 'slow-2g') return 'bad';
+      if (type === '3g') return 'warn';
+      return 'good';
+    };
+
+    const updateStatus = () => setConnection(getStatus());
+
+    updateStatus();
+
+    window.addEventListener('online', updateStatus);
+    window.addEventListener('offline', updateStatus);
+    const connectionInfo = (navigator as any).connection;
+    connectionInfo?.addEventListener?.('change', updateStatus);
+
+    return () => {
+      window.removeEventListener('online', updateStatus);
+      window.removeEventListener('offline', updateStatus);
+      connectionInfo?.removeEventListener?.('change', updateStatus);
+    };
+  }, []);
+
   const getDeviceFingerprint = () => {
     if (typeof window === 'undefined') return undefined;
     let fingerprint = window.localStorage.getItem(fingerprintKey);
     if (!fingerprint) {
-      // Use only UUID to ensure it fits in 128 chars
       fingerprint = crypto.randomUUID();
       window.localStorage.setItem(fingerprintKey, fingerprint);
     }
-    // Ensure it's not too long (max 128 chars)
     return fingerprint.substring(0, 128);
   };
 
@@ -66,15 +100,13 @@ export default function JoinRoom({ code }: { code: string }) {
     setError(null);
     try {
       if (isCloudMode) {
-        // First, get room ID from room code
         const lookupResponse = await fetch(`/api/rooms/lookup?code=${encodeURIComponent(code)}`);
         if (!lookupResponse.ok) {
           throw new Error('ルームが見つかりません');
         }
-        const { roomId: fetchedRoomId } = await lookupResponse.json() as { roomId: string };
+        const { roomId: fetchedRoomId } = (await lookupResponse.json()) as { roomId: string };
         setRoomId(fetchedRoomId);
 
-        // Then join with the room ID
         const response = await fetch(`/api/rooms/${fetchedRoomId}/join`, {
           method: 'POST',
           headers: {
@@ -82,8 +114,6 @@ export default function JoinRoom({ code }: { code: string }) {
           },
           body: JSON.stringify({
             displayName: name.trim(),
-            tableNo: tableNo.trim() || undefined,
-            seatNo: seatNo.trim() || undefined,
             deviceFingerprint: getDeviceFingerprint()
           })
         });
@@ -101,18 +131,19 @@ export default function JoinRoom({ code }: { code: string }) {
         setPlayerAuth({ playerId, token });
         if (typeof window !== 'undefined') {
           window.localStorage.setItem(storageKey, JSON.stringify({ token, playerId, expiresAt }));
+          window.localStorage.setItem(`${storageKey}:name`, name.trim());
+          window.localStorage.setItem(`${storageKey}:room`, fetchedRoomId);
         }
       } else {
         await client.emit({
           type: 'hello',
           payload: {
-            displayName: name.trim(),
-            tableNo: tableNo.trim() || undefined,
-            seatNo: seatNo.trim() || undefined
+            displayName: name.trim()
           }
         });
       }
       setRegistered(true);
+      setDisplayName(name.trim());
     } catch (err) {
       setError(err instanceof Error ? err.message : '参加に失敗しました');
       setRegistered(false);
@@ -122,10 +153,11 @@ export default function JoinRoom({ code }: { code: string }) {
   const handleTap = async () => {
     try {
       if (isCloudMode) {
-        if (!playerToken || !roomId) {
+        const activeRoomId = runtimeRoomId ?? roomId;
+        if (!playerToken || !activeRoomId) {
           throw new Error('参加手続きを完了してください');
         }
-        const response = await fetch(`/api/rooms/${roomId}/tap`, {
+        const response = await fetch(`/api/rooms/${activeRoomId}/tap`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -148,84 +180,128 @@ export default function JoinRoom({ code }: { code: string }) {
     }
   };
 
+  const handleReset = () => {
+    setRegistered(false);
+    setName(displayName);
+  };
+
+  const connectionConfig: Record<'good' | 'warn' | 'bad', { label: string; dot: string }> = {
+    good: { label: '接続良好', dot: 'bg-success' },
+    warn: { label: '注意が必要です', dot: 'bg-warning' },
+    bad: { label: '接続が不安定です。場所を変えるか再接続をお試しください。', dot: 'bg-error' }
+  };
+
   return (
-    <main className="mx-auto flex min-h-screen w-full max-w-xl flex-col gap-8 p-6">
-      <header className="space-y-2 text-center">
-        <h1 className="text-3xl font-semibold">ルーム {code.toUpperCase()} に参加</h1>
-        <p className="text-sm text-slate-300">
-          自分の名前と席情報を入力して参加してください。ゲーム中の操作は同じページから行います。
-        </p>
-      </header>
-      {!registered ? (
-        <form className="flex flex-col gap-4" onSubmit={(event) => event.preventDefault()}>
-          <label className="flex flex-col gap-2">
-            <span className="text-sm text-slate-200">名前</span>
-            <input
-              className="rounded border border-slate-600 bg-slate-900 px-3 py-2 text-base"
-              value={name}
-              onChange={(event) => setName(event.target.value)}
-              placeholder="例：Kai"
-              required
-            />
-          </label>
-          <div className="grid grid-cols-2 gap-4">
-            <label className="flex flex-col gap-2">
-              <span className="text-sm text-slate-200">卓番号</span>
-              <input
-                className="rounded border border-slate-600 bg-slate-900 px-3 py-2 text-base"
-                value={tableNo}
-                onChange={(event) => setTableNo(event.target.value)}
-                placeholder="例：A"
-              />
-            </label>
-            <label className="flex flex-col gap-2">
-              <span className="text-sm text-slate-200">席番号</span>
-              <input
-                className="rounded border border-slate-600 bg-slate-900 px-3 py-2 text-base"
-                value={seatNo}
-                onChange={(event) => setSeatNo(event.target.value)}
-                placeholder="例：12"
-              />
-            </label>
+    <main className="min-h-screen px-6 py-10">
+      <Section title="参加登録" subtitle={`ルームコード: ${code.toUpperCase()}`}>
+        <div className="flex items-center justify-between rounded-xl bg-brand-blue-50/60 px-4 py-2 text-sm mb-4">
+          <div className="flex items-center gap-2">
+            <span className={`h-3 w-3 rounded-full ${connectionConfig[connection].dot}`} aria-hidden="true" />
+            <span>{connectionConfig[connection].label}</span>
           </div>
-          {error && <p className="text-sm text-rose-300">{error}</p>}
-          <Button
-            type="button"
-            className="mt-4 w-full px-4 py-3 text-lg"
-            onClick={handleJoin}
-            disabled={name.trim().length === 0}
+          <span className="text-xs text-brand-blue-700/80">接続インジケータ</span>
+        </div>
+
+        {!registered ? (
+          <form
+            className="space-y-4"
+            onSubmit={(event) => {
+              event.preventDefault();
+              if (!name.trim()) {
+                setError('お名前を入力してください');
+                return;
+              }
+              void handleJoin();
+            }}
           >
-            参加する
-          </Button>
-        </form>
-      ) : (
-        <section className="flex flex-1 flex-col gap-6">
-          <div className="rounded border border-brand/20 bg-brand/10 p-4 text-center text-2xl font-semibold">
-            {mode === 'countup' && '連打！'}
-            {mode === 'quiz' && 'クイズ回答！'}
-            {mode === 'lottery' && '抽選待機中'}
-            {mode === 'idle' && '次のゲームを待っています'}
+            <div className="space-y-2">
+              <label className="text-sm font-medium" htmlFor="displayName">
+                お名前
+              </label>
+              <input
+                id="displayName"
+                className="w-full rounded-xl border border-brand-blue-200 bg-white px-4 py-3 text-base focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-blue-400"
+                value={name}
+                onChange={(event) => {
+                  setName(event.target.value);
+                  if (error) setError(null);
+                }}
+                placeholder="例：Kai"
+                autoComplete="name"
+                required
+              />
+            </div>
+            {error && (
+              <p className="text-sm text-error" role="alert">
+                {error}
+              </p>
+            )}
+            <PrimaryButton type="submit" disabled={name.trim().length === 0}>
+              参加する
+            </PrimaryButton>
+            <p className="text-sm text-brand-blue-700/80">
+              お名前を入力し、「参加する」を押してください。ゲームの操作はこのページから行えます。
+            </p>
+          </form>
+        ) : (
+          <div className="space-y-6" aria-live="polite">
+            <div className="glass-panel rounded-2xl border border-white/40 px-6 py-5 shadow-brand">
+              <p className="text-lg font-semibold">{displayName} さん、ゲーム開始までお待ちください。</p>
+              <button
+                type="button"
+                className="mt-3 text-sm text-brand-blue-700 underline decoration-brand-blue-400 decoration-dashed"
+                onClick={handleReset}
+              >
+                お名前を変更する
+              </button>
+            </div>
+
+            <div className="rounded-2xl bg-white/70 p-6 shadow-brand">
+              <h2 className="text-xl font-semibold text-brand-blue-700">タップチャレンジ</h2>
+              <p className="mt-2 text-sm text-brand-blue-700/80">
+                {mode === 'countup'
+                  ? '巨大な TAP ボタンが表示されたら、リズミカルにタップしてスコアを伸ばしましょう。'
+                  : mode === 'quiz'
+                    ? 'クイズが表示されたら、画面の指示に従って回答してください。'
+                    : mode === 'lottery'
+                      ? '抽選の結果発表をお待ちください。'
+                      : 'まもなくゲームが始まります。'}
+              </p>
+              {mode === 'countup' && (
+                <PrimaryButton type="button" onClick={handleTap} className="mt-4 h-16 text-xl">
+                  TAP!
+                </PrimaryButton>
+              )}
+            </div>
+
+            <div className="rounded-2xl bg-brand-blue-50/70 p-6">
+              <h2 className="text-xl font-semibold text-brand-blue-700">現在のランキング</h2>
+              <ul className="mt-4 space-y-2">
+                {leaderboard.slice(0, 10).map((entry) => (
+                  <li
+                    key={entry.playerId}
+                    className="flex items-center justify-between rounded-xl bg-white/80 px-4 py-3 text-sm shadow-brand"
+                  >
+                    <span className="font-medium">
+                      {entry.rank}. {entry.displayName}
+                    </span>
+                    <span className="font-semibold text-brand-terra-600">
+                      {entry.totalPoints}
+                      <span className="ml-1 text-xs text-brand-blue-700/70">pt</span>
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {error && !playerToken && (
+              <p className="text-sm text-error" role="alert">
+                {error}
+              </p>
+            )}
           </div>
-          {mode === 'countup' && (
-            <Button className="h-48 w-full text-4xl" onClick={handleTap}>
-              TAP!
-            </Button>
-          )}
-          <section className="space-y-2">
-            <h2 className="text-sm uppercase tracking-wide text-slate-400">Leaderboard</h2>
-            <ul className="space-y-2">
-              {leaderboard.map((entry) => (
-                <li key={entry.playerId} className="flex items-center justify-between rounded bg-slate-800/60 px-3 py-2">
-                  <span className="text-lg font-semibold">
-                    {entry.rank}. {entry.displayName}
-                  </span>
-                  <span className="text-xl font-bold">{entry.totalPoints}</span>
-                </li>
-              ))}
-            </ul>
-          </section>
-        </section>
-      )}
+        )}
+      </Section>
     </main>
   );
 }

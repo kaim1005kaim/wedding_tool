@@ -3,16 +3,43 @@
 @tailwind utilities;
 
 :root {
-  color-scheme: light;
-}
-
-html, body {
-  height: 100%;
-  background: #101018;
-  color: #f8fafc;
+  /* Base */
+  --ecru: #F7F3EA;
+  --ink: #1F2A37;
+  /* Blues */
+  --blue-50: #EEF6FB;
+  --blue-200: #BFD9EF;
+  --blue-400: #7FB2DA;
+  --blue-600: #397AAE;
+  --blue-700: #275E8B;
+  /* Terracotta */
+  --terra-50: #F6ECE8;
+  --terra-200: #E3BBAA;
+  --terra-400: #C46B47;
+  --terra-600: #9E4C33;
+  --terra-700: #7E3C29;
+  /* System */
+  --success: #3AA76D;
+  --warning: #D97706;
+  --error: #CC3333;
+  /* Surfaces */
+  --panel: #FFFFFF;
+  --shadow: 0 6px 18px rgba(16, 24, 40, 0.08);
 }
 
 body {
   margin: 0;
-  font-family: 'Inter', 'Noto Sans JP', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  min-height: 100vh;
+  background-color: var(--ecru);
+  color: var(--ink);
+}
+
+.lace-overlay {
+  background: radial-gradient(60% 40% at 50% 0%, rgba(127, 178, 218, 0.1), transparent 70%),
+    radial-gradient(40% 40% at 20% 20%, rgba(196, 107, 71, 0.06), transparent 70%);
+}
+
+.glass-panel {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.65), rgba(255, 255, 255, 0.5));
+  backdrop-filter: saturate(120%) blur(8px);
 }
