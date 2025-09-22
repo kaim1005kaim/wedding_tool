@@ -117,9 +117,7 @@ export async function ensureScoreRecord(roomId: string, playerId: string) {
   const client = getSupabaseServiceRoleClient();
   const { error } = await client
     .from('scores')
-    .upsert({ room_id: roomId, player_id: playerId, total_points: 0 })
-    .eq('room_id', roomId)
-    .eq('player_id', playerId);
+    .upsert({ room_id: roomId, player_id: playerId, total_points: 0 }, { onConflict: 'room_id,player_id' });
 
   if (error) {
     throw error;
