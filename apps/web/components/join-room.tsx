@@ -12,6 +12,7 @@ export default function JoinRoom({ code }: { code: string }) {
   const [seatNo, setSeatNo] = useState('');
   const [registered, setRegistered] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [roomId, setRoomId] = useState<string | null>(null);
   const client = useRealtimeClient();
   const mode = useRoomStore((state) => state.mode);
   const leaderboard = useRoomStore((state) => state.leaderboard);
@@ -70,10 +71,11 @@ export default function JoinRoom({ code }: { code: string }) {
         if (!lookupResponse.ok) {
           throw new Error('ルームが見つかりません');
         }
-        const { roomId } = await lookupResponse.json() as { roomId: string };
+        const { roomId: fetchedRoomId } = await lookupResponse.json() as { roomId: string };
+        setRoomId(fetchedRoomId);
 
         // Then join with the room ID
-        const response = await fetch(`/api/rooms/${roomId}/join`, {
+        const response = await fetch(`/api/rooms/${fetchedRoomId}/join`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
@@ -120,10 +122,10 @@ export default function JoinRoom({ code }: { code: string }) {
   const handleTap = async () => {
     try {
       if (isCloudMode) {
-        if (!playerToken) {
+        if (!playerToken || !roomId) {
           throw new Error('参加手続きを完了してください');
         }
-        const response = await fetch(`/api/rooms/${code}/tap`, {
+        const response = await fetch(`/api/rooms/${roomId}/tap`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
