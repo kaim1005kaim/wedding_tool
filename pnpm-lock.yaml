@@ -108,6 +108,9 @@ importers:
       next-themes:
         specifier: 0.2.1
         version: 0.2.1(next@14.2.4(@opentelemetry/api@1.9.0)(@playwright/test@1.44.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      qrcode.react:
+        specifier: ^4.2.0
+        version: 4.2.0(react@18.3.1)
       react:
         specifier: 18.3.1
         version: 18.3.1
@@ -198,11 +201,11 @@ packages:
     resolution: {integrity: sha512-UrcABB+4bUrFABwbluTIBErXwvbsU/V7TZWfmbgJfbkwiBuziS9gxdODUyuiecfdGQ85jglMW6juS3+z5TsKLw==}
     engines: {node: '>=10'}
 
-  '@artilleryio/int-commons@2.16.0':
-    resolution: {integrity: sha512-+2LMUYXS1CP9GP5lEfroW6Y/xUHq73G9aT2kW114ReX73CAps8xXSek2Uo5GwGbFh2qCngPf/PawH8VOntYyZw==}
+  '@artilleryio/int-commons@2.17.0':
+    resolution: {integrity: sha512-FUPsfFRValc/XTKw9kInKGmN6j4lnyFfhOpvNfy1jUC5pPjZjtez9JyrxqSsdjlhY+FeUb/YrEOFPK0m9Da51w==}
 
-  '@artilleryio/int-core@2.20.0':
-    resolution: {integrity: sha512-8VwEOHv/fQspWQnotCVpowOAPNTNXldw1GHJ7A6VhrAaEq8jysidIZSMUBgzAEdqaN1gzApGobA2UBEG/MVgbg==}
+  '@artilleryio/int-core@2.21.0':
+    resolution: {integrity: sha512-QKfDJIopNHrrwaXhfSAM5aJ+/dhwD1x3EHNmp7XR4jUuCOgZnsJ9d8+oFJgbrYjqnLUtALDxDxSdHTuhdSAUcg==}
 
   '@artilleryio/platform-fargate@1.0.7':
     resolution: {integrity: sha512-NKr1+k/BK2xG8JV3VIkLVe1S5i9u9DkCNu3Qv65l01Bsy5Q8/6qgPwfIZfUMKJl/BlB7LHjZs9aAL4gMPIYMAw==}
@@ -1974,20 +1977,20 @@ packages:
   artillery-engine-playwright@0.3.2:
     resolution: {integrity: sha512-emlSdlT5gCenFFjhL60wxepkYBn6/zLy8zLt96QFWuZj3oL9cB3kzklevUTDYfsdpc9t5SmF3wTYpCxXCcdrGg==}
 
-  artillery-plugin-apdex@1.16.0:
-    resolution: {integrity: sha512-cF1wmZVtdjvQbuRv2Werum0f5v2hTGK07YLpfndrrH6DlWc4xOO92RdN+MCBxc8Ho9lIYKBLmVvY1zZoV1qrIA==}
+  artillery-plugin-apdex@1.17.0:
+    resolution: {integrity: sha512-5cIw9T3pcOyWlIaBK8rJqmqGfEUIqrkGQNiJD5+6ReiCpGH3mk0fkusAZMdoyhSob0Zf60F0kUgzJxcMq9PQfQ==}
 
-  artillery-plugin-ensure@1.19.0:
-    resolution: {integrity: sha512-62CEFFG2aUx/fk+AZ9jeyXV/MyolfC9RO1pckNG7xuDcrw4YKZrTfmbmvrBl7/Omx4Amc55P/auNUHTd0e9OaA==}
+  artillery-plugin-ensure@1.20.0:
+    resolution: {integrity: sha512-IYaxUjRpaPK1v4hkmyqV7oxEuUEuwEZJFL3p71zkv7H2P0cLgqBmUGVbCSvsMz0vlso0638ruJ8MZiAFaNFphQ==}
 
-  artillery-plugin-expect@2.19.0:
-    resolution: {integrity: sha512-4XGwaMo62VH7OvMjs96m4yRkMARSZz4C6Wka23RtFL05yagYX9IHpzRs6svN6Nfkf9xHnEo5ZXh5TtDs/5KgjA==}
+  artillery-plugin-expect@2.20.0:
+    resolution: {integrity: sha512-CuPCHeS62SQFDR28r9HptuaoevTU4K2ZtT+1QNcpIHY7daJfJk9Do5HfHuODe5j4YrpYA33dCVrk9NU1KWyWyw==}
 
-  artillery-plugin-metrics-by-endpoint@1.19.0:
-    resolution: {integrity: sha512-gYV+BfssNMhYNQiTBhhs1vqCB3Kpzp9OMjAnzmM0aQadM1qkazBXQVGE+2l6COZKjRLrc4nSFvfZWMC6BOAjqg==}
+  artillery-plugin-metrics-by-endpoint@1.20.0:
+    resolution: {integrity: sha512-aoodF4VfD+QYeBsLpfW8/idnvuMJd1TtJmmcmV6xmIDgGI2TUoZTyXndAfB0bbZI5KIz9Id9NCSKwg51nkl0hA==}
 
-  artillery-plugin-publish-metrics@2.30.0:
-    resolution: {integrity: sha512-eC3fUsE4ONaAuKlkrOTt9mX03tJ3D62LSeZ3YBu+UvvTnEjn6EKJTvFf+0Y1RwKBVTxUaW2Gn3SGdO6q4A4fQA==}
+  artillery-plugin-publish-metrics@2.31.0:
+    resolution: {integrity: sha512-xhE2Z+u+0Fwu5QEfpSaXYxPnrZFtyYWZuT5wztVbl4ACL8W9PQxAWNbvIU60d9/dDbyi2M/Km9hVbMu0Z386cg==}
 
   artillery@2.0.0-33:
     resolution: {integrity: sha512-1lxCTlTXJu26IO1jWlvpyp+SeQgzj2gBLalkbfiNiY3zChHj9VExDZHQvDLSm0koXwXRD+0HMVKj5WanEzFWDQ==}
@@ -4293,6 +4296,11 @@ packages:
     resolution: {integrity: sha512-vYt7UD1U9Wg6138shLtLOvdAu+8DsC/ilFtEVHcH+wydcSpNE20AfSOduf6MkRFahL5FY7X1oU7nKVZFtfq8Fg==}
     engines: {node: '>=6'}
 
+  qrcode.react@4.2.0:
+    resolution: {integrity: sha512-QpgqWi8rD9DsS9EP3z7BT+5lY5SFhsqGjpgW5DY/i3mK4M9DTBNz3ErMi8BWYEfI3L0d8GIbGmcdFAS1uIRGjA==}
+    peerDependencies:
+      react: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
+
   qs@6.11.0:
     resolution: {integrity: sha512-MvjoMCJwEarSbUYk5O+nmoSzSutSsTwF85zcHPQ9OrlFoZOYIjaqBAJIqIXjptyD5vThxGq52Xu/MaJzRkIk4Q==}
     engines: {node: '>=0.6'}
@@ -5382,7 +5390,7 @@ snapshots:
 
   '@alloc/quick-lru@5.2.0': {}
 
-  '@artilleryio/int-commons@2.16.0':
+  '@artilleryio/int-commons@2.17.0':
     dependencies:
       async: 2.6.4
       cheerio: 1.1.2
@@ -5395,9 +5403,9 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@artilleryio/int-core@2.20.0':
+  '@artilleryio/int-core@2.21.0':
     dependencies:
-      '@artilleryio/int-commons': 2.16.0
+      '@artilleryio/int-commons': 2.17.0
       '@artilleryio/sketches-js': 2.1.1
       agentkeepalive: 4.6.0
       arrivals: 2.1.2
@@ -5437,7 +5445,7 @@ snapshots:
       '@oclif/command': 1.8.36(@oclif/config@1.18.17)
       '@supercharge/promise-pool': 2.4.0
       ajv: 6.12.6
-      artillery-plugin-ensure: 1.19.0
+      artillery-plugin-ensure: 1.20.0
       async: 2.6.4
       aws-sdk: 2.1692.0
       chalk: 2.4.2
@@ -7719,9 +7727,9 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  artillery-plugin-apdex@1.16.0: {}
+  artillery-plugin-apdex@1.17.0: {}
 
-  artillery-plugin-ensure@1.19.0:
+  artillery-plugin-ensure@1.20.0:
     dependencies:
       chalk: 2.4.2
       debug: 4.4.3(supports-color@8.1.1)
@@ -7729,7 +7737,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  artillery-plugin-expect@2.19.0:
+  artillery-plugin-expect@2.20.0:
     dependencies:
       chalk: 4.1.2
       debug: 4.4.3(supports-color@8.1.1)
@@ -7738,13 +7746,13 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  artillery-plugin-metrics-by-endpoint@1.19.0:
+  artillery-plugin-metrics-by-endpoint@1.20.0:
     dependencies:
       debug: 4.4.3(supports-color@8.1.1)
     transitivePeerDependencies:
       - supports-color
 
-  artillery-plugin-publish-metrics@2.30.0:
+  artillery-plugin-publish-metrics@2.31.0:
     dependencies:
       '@aws-sdk/client-cloudwatch': 3.893.0
       '@opentelemetry/api': 1.9.0
@@ -7776,8 +7784,8 @@ snapshots:
 
   artillery@2.0.0-33(@types/node@20.12.12)(reflect-metadata@0.2.2)(ts-node@10.9.2(@types/node@20.12.12)(typescript@3.9.10))(typescript@3.9.10):
     dependencies:
-      '@artilleryio/int-commons': 2.16.0
-      '@artilleryio/int-core': 2.20.0
+      '@artilleryio/int-commons': 2.17.0
+      '@artilleryio/int-core': 2.21.0
       '@artilleryio/platform-fargate': 1.0.7(@oclif/config@1.18.17)(reflect-metadata@0.2.2)(ts-node@10.9.2(@types/node@20.12.12)(typescript@3.9.10))
       '@aws-sdk/credential-providers': 3.893.0
       '@oclif/command': 1.8.36(@oclif/config@1.18.17)
@@ -7786,11 +7794,11 @@ snapshots:
       '@oclif/plugin-not-found': 2.4.3(@types/node@20.12.12)(typescript@3.9.10)
       archiver: 5.3.2
       artillery-engine-playwright: 0.3.2
-      artillery-plugin-apdex: 1.16.0
-      artillery-plugin-ensure: 1.19.0
-      artillery-plugin-expect: 2.19.0
-      artillery-plugin-metrics-by-endpoint: 1.19.0
-      artillery-plugin-publish-metrics: 2.30.0
+      artillery-plugin-apdex: 1.17.0
+      artillery-plugin-ensure: 1.20.0
+      artillery-plugin-expect: 2.20.0
+      artillery-plugin-metrics-by-endpoint: 1.20.0
+      artillery-plugin-publish-metrics: 2.31.0
       async: 2.6.4
       aws-sdk: 2.1692.0
       chalk: 2.4.2
@@ -10430,6 +10438,10 @@ snapshots:
   punycode@1.3.2: {}
 
   punycode@2.3.1: {}
+
+  qrcode.react@4.2.0(react@18.3.1):
+    dependencies:
+      react: 18.3.1
 
   qs@6.11.0:
     dependencies:

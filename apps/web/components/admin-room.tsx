@@ -13,8 +13,12 @@ import {
   Dice3,
   Shuffle,
   PauseCircle,
-  Settings
+  Settings,
+  Copy,
+  QrCode,
+  Check
 } from 'lucide-react';
+import { QRCodeSVG } from 'qrcode.react';
 import { useRealtimeClient } from '../lib/realtime-context';
 import { useRoomStore } from '../lib/store/room-store';
 import { appConfig } from '../lib/env';
@@ -41,6 +45,8 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
   const [pin, setPin] = useState('');
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [roomCode, setRoomCode] = useState<string>('');
+  const [copied, setCopied] = useState(false);
   const [logs, setLogs] = useState<Array<{ id: number; action: string; created_at: string; payload?: Record<string, unknown> }>>([]);
   const [lotteries, setLotteries] = useState<Array<{ kind: string; created_at: string; players?: { display_name: string; table_no?: string | null; seat_no?: string | null } }>>([]);
   const [adminToken, setAdminTokenState] = useState<string | null>(null);
@@ -478,9 +484,9 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
             </div>
           )}
 
-          <div className="grid grid-cols-2 gap-6 xl:grid-cols-4">
+          <div className="space-y-6">
           <AdminCard title="モード切替" description="ゲームの進行モードを選択します" icon={Gauge}>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="flex flex-wrap gap-4">
               <AdminButton variant={mode === 'idle' ? 'primary' : 'secondary'} icon={PauseCircle} onClick={() => send({ type: 'mode:switch', payload: { to: 'idle' } })}>
                 待機モード
               </AdminButton>
@@ -497,7 +503,7 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
           </AdminCard>
 
           <AdminCard title="ゲーム制御" description="タップチャレンジは3秒カウント後に10秒で自動終了します" icon={Play}>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="flex flex-wrap gap-4">
               <AdminButton icon={Play} onClick={async () => {
                 if (autoStopRef.current) {
                   clearTimeout(autoStopRef.current);
@@ -527,18 +533,18 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
           </AdminCard>
 
           <AdminCard title="クイズ操作" description="出題と正解の公開" icon={Eye}>
-            <div className="mb-3 flex items-center gap-3 rounded-lg bg-brand-blue-50/50 p-3">
-              <label className="flex cursor-pointer items-center gap-2 text-sm text-brand-blue-700">
+            <div className="mb-4 flex items-center gap-3 rounded-lg bg-blue-50 p-3 border border-blue-200">
+              <label className="flex cursor-pointer items-center gap-2 text-sm text-slate-700">
                 <input
                   type="checkbox"
                   checked={quizSettings.representativeByTable}
                   onChange={(e) => setQuizSettings({ ...quizSettings, representativeByTable: e.target.checked })}
-                  className="h-4 w-4 rounded border-brand-blue-300 text-brand-blue-600 focus:ring-2 focus:ring-brand-blue-400"
+                  className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-2 focus:ring-blue-400"
                 />
                 <span className="font-medium">代表者制（各テーブル1回答まで）</span>
               </label>
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="flex flex-wrap gap-4">
               <AdminButton icon={ListChecks} onClick={() => send({ type: 'quiz:next', payload: undefined })}>
                 次のクイズ
               </AdminButton>
@@ -547,15 +553,15 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
               </AdminButton>
             </div>
             {activeQuiz && (
-              <p className="mt-3 text-xs text-brand-blue-700/80">表示中: {activeQuiz.question}</p>
+              <p className="mt-4 text-sm text-slate-600">表示中: {activeQuiz.question}</p>
             )}
             {quizSettings.representativeByTable && (
-              <p className="mt-2 text-xs text-brand-terra-600">各テーブル1名のみ回答が有効です</p>
+              <p className="mt-2 text-sm text-blue-600">各テーブル1名のみ回答が有効です</p>
             )}
           </AdminCard>
 
           <AdminCard title="抽選" description="候補リストからランダムに選出します" icon={Dice1}>
-            <div className="grid grid-cols-3 gap-4">
+            <div className="flex flex-wrap gap-4">
               <AdminButton variant="secondary" icon={Dice1} onClick={() => handleLottery('all')}>
                 全員対象
               </AdminButton>
@@ -742,7 +748,7 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
 
         {isCloudMode && (
           <AdminCard title="ログ / 抽選履歴" description="進行状況の確認" icon={ListChecks}>
-            <div className="mb-4 inline-flex rounded-full bg-brand-blue-50 p-1 text-sm">
+            <div className="mb-4 inline-flex rounded-xl bg-slate-100 p-1">
               <TabButton label="操作ログ" active={activeLogTab === 'logs'} onClick={() => setActiveLogTab('logs')} />
               <TabButton label="抽選履歴" active={activeLogTab === 'lottery'} onClick={() => setActiveLogTab('lottery')} />
             </div>
@@ -830,7 +836,7 @@ function TabButton({ label, active, onClick }: { label: string; active: boolean;
   return (
     <button
       type="button"
-      className={`rounded-full px-4 py-2 font-semibold transition ${active ? 'bg-white shadow-brand text-brand-blue-700' : 'text-brand-blue-700/60 hover:text-brand-blue-700'}`}
+      className={`rounded-lg px-6 py-2.5 text-sm font-semibold transition-all ${active ? 'bg-white shadow-md text-slate-800' : 'text-slate-600 hover:text-slate-800'}`}
       onClick={onClick}
     >
       {label}
