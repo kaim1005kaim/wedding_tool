@@ -73,72 +73,74 @@ export default function AdminEntryPage() {
   };
 
   return (
-    <main className="mx-auto flex min-h-screen w-full max-w-2xl flex-col items-center justify-center gap-8 bg-gradient-to-br from-brand-blue-100 via-ecru to-brand-terra-100 p-8 text-center">
-      <div className="slide-up">
-        <div className="mb-8 text-8xl">🔐</div>
-        <h1 className="text-display-lg font-bold text-brand-blue-700">管理画面</h1>
-        <p className="mt-4 text-xl text-brand-blue-700/70">ルームコードを入力してください</p>
-      </div>
-
-      <form onSubmit={handleSubmit} className="w-full space-y-8">
-        <div className="glass-panel-strong rounded-3xl p-10 shadow-brand-lg bounce-in">
-          <label className="mb-4 flex items-center justify-center gap-2 text-base font-bold text-brand-blue-700">
-            <span className="text-2xl">🎮</span>
-            <span>ルームコード</span>
-          </label>
-          <input
-            type="text"
-            className="w-full rounded-2xl border-2 border-brand-blue-200 bg-white px-8 py-6 text-center text-4xl font-bold uppercase tracking-wider text-slate-900 shadow-brand-sm transition-all duration-300 placeholder:text-slate-400 hover:border-brand-blue-300 focus:border-brand-blue-500 focus:shadow-brand focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-blue-400"
-            value={roomCode}
-            onChange={(e) => setRoomCode(e.target.value.toUpperCase())}
-            placeholder="AB12"
-            disabled={loading}
-            maxLength={6}
-          />
+    <main className="flex min-h-screen items-center justify-center bg-gradient-to-br from-brand-blue-100 via-ecru to-brand-terra-100 p-6">
+      <div className="w-full max-w-md space-y-6">
+        <div className="text-center slide-up">
+          <div className="mb-4 text-6xl">🔐</div>
+          <h1 className="text-3xl font-bold text-brand-blue-700">管理画面</h1>
+          <p className="mt-2 text-sm text-brand-blue-700/70">ルームコードを入力してください</p>
         </div>
 
-        {error && (
-          <div className="rounded-2xl bg-error-light px-6 py-4 text-base font-semibold text-error shadow-brand-sm bounce-in">
-            ⚠️ {error}
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="glass-panel-strong rounded-2xl p-6 shadow-brand-lg bounce-in">
+            <label className="mb-3 flex items-center justify-center gap-2 text-sm font-bold text-brand-blue-700">
+              <span>🎮</span>
+              <span>ルームコード</span>
+            </label>
+            <input
+              type="text"
+              className="w-full rounded-xl border-2 border-brand-blue-200 bg-white px-4 py-4 text-center text-2xl font-bold uppercase tracking-wider text-slate-900 shadow-brand-sm transition-all duration-300 placeholder:text-slate-400 hover:border-brand-blue-300 focus:border-brand-blue-500 focus:shadow-brand focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-blue-400"
+              value={roomCode}
+              onChange={(e) => setRoomCode(e.target.value.toUpperCase())}
+              placeholder="AB12"
+              disabled={loading}
+              maxLength={6}
+            />
           </div>
-        )}
 
-        {successMessage && (
-          <div className="rounded-2xl bg-success-light px-6 py-4 text-base font-semibold text-success shadow-brand-sm bounce-in">
-            ✓ {successMessage}
-          </div>
-        )}
+          {error && (
+            <div className="rounded-xl bg-error-light px-4 py-3 text-sm font-semibold text-error shadow-brand-sm bounce-in">
+              ⚠️ {error}
+            </div>
+          )}
 
-        <Button
-          type="submit"
-          className="w-full rounded-2xl bg-gradient-secondary px-8 py-6 text-xl font-bold text-white shadow-brand-md transition-all duration-300 hover:scale-[1.02] hover:shadow-brand-lg active:scale-[0.98] disabled:opacity-60"
-          disabled={loading || creating}
-        >
-          {loading ? '読み込み中...' : '→ 管理画面へ'}
-        </Button>
-      </form>
+          {successMessage && (
+            <div className="rounded-xl bg-success-light px-4 py-3 text-sm font-semibold text-success shadow-brand-sm bounce-in">
+              ✓ {successMessage}
+            </div>
+          )}
 
-      <div className="w-full">
-        <div className="relative my-8">
-          <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t-2 border-brand-blue-200"></div>
+          <Button
+            type="submit"
+            className="w-full rounded-xl bg-gradient-secondary px-6 py-4 text-base font-bold text-white shadow-brand-md transition-all duration-300 hover:scale-[1.02] hover:shadow-brand-lg active:scale-[0.98] disabled:opacity-60"
+            disabled={loading || creating}
+          >
+            {loading ? '読み込み中...' : '→ 管理画面へ'}
+          </Button>
+        </form>
+
+        <div className="space-y-4">
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-brand-blue-200"></div>
+            </div>
+            <div className="relative flex justify-center text-xs">
+              <span className="bg-gradient-to-br from-brand-blue-100 via-ecru to-brand-terra-100 px-3 font-semibold text-brand-blue-700">または</span>
+            </div>
           </div>
-          <div className="relative flex justify-center text-sm">
-            <span className="bg-gradient-to-br from-brand-blue-100 via-ecru to-brand-terra-100 px-4 font-semibold text-brand-blue-700">または</span>
-          </div>
+
+          <button
+            onClick={handleCreateRoom}
+            disabled={creating || loading}
+            className="w-full rounded-xl border-2 border-brand-blue-300 bg-white/90 px-6 py-4 text-base font-bold text-brand-blue-700 shadow-brand-sm transition-all duration-300 hover:scale-[1.02] hover:border-brand-blue-400 hover:bg-brand-blue-50 hover:shadow-brand active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed"
+          >
+            {creating ? '作成中...' : '+ 新しいルームを作成'}
+          </button>
+
+          <p className="text-center text-xs text-brand-blue-700/60">
+            新しいルームを作成すると、4桁のルームコードが自動生成されます（デフォルトPIN: 1234）
+          </p>
         </div>
-
-        <button
-          onClick={handleCreateRoom}
-          disabled={creating || loading}
-          className="w-full rounded-2xl border-2 border-brand-blue-300 bg-white/90 px-8 py-6 text-xl font-bold text-brand-blue-700 shadow-brand-sm transition-all duration-300 hover:scale-[1.02] hover:border-brand-blue-400 hover:bg-brand-blue-50 hover:shadow-brand active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed"
-        >
-          {creating ? '作成中...' : '+ 新しいルームを作成'}
-        </button>
-
-        <p className="mt-6 text-sm text-brand-blue-700/60">
-          新しいルームを作成すると、4桁のルームコードが自動生成されます（デフォルトPIN: 1234）
-        </p>
       </div>
     </main>
   );

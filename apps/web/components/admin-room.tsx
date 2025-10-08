@@ -444,18 +444,18 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
   }
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-brand-blue-100 via-ecru to-brand-terra-100 px-6 py-10">
-      <div className="mx-auto max-w-7xl">
+    <main className="min-h-screen bg-gradient-to-br from-brand-blue-100 via-ecru to-brand-terra-100 px-4 py-6 sm:px-6 sm:py-8">
+      <div className="mx-auto max-w-6xl">
         <Section title="管理パネル" subtitle={`Room ${roomId}`}>
-          <div className="mb-8 grid gap-6 rounded-3xl bg-white/90 p-8 shadow-brand-lg backdrop-blur-sm sm:grid-cols-3">
+          <div className="mb-6 grid gap-4 rounded-2xl bg-white/90 p-6 shadow-brand-lg backdrop-blur-sm sm:grid-cols-3">
             <StatusItem label="モード" value={labelForMode(mode)} icon={Gauge} />
             <StatusItem label="フェーズ" value={phaseLabel(phase)} icon={PauseCircle} />
             <StatusItem label="カウントダウン" value={`${Math.max(0, Math.ceil(countdownMs / 1000))} 秒`} icon={ListChecks} />
           </div>
 
-          <div className="mb-6 flex items-center justify-between">
-            <div className="rounded-2xl bg-white/80 px-6 py-3 shadow-brand-sm backdrop-blur-sm">
-              <p className="text-sm font-semibold text-brand-blue-700">
+          <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="rounded-xl bg-white/80 px-4 py-2.5 shadow-brand-sm backdrop-blur-sm">
+              <p className="text-xs font-semibold text-brand-blue-700 sm:text-sm">
                 💡 投影画面を別タブで開き、全画面表示（Fキー）してプロジェクターに投影してください
               </p>
             </div>
@@ -463,9 +463,11 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
               variant="secondary"
               icon={Settings}
               onClick={openManagement}
-              className="w-12 justify-center px-3"
+              className="w-full justify-center sm:w-auto sm:px-4"
               aria-label="詳細設定"
-            />
+            >
+              <span className="sm:inline">設定</span>
+            </AdminButton>
           </div>
 
           {error && (
@@ -476,7 +478,7 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
             </div>
           )}
 
-          <div className="grid gap-6 lg:grid-cols-2 xl:grid-cols-3">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <AdminCard title="モード切替" description="ゲームの進行モードを選択します" icon={Gauge}>
             <div className="grid gap-3 sm:grid-cols-2">
               <AdminButton variant={mode === 'idle' ? 'primary' : 'secondary'} icon={PauseCircle} onClick={() => send({ type: 'mode:switch', payload: { to: 'idle' } })}>
@@ -766,13 +768,13 @@ type ConfirmState = {
 
 function StatusItem({ label, value, icon: Icon }: { label: string; value: string; icon: LucideIcon }) {
   return (
-    <div className="flex items-center gap-4 rounded-2xl bg-gradient-to-br from-brand-blue-50 to-white p-5 shadow-brand-sm transition-all duration-300 hover:shadow-brand hover:scale-[1.02]">
-      <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-secondary shadow-brand-sm">
-        <Icon className="h-6 w-6 text-white" />
+    <div className="flex items-center gap-3 rounded-xl bg-gradient-to-br from-brand-blue-50 to-white p-4 shadow-brand-sm transition-all duration-300 hover:shadow-brand hover:scale-[1.02]">
+      <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-secondary shadow-brand-sm">
+        <Icon className="h-5 w-5 text-white" />
       </div>
       <div>
         <p className="text-xs font-bold uppercase tracking-wider text-brand-blue-700/70">{label}</p>
-        <p className="mt-1 text-xl font-bold text-brand-blue-700">{value}</p>
+        <p className="mt-0.5 text-lg font-bold text-brand-blue-700">{value}</p>
       </div>
     </div>
   );
@@ -787,11 +789,11 @@ type AdminCardProps = {
 
 function AdminCard({ title, description, icon: Icon, children }: AdminCardProps) {
   return (
-    <div className="glass-panel rounded-2xl p-6 shadow-brand">
-      <div className="mb-4 flex items-center gap-3">
-        <Icon className="h-6 w-6 text-brand-terra-600" />
+    <div className="glass-panel rounded-xl p-4 shadow-brand">
+      <div className="mb-3 flex items-center gap-2">
+        <Icon className="h-5 w-5 text-brand-terra-600" />
         <div>
-          <h3 className="text-lg font-semibold text-brand-blue-700">{title}</h3>
+          <h3 className="text-base font-semibold text-brand-blue-700">{title}</h3>
           {description && <p className="text-xs text-brand-blue-700/70">{description}</p>}
         </div>
       </div>
@@ -806,7 +808,7 @@ type AdminButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
 };
 
 function AdminButton({ variant = 'primary', icon: Icon, className = '', children, type = 'button', ...props }: AdminButtonProps) {
-  const base = 'flex h-12 items-center justify-center gap-2 rounded-xl font-semibold transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 disabled:opacity-60';
+  const base = 'flex h-10 items-center justify-center gap-2 rounded-lg px-3 text-sm font-semibold transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 disabled:opacity-60';
   const variantClass =
     variant === 'primary'
       ? 'bg-brand-terra-600 text-white hover:bg-brand-terra-700 focus-visible:outline-brand-terra-400'
@@ -816,7 +818,7 @@ function AdminButton({ variant = 'primary', icon: Icon, className = '', children
 
   return (
     <button type={type} className={`${base} ${variantClass} ${className}`} {...props}>
-      {Icon && <Icon className="h-5 w-5" />}
+      {Icon && <Icon className="h-4 w-4" />}
       {children}
     </button>
   );
