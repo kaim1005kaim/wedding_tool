@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import bcrypt from 'bcryptjs';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -93,12 +94,32 @@ export async function POST() {
       // Room was created, but snapshot failed - still return success
     }
 
+    // Create room_admins record with default PIN (1234)
+    const defaultPin = '1234';
+    const pinHash = await bcrypt.hash(defaultPin, 10);
+
+    const { error: adminError } = await supabase
+      .from('room_admins')
+      .insert({
+        room_id: room.id,
+        pin_hash: pinHash,
+        disabled: false
+      });
+
+    if (adminError) {
+      console.error('[Room Create] Failed to create admin record:', adminError);
+      // Continue anyway - admin can use fallback PIN from env
+    } else {
+      console.log('[Room Create] Admin record created with default PIN: 1234');
+    }
+
     console.log('[Room Create] Room creation completed successfully');
 
     return NextResponse.json({
       roomId: room.id,
       code: room.code,
-      message: 'Room created successfully'
+      message: 'Room created successfully',
+      defaultPin: '1234'
     });
   } catch (err) {
     console.error('[Room Create] Unexpected error:', err);
