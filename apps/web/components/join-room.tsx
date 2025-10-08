@@ -308,13 +308,21 @@ export default function JoinRoom({ code }: { code: string }) {
         </div>
       )}
 
-      {registered && (
+      {registered && mode === 'countup' && (
         <CountupOverlay
-          mode={mode}
           phase={phase}
           countdownMs={countdownMs}
           leaderboard={leaderboard}
           onTap={handleTap}
+        />
+      )}
+
+      {registered && mode === 'quiz' && (
+        <QuizOverlay
+          phase={phase}
+          countdownMs={countdownMs}
+          roomId={runtimeRoomId}
+          playerToken={playerToken}
         />
       )}
 
@@ -417,14 +425,13 @@ function JoinModal({ visible, tableNo, displayName, onTableNoChange, onDisplayNa
 }
 
 type CountupOverlayProps = {
-  mode: RoomView;
   phase: 'idle' | 'running' | 'ended';
   countdownMs: number;
   leaderboard: LeaderboardEntry[];
   onTap: () => Promise<void> | void;
 };
 
-function CountupOverlay({ mode, phase, countdownMs, leaderboard, onTap }: CountupOverlayProps) {
+function CountupOverlay({ phase, countdownMs, leaderboard, onTap }: CountupOverlayProps) {
   const [localCountdown, setLocalCountdown] = useState<number | null>(null);
   const [flash, setFlash] = useState(false);
   const [showResults, setShowResults] = useState(false);
@@ -481,20 +488,6 @@ function CountupOverlay({ mode, phase, countdownMs, leaderboard, onTap }: Countu
 
   useEffect(() => {
     const prev = prevPhaseRef.current;
-    if (mode !== 'countup') {
-      clearStartDelay();
-      clearStopDelay();
-      finishTriggeredRef.current = false;
-      setLocalCountdown(null);
-      setPhaseEndTime(null);
-      setTimeLeftSeconds(null);
-      setIsTimerRunning(false);
-      setIsFinished(false);
-      setBanner(null);
-      setShowResults(false);
-      prevPhaseRef.current = phase;
-      return;
-    }
 
     if (phase === 'running' && prev !== 'running') {
       clearStartDelay();
@@ -526,7 +519,7 @@ function CountupOverlay({ mode, phase, countdownMs, leaderboard, onTap }: Countu
     }
 
     prevPhaseRef.current = phase;
-  }, [mode, phase, clearStartDelay, clearStopDelay, triggerFinish]);
+  }, [phase, clearStartDelay, clearStopDelay, triggerFinish]);
 
   useEffect(() => {
     if (localCountdown === null) return;
@@ -541,7 +534,6 @@ function CountupOverlay({ mode, phase, countdownMs, leaderboard, onTap }: Countu
   }, [localCountdown]);
 
   useEffect(() => {
-    if (mode !== 'countup') return;
     if (phase !== 'running') return;
     if (localCountdown !== null) return;
     if (isFinished) return;
@@ -554,10 +546,10 @@ function CountupOverlay({ mode, phase, countdownMs, leaderboard, onTap }: Countu
       setIsTimerRunning(true);
       startDelayRef.current = null;
     }, START_BANNER_DURATION_MS);
-  }, [mode, phase, localCountdown, isFinished, isTimerRunning, clearStartDelay]);
+  }, [phase, localCountdown, isFinished, isTimerRunning, clearStartDelay]);
 
   useEffect(() => {
-    if (!isTimerRunning || mode !== 'countup' || phase !== 'running') {
+    if (!isTimerRunning || phase !== 'running') {
       return;
     }
 
@@ -575,10 +567,9 @@ function CountupOverlay({ mode, phase, countdownMs, leaderboard, onTap }: Countu
       return target < previous ? target : previous;
     });
     setTimeLeftSeconds(Math.max(0, Math.ceil(countdownMs / 1000)));
-  }, [isTimerRunning, mode, phase, countdownMs, triggerFinish]);
+  }, [isTimerRunning, phase, countdownMs, triggerFinish]);
 
   useEffect(() => {
-    if (mode !== 'countup') return;
     if (!phaseEndTime || !isTimerRunning || phase !== 'running') return;
 
     const tick = () => {
@@ -593,11 +584,7 @@ function CountupOverlay({ mode, phase, countdownMs, leaderboard, onTap }: Countu
     tick();
     const id = setInterval(tick, 100);
     return () => clearInterval(id);
-  }, [mode, phase, phaseEndTime, isTimerRunning, triggerFinish]);
-
-  if (mode !== 'countup') {
-    return null;
-  }
+  }, [phase, phaseEndTime, isTimerRunning, triggerFinish]);
 
   const disabled = phase !== 'running' || localCountdown !== null || !isTimerRunning || banner === 'stop';
   const showPad = !showResults && (phase === 'running' || banner === 'stop');
@@ -626,71 +613,65 @@ function CountupOverlay({ mode, phase, countdownMs, leaderboard, onTap }: Countu
 
   return (
     <>
+      {/* Countdown Timer - Top Right */}
+      {showPad && displaySeconds !== '' && (
+        <div className="fixed top-4 right-4 z-40 pointer-events-none">
+          <div className="rounded-2xl bg-brand-blue-600 px-5 py-3 shadow-brand-xl">
+            <span className="text-4xl font-bold text-white drop-shadow">{displaySeconds}</span>
+          </div>
+        </div>
+      )}
+
       {showPad && (
         <button
           type="button"
           onPointerDown={handleTap}
           disabled={disabled}
-          className="fixed inset-0 z-30 flex select-none items-center justify-center bg-gradient-to-br from-brand-blue-100 via-brand-blue-50 to-brand-terra-50 transition-all duration-300 active:from-brand-terra-100 active:via-brand-terra-50 active:to-brand-blue-50 disabled:cursor-not-allowed disabled:opacity-60"
+          className="fixed inset-0 z-30 flex select-none items-center justify-center bg-gradient-to-br from-brand-blue-400 via-brand-blue-500 to-brand-terra-400 transition-all duration-150 active:from-brand-terra-400 active:via-brand-terra-500 active:to-brand-blue-400 disabled:cursor-not-allowed disabled:opacity-60"
         >
-        <div className="pointer-events-none absolute top-16 flex flex-col items-center gap-2">
-          <div className="rounded-full bg-white/90 px-6 py-3 shadow-brand-lg backdrop-blur-sm">
-            <span className="text-[min(14vw,6rem)] font-bold text-brand-blue-700 drop-shadow count-up">{displaySeconds}</span>
-          </div>
-        </div>
-        {banner === 'start' ? (
-          <div className="flex flex-col items-center gap-6 bounce-in">
-            <span className="text-[min(30vw,14rem)] font-bold uppercase tracking-wider text-brand-terra-600 drop-shadow-2xl animate-pulse-ring">
-              START!
-            </span>
-            <div className="text-6xl animate-bounce">🚀</div>
-          </div>
-        ) : banner === 'stop' ? (
-          <div className="flex flex-col items-center gap-6 bounce-in">
-            <span className="text-[min(30vw,14rem)] font-bold uppercase tracking-wider text-brand-terra-600 drop-shadow-2xl">
-              STOP!
-            </span>
-            <div className="text-6xl">🎉</div>
-          </div>
-        ) : localCountdown !== null ? (
+        {localCountdown !== null ? (
           <div className="flex flex-col items-center gap-4 bounce-in">
-            <div className="rounded-full bg-gradient-to-br from-brand-blue-500 to-brand-blue-700 p-12 shadow-brand-xl animate-pulse-ring">
-              <span className="text-[min(40vw,18rem)] font-serif font-bold leading-none text-white drop-shadow-2xl">
+            <div className="rounded-full bg-white p-16 shadow-brand-xl">
+              <span className="text-[min(40vw,18rem)] font-bold leading-none text-brand-blue-700 drop-shadow-lg">
                 {localCountdown}
               </span>
             </div>
-            <p className="text-2xl font-bold text-brand-blue-700">準備してください！</p>
+            <p className="text-3xl font-bold text-white drop-shadow-lg">準備してください！</p>
+          </div>
+        ) : banner === 'start' ? (
+          <div className="flex flex-col items-center gap-6 bounce-in">
+            <div className="text-8xl animate-bounce">🚀</div>
+            <span className="text-[min(30vw,12rem)] font-bold uppercase tracking-wider text-white drop-shadow-2xl">
+              START!
+            </span>
+          </div>
+        ) : banner === 'stop' ? (
+          <div className="flex flex-col items-center gap-6 bounce-in">
+            <div className="text-8xl">🎉</div>
+            <span className="text-[min(30vw,12rem)] font-bold uppercase tracking-wider text-white drop-shadow-2xl">
+              STOP!
+            </span>
           </div>
         ) : isTimerRunning ? (
           <div className="flex flex-col items-center gap-8">
-            <div className="relative">
-              <div className="absolute inset-0 rounded-full bg-brand-terra-400 opacity-30 blur-3xl animate-pulse-ring" />
-              <div className="relative rounded-full bg-gradient-to-br from-brand-terra-400 to-brand-terra-600 p-16 shadow-brand-xl">
-                <span className="text-[min(20vw,9rem)] font-bold uppercase tracking-wider text-white drop-shadow-2xl">
-                  TAP!
-                </span>
-              </div>
+            <div className="text-[min(25vw,10rem)] font-bold uppercase text-white drop-shadow-2xl animate-pulse">
+              TAP!
             </div>
-            <p className="text-2xl font-bold text-brand-blue-700 animate-bounce">タップしてポイント獲得！</p>
+            <p className="text-2xl font-bold text-white drop-shadow-lg">連打してポイント獲得！</p>
           </div>
-        ) : (
-          <div className="flex flex-col items-center gap-4">
-            <div className="text-6xl animate-pulse">⏳</div>
-            <span className="text-3xl font-bold text-brand-blue-700">開始を待っています</span>
-          </div>
-        )}
+        ) : null}
         {flash && (
-          <span className="pointer-events-none absolute inset-x-0 top-1/3 text-center text-7xl font-bold text-brand-terra-600 opacity-90 animate-bounce-in drop-shadow-lg">
+          <span className="pointer-events-none absolute inset-x-0 top-1/3 text-center text-8xl font-bold text-white opacity-90 animate-bounce-in drop-shadow-2xl">
             +1
           </span>
         )}
         {sparkles.map((sparkle) => (
           <span
             key={sparkle.id}
-            className="pointer-events-none absolute text-5xl sparkle-pop drop-shadow-lg"
+            className="pointer-events-none absolute text-6xl sparkle-pop drop-shadow-lg"
             style={{ left: `${sparkle.left}%`, top: `${sparkle.top}%` }}
           >
-            ✨
+            ⭐
           </span>
         ))}
         </button>
@@ -752,4 +733,216 @@ function medalForRank(rank: number) {
     default:
       return `${rank}.`;
   }
+}
+
+type QuizOverlayProps = {
+  phase: 'idle' | 'running' | 'ended';
+  countdownMs: number;
+  roomId: string | null;
+  playerToken: string | null;
+};
+
+const CHOICE_LABELS = ['A', 'B', 'C', 'D'];
+
+function QuizOverlay({ phase, countdownMs, roomId, playerToken }: QuizOverlayProps) {
+  const activeQuiz = useRoomStore((state) => state.activeQuiz);
+  const quizResult = useRoomStore((state) => state.quizResult);
+  const [selectedChoice, setSelectedChoice] = useState<number | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [timeLeftSeconds, setTimeLeftSeconds] = useState<number | null>(null);
+  const [phaseEndTime, setPhaseEndTime] = useState<number | null>(null);
+
+  // Reset selection when quiz changes
+  useEffect(() => {
+    if (activeQuiz) {
+      setSelectedChoice(null);
+      setIsSubmitting(false);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeQuiz?.quizId]);
+
+  // Calculate countdown
+  useEffect(() => {
+    if (phase !== 'running' || !activeQuiz) {
+      setPhaseEndTime(null);
+      setTimeLeftSeconds(null);
+      return;
+    }
+
+    const now = Date.now();
+    const target = activeQuiz.deadlineTs;
+    setPhaseEndTime(target);
+    setTimeLeftSeconds(Math.max(0, Math.ceil((target - now) / 1000)));
+  }, [phase, activeQuiz]);
+
+  // Update timer
+  useEffect(() => {
+    if (!phaseEndTime || phase !== 'running') return;
+
+    const tick = () => {
+      const remainingMs = phaseEndTime - Date.now();
+      if (remainingMs <= 0) {
+        setTimeLeftSeconds(0);
+        return;
+      }
+      setTimeLeftSeconds(Math.max(0, Math.ceil(remainingMs / 1000)));
+    };
+
+    tick();
+    const id = setInterval(tick, 100);
+    return () => clearInterval(id);
+  }, [phase, phaseEndTime]);
+
+  const handleChoiceSelect = async (choiceIndex: number) => {
+    if (!activeQuiz || !roomId || !playerToken || selectedChoice !== null || quizResult) {
+      return;
+    }
+
+    setSelectedChoice(choiceIndex);
+    setIsSubmitting(true);
+
+    try {
+      const response = await fetch(`/api/rooms/${roomId}/quiz/answer`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${playerToken}`
+        },
+        body: JSON.stringify({
+          quizId: activeQuiz.quizId,
+          choiceIndex
+        })
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        console.error('Failed to submit answer:', error);
+        setSelectedChoice(null);
+      }
+    } catch (err) {
+      console.error('Failed to submit answer:', err);
+      setSelectedChoice(null);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  if (!activeQuiz) {
+    return null;
+  }
+
+  // Get background image based on question number
+  const backgroundOrd = activeQuiz.ord ? Math.min(activeQuiz.ord, 5) : 1;
+  const backgroundImage = `/quiz-backgrounds/${backgroundOrd}-smartphone.png`;
+
+  const correctIndex = quizResult?.correctIndex ?? -1;
+  const hasAnswered = selectedChoice !== null;
+
+  return (
+    <div
+      className="fixed inset-0 z-30 flex flex-col"
+      style={{
+        backgroundImage: `url(${backgroundImage})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat'
+      }}
+    >
+      {/* Countdown Timer - Top Right */}
+      {timeLeftSeconds !== null && timeLeftSeconds > 0 && !quizResult && (
+        <div className="absolute top-4 right-4 z-10">
+          <div className="rounded-2xl bg-brand-blue-600 px-5 py-3 shadow-brand-xl">
+            <span className="text-4xl font-bold text-white drop-shadow">{timeLeftSeconds}</span>
+          </div>
+        </div>
+      )}
+
+      <div className="flex-1 flex flex-col items-center justify-center p-6">
+        {/* Question */}
+        <div className="w-full max-w-2xl mb-8">
+          <div className="glass-panel-strong rounded-3xl p-6 shadow-brand-xl">
+            <p className="text-2xl font-bold text-brand-blue-700 leading-relaxed text-center">
+              {activeQuiz.question}
+            </p>
+          </div>
+        </div>
+
+        {/* Choices */}
+        <div className="w-full max-w-2xl grid grid-cols-1 gap-4">
+          {activeQuiz.choices.map((choice, index) => {
+            const isSelected = selectedChoice === index;
+            const isCorrect = quizResult && index === correctIndex;
+            const isWrong = quizResult && isSelected && index !== correctIndex;
+
+            let buttonClass = 'glass-panel rounded-2xl p-6 shadow-brand-lg transition-all duration-200';
+
+            if (quizResult) {
+              if (isCorrect) {
+                buttonClass = 'rounded-2xl p-6 shadow-brand-xl bg-gradient-to-r from-green-400 to-green-500 border-4 border-green-600';
+              } else if (isWrong) {
+                buttonClass = 'rounded-2xl p-6 shadow-brand-xl bg-gradient-to-r from-red-400 to-red-500 border-4 border-red-600';
+              } else {
+                buttonClass = 'rounded-2xl p-6 shadow-brand bg-white/50';
+              }
+            } else if (isSelected) {
+              buttonClass = 'rounded-2xl p-6 shadow-brand-xl bg-gradient-to-r from-brand-blue-400 to-brand-blue-500 border-4 border-brand-blue-600 scale-105';
+            } else if (hasAnswered) {
+              buttonClass = 'rounded-2xl p-6 shadow-brand bg-white/30';
+            } else {
+              buttonClass = 'glass-panel-strong rounded-2xl p-6 shadow-brand-lg hover:shadow-brand-xl hover:scale-105 active:scale-95';
+            }
+
+            return (
+              <button
+                key={index}
+                onClick={() => handleChoiceSelect(index)}
+                disabled={hasAnswered || isSubmitting || !!quizResult}
+                className={buttonClass}
+              >
+                <div className="flex items-center gap-4">
+                  <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-2xl font-bold ${
+                    quizResult
+                      ? isCorrect
+                        ? 'bg-green-600 text-white'
+                        : isWrong
+                          ? 'bg-red-600 text-white'
+                          : 'bg-brand-blue-100 text-brand-blue-700'
+                      : isSelected
+                        ? 'bg-brand-blue-600 text-white'
+                        : 'bg-brand-blue-500 text-white'
+                  }`}>
+                    {CHOICE_LABELS[index]}
+                  </div>
+                  <span className={`flex-1 text-left text-xl font-semibold ${
+                    quizResult
+                      ? isCorrect || isWrong
+                        ? 'text-white'
+                        : 'text-brand-blue-700'
+                      : isSelected
+                        ? 'text-white'
+                        : 'text-brand-blue-700'
+                  }`}>
+                    {choice}
+                  </span>
+                  {isCorrect && <span className="text-3xl">✓</span>}
+                  {isWrong && <span className="text-3xl">✗</span>}
+                </div>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Status Message */}
+        {hasAnswered && !quizResult && (
+          <div className="mt-8">
+            <div className="glass-panel-strong rounded-2xl px-8 py-4 shadow-brand-xl">
+              <p className="text-xl font-bold text-brand-blue-700 text-center">
+                回答を送信しました。正解発表をお待ちください...
+              </p>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
 }
