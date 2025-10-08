@@ -257,25 +257,19 @@ export default function JoinRoom({ code }: { code: string }) {
         )}
       </div>
 
-      {registered && (
+      {registered && mode !== 'countup' && mode !== 'quiz' && (
         <div className="mx-auto w-full max-w-3xl mt-8 space-y-6 relative z-10">
           <div className="rounded-2xl bg-white p-8 text-center shadow-brand-md slide-up border-3 border-black">
             <div className="mb-4 text-3xl">
-              {mode === 'countup' ? '⚡' : mode === 'quiz' ? '🎯' : mode === 'lottery' ? '🎰' : '🎮'}
+              {mode === 'lottery' ? '🎰' : '🎮'}
             </div>
             <h2 className="text-title-sm font-bold text-black">
-              {mode === 'countup' ? 'タップチャレンジ' : mode === 'quiz' ? 'クイズ' : mode === 'lottery' ? '抽選' : 'ゲーム'}
+              {mode === 'lottery' ? '抽選' : 'ゲーム'}
             </h2>
             <p className="mt-4 text-base leading-relaxed text-black font-medium">
-              {mode === 'countup'
-                ? phase === 'running'
-                  ? '画面全体に表示される TAP ボタンをテンポ良くタップして、スコアを伸ばしましょう！'
-                  : '合図が出るまでそのままお待ちください。スタート直前にカウントダウンが表示されます。'
-                : mode === 'quiz'
-                  ? 'クイズが表示されたら、画面の指示に従って回答してください。正解でポイント獲得！'
-                  : mode === 'lottery'
-                    ? '抽選の結果発表をお待ちください。当選者はスクリーンに表示されます。'
-                    : 'まもなくゲームが始まります。画面の指示に従ってください。'}
+              {mode === 'lottery'
+                ? '抽選の結果発表をお待ちください。当選者はスクリーンに表示されます。'
+                : 'まもなくゲームが始まります。画面の指示に従ってください。'}
             </p>
           </div>
 
@@ -626,7 +620,7 @@ function CountupOverlay({ phase, countdownMs, leaderboard, onTap }: CountupOverl
     <>
       {/* Countdown Timer - Top Right - Only show when timer is actually running (not during 3-2-1 or START banner) */}
       {showPad && displaySeconds !== '' && isTimerRunning && banner !== 'start' && localCountdown === null && (
-        <div className="fixed top-4 right-4 z-40 pointer-events-none">
+        <div className="fixed top-4 right-4 z-[70] pointer-events-none">
           <div className="rounded-2xl bg-brand-blue-600 px-5 py-3 shadow-brand-xl">
             <span className="text-4xl font-bold text-white drop-shadow">{displaySeconds}</span>
           </div>
@@ -638,7 +632,7 @@ function CountupOverlay({ phase, countdownMs, leaderboard, onTap }: CountupOverl
           type="button"
           onPointerDown={handleTap}
           disabled={disabled}
-          className="fixed inset-0 z-30 flex select-none items-center justify-center bg-white transition-all duration-150 disabled:cursor-not-allowed relative overflow-hidden"
+          className="fixed inset-0 z-[60] flex select-none items-center justify-center bg-white transition-all duration-150 disabled:cursor-not-allowed relative overflow-hidden"
         >
         <PatternBackground pattern="dot" />
         {localCountdown !== null ? (
@@ -680,7 +674,7 @@ function CountupOverlay({ phase, countdownMs, leaderboard, onTap }: CountupOverl
         </button>
       )}
       {showResults && topThree.length > 0 && (
-        <div className="fixed inset-0 z-40 flex items-center justify-center bg-white px-6 relative overflow-hidden">
+        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-white px-6 relative overflow-hidden">
           <PatternBackground pattern="wave" />
           <div className="bg-white w-full max-w-xl rounded-2xl p-10 shadow-brand-xl bounce-in border-3 border-black relative z-10">
             <div className="mb-8 text-center">
@@ -886,7 +880,7 @@ function QuizOverlay({ phase, countdownMs, roomId, playerToken }: QuizOverlayPro
 
   return (
     <div
-      className="fixed inset-0 z-30 flex flex-col"
+      className="fixed inset-0 z-[60] flex flex-col"
       style={{
         backgroundImage: `url(${backgroundImage})`,
         backgroundSize: 'cover',
