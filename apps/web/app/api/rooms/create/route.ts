@@ -22,6 +22,8 @@ function generateRoomCode(): string {
 
 export async function POST() {
   try {
+    console.log('[Room Create] Starting room creation...');
+
     // Generate a unique room code
     let roomCode = generateRoomCode();
     let attempts = 0;
@@ -29,55 +31,69 @@ export async function POST() {
 
     // Check if code already exists, regenerate if needed
     while (attempts < maxAttempts) {
-      const { data: existing } = await supabase
+      const { data: existing, error: checkError } = await supabase
         .from('rooms')
         .select('id')
         .eq('code', roomCode)
-        .single();
+        .maybeSingle();
+
+      if (checkError) {
+        console.error('[Room Create] Error checking existing code:', checkError);
+      }
 
       if (!existing) break;
 
+      console.log(`[Room Create] Code ${roomCode} exists, regenerating...`);
       roomCode = generateRoomCode();
       attempts++;
     }
 
     if (attempts >= maxAttempts) {
+      console.error('[Room Create] Failed to generate unique code after max attempts');
       return NextResponse.json(
         { error: 'Failed to generate unique room code' },
         { status: 500 }
       );
     }
 
-    // Create the room
+    console.log(`[Room Create] Generated unique code: ${roomCode}`);
+
+    // Create the room - let database handle timestamps
     const { data: room, error } = await supabase
       .from('rooms')
       .insert({
-        code: roomCode,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
+        code: roomCode
       })
       .select()
       .single();
 
     if (error) {
-      console.error('Failed to create room:', error);
+      console.error('[Room Create] Failed to create room:', error);
       return NextResponse.json(
-        { error: 'Failed to create room', details: error.message },
+        { error: 'Failed to create room', details: error.message, hint: error.hint },
         { status: 500 }
       );
     }
 
+    console.log(`[Room Create] Room created with ID: ${room.id}`);
+
     // Initialize room snapshot
-    await supabase
+    const { error: snapshotError } = await supabase
       .from('room_snapshots')
       .insert({
         room_id: room.id,
         mode: 'idle',
         phase: 'idle',
         countdown_ms: 0,
-        leaderboard: [],
-        updated_at: new Date().toISOString()
+        leaderboard: []
       });
+
+    if (snapshotError) {
+      console.error('[Room Create] Failed to create snapshot:', snapshotError);
+      // Room was created, but snapshot failed - still return success
+    }
+
+    console.log('[Room Create] Room creation completed successfully');
 
     return NextResponse.json({
       roomId: room.id,
@@ -85,9 +101,12 @@ export async function POST() {
       message: 'Room created successfully'
     });
   } catch (err) {
-    console.error('Room creation error:', err);
+    console.error('[Room Create] Unexpected error:', err);
     return NextResponse.json(
-      { error: 'Internal server error' },
+      {
+        error: 'Internal server error',
+        details: err instanceof Error ? err.message : 'Unknown error'
+      },
       { status: 500 }
     );
   }
