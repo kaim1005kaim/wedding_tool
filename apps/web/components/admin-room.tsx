@@ -56,6 +56,7 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
   const [manageTab, setManageTab] = useState<'quiz' | 'lottery'>('quiz');
   const [manageMessage, setManageMessage] = useState<string | null>(null);
   const [manageLoading, setManageLoading] = useState(false);
+  const [modeSwitching, setModeSwitching] = useState(false);
   const [quizzes, setQuizzes] = useState<QuizSummary[]>([]);
   const [lotteryCandidates, setLotteryCandidates] = useState<LotteryCandidateSummary[]>([]);
   const [quizForm, setQuizForm] = useState({
@@ -206,7 +207,10 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
   };
 
   const send = async (event: Parameters<typeof client.emit>[0], overrideBody?: Record<string, unknown>) => {
+    const isModeSwitch = event.type === 'mode:switch';
     try {
+      if (isModeSwitch) setModeSwitching(true);
+
       if (isCloudMode) {
         if (!adminToken) {
           throw new Error('管理トークンがありません。再ログインしてください');
@@ -232,6 +236,10 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : '操作に失敗しました');
+    } finally {
+      if (isModeSwitch) {
+        setTimeout(() => setModeSwitching(false), 500);
+      }
     }
   };
 
@@ -563,17 +571,37 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
           <div className="space-y-6">
           <AdminCard title="モード切替" description="ゲームの進行モードを選択します" icon={Gauge}>
             <div className="flex flex-wrap gap-4">
-              <AdminButton variant={mode === 'idle' ? 'primary' : 'secondary'} icon={PauseCircle} onClick={() => send({ type: 'mode:switch', payload: { to: 'idle' } })}>
-                待機モード
+              <AdminButton
+                variant={mode === 'idle' ? 'primary' : 'secondary'}
+                icon={PauseCircle}
+                onClick={() => send({ type: 'mode:switch', payload: { to: 'idle' } })}
+                disabled={modeSwitching}
+              >
+                {modeSwitching && mode !== 'idle' ? '切替中...' : '待機モード'}
               </AdminButton>
-              <AdminButton variant={mode === 'countup' ? 'primary' : 'secondary'} icon={Shuffle} onClick={() => send({ type: 'mode:switch', payload: { to: 'countup' } })}>
-                タップチャレンジ
+              <AdminButton
+                variant={mode === 'countup' ? 'primary' : 'secondary'}
+                icon={Shuffle}
+                onClick={() => send({ type: 'mode:switch', payload: { to: 'countup' } })}
+                disabled={modeSwitching}
+              >
+                {modeSwitching && mode !== 'countup' ? '切替中...' : 'タップチャレンジ'}
               </AdminButton>
-              <AdminButton variant={mode === 'quiz' ? 'primary' : 'secondary'} icon={Eye} onClick={() => send({ type: 'mode:switch', payload: { to: 'quiz' } })}>
-                クイズ
+              <AdminButton
+                variant={mode === 'quiz' ? 'primary' : 'secondary'}
+                icon={Eye}
+                onClick={() => send({ type: 'mode:switch', payload: { to: 'quiz' } })}
+                disabled={modeSwitching}
+              >
+                {modeSwitching && mode !== 'quiz' ? '切替中...' : 'クイズ'}
               </AdminButton>
-              <AdminButton variant={mode === 'lottery' ? 'primary' : 'secondary'} icon={Dice3} onClick={() => send({ type: 'mode:switch', payload: { to: 'lottery' } })}>
-                抽選
+              <AdminButton
+                variant={mode === 'lottery' ? 'primary' : 'secondary'}
+                icon={Dice3}
+                onClick={() => send({ type: 'mode:switch', payload: { to: 'lottery' } })}
+                disabled={modeSwitching}
+              >
+                {modeSwitching && mode !== 'lottery' ? '切替中...' : '抽選'}
               </AdminButton>
             </div>
           </AdminCard>

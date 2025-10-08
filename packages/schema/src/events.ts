@@ -71,8 +71,8 @@ export const stateUpdateBroadcastSchema = z.object({
       totalPoints: z.number().int().nonnegative(),
       rank: z.number().int().min(1),
       delta: z.number().int(),
-      quizPoints: z.number().int().nonnegative(),
-      countupTapCount: z.number().int().nonnegative()
+      quizPoints: z.number().int().nonnegative().default(0),
+      countupTapCount: z.number().int().nonnegative().default(0)
     })
   ),
   activeQuiz: quizShowBroadcastSchema.nullable().optional(),
