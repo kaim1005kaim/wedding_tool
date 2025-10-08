@@ -20,6 +20,7 @@ export type Player = z.infer<typeof playerSchema>;
 export const leaderboardEntrySchema = z.object({
   playerId: z.string().uuid(),
   name: z.string(),
+  tableNo: z.string().nullable().optional(),
   points: z.number().int().nonnegative(),
   rank: z.number().int().min(1).optional()
 });
@@ -35,7 +36,14 @@ export const roomSnapshotSchema = z.object({
       quizId: z.string().uuid(),
       question: z.string(),
       choices: z.array(z.string()).length(4),
-      deadlineTs: z.number().int()
+      deadlineTs: z.number().int(),
+      startTs: z.number().int().optional(),
+      representativeByTable: z.boolean().optional().default(true),
+      suddenDeath: z.object({
+        enabled: z.boolean(),
+        by: z.enum(['table', 'player']),
+        topK: z.number().int().positive()
+      }).nullable().optional()
     })
     .nullable()
     .optional(),
@@ -47,7 +55,10 @@ export const roomSnapshotSchema = z.object({
       awarded: z.array(
         z.object({
           playerId: z.string().uuid(),
-          delta: z.number().int()
+          delta: z.number().int(),
+          displayName: z.string().optional(),
+          tableNo: z.string().nullable().optional(),
+          latencyMs: z.number().int().nonnegative().nullable().optional()
         })
       )
     })

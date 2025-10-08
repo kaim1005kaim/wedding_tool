@@ -62,6 +62,9 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
     displayName: '',
     groupTag: 'all' as 'all' | 'groom_friends' | 'bride_friends'
   });
+  const [quizSettings, setQuizSettings] = useState({
+    representativeByTable: true
+  });
   const autoStopRef = useRef<NodeJS.Timeout | null>(null);
   const COUNTUP_DURATION_MS = 10_000;
   const COUNTDOWN_LEAD_MS = 3_000;
@@ -221,7 +224,10 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
   const buildPayload = (type: Parameters<typeof client.emit>[0]['type'], payload: Record<string, unknown>) => {
     switch (type) {
       case 'quiz:next':
-        return {};
+        return {
+          representativeByTable: quizSettings.representativeByTable,
+          ...payload
+        };
       case 'quiz:reveal': {
         if (Object.keys(payload).length > 0) {
           return payload;
@@ -507,6 +513,17 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
           </AdminCard>
 
           <AdminCard title="クイズ操作" description="出題と正解の公開" icon={Eye}>
+            <div className="mb-3 flex items-center gap-3 rounded-lg bg-brand-blue-50/50 p-3">
+              <label className="flex cursor-pointer items-center gap-2 text-sm text-brand-blue-700">
+                <input
+                  type="checkbox"
+                  checked={quizSettings.representativeByTable}
+                  onChange={(e) => setQuizSettings({ ...quizSettings, representativeByTable: e.target.checked })}
+                  className="h-4 w-4 rounded border-brand-blue-300 text-brand-blue-600 focus:ring-2 focus:ring-brand-blue-400"
+                />
+                <span className="font-medium">代表者制（各テーブル1回答まで）</span>
+              </label>
+            </div>
             <div className="grid gap-3 sm:grid-cols-2">
               <AdminButton icon={ListChecks} onClick={() => send({ type: 'quiz:next', payload: undefined })}>
                 次のクイズ
@@ -517,6 +534,9 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
             </div>
             {activeQuiz && (
               <p className="mt-3 text-xs text-brand-blue-700/80">表示中: {activeQuiz.question}</p>
+            )}
+            {quizSettings.representativeByTable && (
+              <p className="mt-2 text-xs text-brand-terra-600">各テーブル1名のみ回答が有効です</p>
             )}
           </AdminCard>
 

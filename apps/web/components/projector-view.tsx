@@ -122,6 +122,7 @@ function CountupBoard({ entries }: { entries: LeaderboardEntry[] }) {
                 >
                   <span className="font-medium text-brand-blue-700">
                     {entry.rank}. {entry.displayName}
+                    {entry.tableNo && <span className="ml-2 text-lg text-brand-blue-700/60">({entry.tableNo})</span>}
                   </span>
                   <span className="font-semibold text-brand-terra-600">{entry.totalPoints} pt</span>
                 </motion.div>
@@ -150,6 +151,7 @@ function IdleBoard({ leaderboard }: { leaderboard: LeaderboardEntry[] }) {
           <div key={entry.playerId} className="rounded-xl bg-white/85 px-6 py-4 text-left shadow-brand">
             <span className="text-xl font-medium text-brand-blue-700">
               {entry.rank}. {entry.displayName}
+              {entry.tableNo && <span className="ml-2 text-sm text-brand-blue-700/60">({entry.tableNo})</span>}
             </span>
             <span className="ml-2 text-base text-brand-blue-700/70">{entry.totalPoints} pt</span>
           </div>

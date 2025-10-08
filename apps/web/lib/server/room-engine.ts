@@ -61,11 +61,52 @@ export async function applyTapDelta(roomId: string, playerId: string, delta: num
 
 export async function submitQuizAnswer(roomId: string, quizId: string, playerId: string, choiceIndex: number) {
   const client = getSupabaseServiceRoleClient();
+
+  // Get current quiz snapshot to check representative mode and calculate latency
+  const { data: snapshot } = await client
+    .from('room_snapshots')
+    .select('current_quiz')
+    .eq('room_id', roomId)
+    .maybeSingle();
+
+  const currentQuiz = snapshot?.current_quiz;
+  const representativeByTable = currentQuiz?.representativeByTable ?? false;
+  const startTs = currentQuiz?.startTs;
+  const latencyMs = startTs ? Date.now() - startTs : null;
+
+  // Get player's table number for representative check
+  const { data: player } = await client
+    .from('players')
+    .select('table_no')
+    .eq('id', playerId)
+    .eq('room_id', roomId)
+    .maybeSingle();
+
+  // If representative mode is ON, check if table_no exists
+  if (representativeByTable) {
+    if (!player?.table_no || player.table_no.trim() === '') {
+      throw new Error('テーブル番号が必要です');
+    }
+
+    // Check if this table already answered using raw SQL query
+    const { data: existingAnswers } = await client.rpc('check_table_answered', {
+      p_quiz_id: quizId,
+      p_table_no: player.table_no,
+      p_room_id: roomId
+    });
+
+    if (existingAnswers) {
+      throw new Error('このテーブルは既に回答済みです');
+    }
+  }
+
   const { error } = await client.rpc('record_quiz_answer', {
     p_room_id: roomId,
     p_quiz_id: quizId,
     p_player_id: playerId,
-    p_choice: choiceIndex
+    p_choice: choiceIndex,
+    p_representative_by_table: representativeByTable,
+    p_latency_ms: latencyMs
   });
 
   if (error) {
@@ -73,7 +114,13 @@ export async function submitQuizAnswer(roomId: string, quizId: string, playerId:
   }
 }
 
-export async function showQuiz(roomId: string, quizId: string, deadlineTs: number) {
+export async function showQuiz(
+  roomId: string,
+  quizId: string,
+  deadlineTs: number,
+  representativeByTable = true,
+  suddenDeath: { enabled: boolean; by: 'table' | 'player'; topK: number } | null = null
+) {
   const client = getSupabaseServiceRoleClient();
   const { data, error } = await client
     .from('quizzes')
@@ -89,23 +136,33 @@ export async function showQuiz(roomId: string, quizId: string, deadlineTs: numbe
   await client.from('rooms').update({ mode: 'quiz', phase: 'running' }).eq('id', roomId);
   await ensureRoomSnapshot(roomId);
 
+  const startTs = Date.now();
+
   await upsertRoomSnapshot(roomId, {
     mode: 'quiz',
     phase: 'running',
-    countdown_ms: Math.max(0, deadlineTs - Date.now()),
+    countdown_ms: Math.max(0, deadlineTs - startTs),
     current_quiz: {
       quizId,
       question: data.question,
       choices: data.choices ?? [],
-      deadlineTs
+      deadlineTs,
+      startTs,
+      representativeByTable,
+      ...(suddenDeath && { suddenDeath })
     },
     quiz_result: null
   });
 
-  await appendAuditLog(roomId, 'quiz:show', { quizId, deadlineTs });
+  await appendAuditLog(roomId, 'quiz:show', { quizId, deadlineTs, representativeByTable, suddenDeath });
 }
 
-export async function showNextQuiz(roomId: string, deadlineMs = DEFAULT_COUNTDOWN_MS) {
+export async function showNextQuiz(
+  roomId: string,
+  deadlineMs = DEFAULT_COUNTDOWN_MS,
+  representativeByTable = true,
+  suddenDeath: { enabled: boolean; by: 'table' | 'player'; topK: number } | null = null
+) {
   const client = getSupabaseServiceRoleClient();
   const { data, error } = await client
     .from('quizzes')
@@ -131,7 +188,7 @@ export async function showNextQuiz(roomId: string, deadlineMs = DEFAULT_COUNTDOW
   }
 
   const deadlineTs = Date.now() + deadlineMs;
-  await showQuiz(roomId, next.id, deadlineTs);
+  await showQuiz(roomId, next.id, deadlineTs, representativeByTable, suddenDeath);
   return next.id;
 }
 

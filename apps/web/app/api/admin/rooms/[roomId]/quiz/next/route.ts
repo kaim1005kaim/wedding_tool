@@ -1,7 +1,17 @@
 import { NextResponse } from 'next/server';
+import { z } from '@wedding_tool/schema';
 import { extractBearerToken } from '@/lib/server/auth-headers';
 import { verifyAdminToken } from '@/lib/auth/jwt';
 import { showNextQuiz } from '@/lib/server/room-engine';
+
+const bodySchema = z.object({
+  representativeByTable: z.boolean().optional().default(true),
+  suddenDeath: z.object({
+    enabled: z.boolean(),
+    by: z.enum(['table', 'player']),
+    topK: z.number().int().positive()
+  }).nullable().optional()
+}).optional();
 
 export async function POST(request: Request, { params }: { params: { roomId: string } }) {
   const auth = extractBearerToken(request.headers.get('authorization'));
@@ -15,7 +25,14 @@ export async function POST(request: Request, { params }: { params: { roomId: str
   }
 
   try {
-    const quizId = await showNextQuiz(params.roomId);
+    const body = await request.json().catch(() => ({}));
+    const validated = bodySchema.parse(body);
+    const quizId = await showNextQuiz(
+      params.roomId,
+      undefined,
+      validated?.representativeByTable ?? true,
+      validated?.suddenDeath ?? null
+    );
     return NextResponse.json({ ok: true, quizId });
   } catch (error) {
     console.error('Failed to start next quiz', error);

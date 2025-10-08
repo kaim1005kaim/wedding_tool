@@ -11,6 +11,7 @@ export type RoomView = 'idle' | 'countup' | 'quiz' | 'lottery';
 export type LeaderboardEntry = {
   playerId: string;
   displayName: string;
+  tableNo?: string | null;
   totalPoints: number;
   rank: number;
   delta: number;
@@ -67,6 +68,7 @@ export const useRoomStore = create<RoomStoreState & RoomStoreActions>((set) => (
       leaderboard: payload.leaderboard.map((entry) => ({
         playerId: entry.playerId,
         displayName: entry.displayName,
+        tableNo: entry.tableNo ?? null,
         totalPoints: entry.totalPoints,
         rank: entry.rank,
         delta: entry.delta ?? 0

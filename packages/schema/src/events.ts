@@ -66,6 +66,7 @@ export const stateUpdateBroadcastSchema = z.object({
     z.object({
       playerId: z.string().uuid(),
       displayName: z.string(),
+      tableNo: z.string().nullable().optional(),
       totalPoints: z.number().int().nonnegative(),
       rank: z.number().int().min(1),
       delta: z.number().int()

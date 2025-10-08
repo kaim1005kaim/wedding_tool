@@ -6,7 +6,13 @@ import { showQuiz } from '@/lib/server/room-engine';
 
 const bodySchema = z.object({
   quizId: z.string().uuid(),
-  deadlineTs: z.number().int().optional()
+  deadlineTs: z.number().int().optional(),
+  representativeByTable: z.boolean().optional().default(true),
+  suddenDeath: z.object({
+    enabled: z.boolean(),
+    by: z.enum(['table', 'player']),
+    topK: z.number().int().positive()
+  }).nullable().optional()
 });
 
 export async function POST(request: Request, { params }: { params: { roomId: string } }) {
@@ -22,7 +28,13 @@ export async function POST(request: Request, { params }: { params: { roomId: str
 
   const body = bodySchema.parse(await request.json());
   const deadlineTs = body.deadlineTs ?? Date.now() + 20_000;
-  await showQuiz(params.roomId, body.quizId, deadlineTs);
+  await showQuiz(
+    params.roomId,
+    body.quizId,
+    deadlineTs,
+    body.representativeByTable ?? true,
+    body.suddenDeath ?? null
+  );
 
   return NextResponse.json({ ok: true });
 }

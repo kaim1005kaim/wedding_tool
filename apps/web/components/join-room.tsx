@@ -13,13 +13,14 @@ const START_BANNER_DURATION_MS = 800;
 const STOP_BANNER_DURATION_MS = 1000;
 
 export default function JoinRoom({ code }: { code: string }) {
-  const [lastName, setLastName] = useState('');
-  const [firstName, setFirstName] = useState('');
+  const [tableNo, setTableNo] = useState('');
+  const [displayName, setDisplayName] = useState('');
   const [modalError, setModalError] = useState<string | null>(null);
   const [registered, setRegistered] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [roomId, setRoomId] = useState<string | null>(null);
-  const [displayName, setDisplayName] = useState('');
+  const [registeredTableNo, setRegisteredTableNo] = useState('');
+  const [registeredName, setRegisteredName] = useState('');
   const [connection, setConnection] = useState<ConnectionStatus>('good');
   const [showModal, setShowModal] = useState(true);
   const client = useRealtimeClient();
@@ -39,12 +40,10 @@ export default function JoinRoom({ code }: { code: string }) {
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
+    const storedTableNo = window.localStorage.getItem(`${storageKey}:tableNo`);
     const storedName = window.localStorage.getItem(`${storageKey}:name`);
-    if (storedName) {
-      const parts = storedName.split(' ');
-      setLastName(parts.at(0) ?? storedName);
-      setFirstName(parts.slice(1).join(' '));
-    }
+    if (storedTableNo) setTableNo(storedTableNo);
+    if (storedName) setDisplayName(storedName);
     clearPlayerAuth();
     setRegistered(false);
     setShowModal(true);
@@ -78,13 +77,6 @@ export default function JoinRoom({ code }: { code: string }) {
     };
   }, []);
 
-  const fullName = useMemo(
-    () =>
-      [lastName.trim(), firstName.trim()]
-        .filter((value) => value.length > 0)
-        .join(' '),
-    [lastName, firstName]
-  );
 
   const getDeviceFingerprint = () => {
     if (typeof window === 'undefined') return undefined;
@@ -97,8 +89,12 @@ export default function JoinRoom({ code }: { code: string }) {
   };
 
   const handleJoin = async () => {
-    if (!lastName.trim() || !firstName.trim()) {
-      setModalError('姓と名を入力してください');
+    if (!tableNo.trim()) {
+      setModalError('テーブル番号を入力してください');
+      return;
+    }
+    if (!displayName.trim()) {
+      setModalError('お名前を入力してください');
       return;
     }
 
@@ -120,7 +116,8 @@ export default function JoinRoom({ code }: { code: string }) {
             'Content-Type': 'application/json'
           },
           body: JSON.stringify({
-            displayName: fullName,
+            displayName: displayName.trim(),
+            tableNo: tableNo.trim(),
             deviceFingerprint: getDeviceFingerprint()
           })
         });
@@ -142,7 +139,8 @@ export default function JoinRoom({ code }: { code: string }) {
         };
         setPlayerAuth({ playerId, token });
         if (typeof window !== 'undefined') {
-          window.localStorage.setItem(`${storageKey}:name`, fullName);
+          window.localStorage.setItem(`${storageKey}:tableNo`, tableNo.trim());
+          window.localStorage.setItem(`${storageKey}:name`, displayName.trim());
           window.localStorage.setItem(`${storageKey}:room`, fetchedRoomId);
           window.localStorage.setItem(storageKey, JSON.stringify({ playerId, token, expiresAt }));
         }
@@ -150,16 +148,16 @@ export default function JoinRoom({ code }: { code: string }) {
         await client.emit({
           type: 'hello',
           payload: {
-            displayName: fullName
+            displayName: displayName.trim(),
+            tableNo: tableNo.trim()
           }
         });
       }
 
       setRegistered(true);
-      setDisplayName(fullName);
+      setRegisteredTableNo(tableNo.trim());
+      setRegisteredName(displayName.trim());
       setShowModal(false);
-      setLastName('');
-      setFirstName('');
     } catch (err) {
       setModalError(err instanceof Error ? err.message : '参加に失敗しました');
       setRegistered(false);
@@ -221,11 +219,11 @@ export default function JoinRoom({ code }: { code: string }) {
 
         {registered ? (
           <div className="glass-panel rounded-2xl border border-white/40 px-6 py-5 text-center shadow-brand" aria-live="polite">
-            <p className="text-lg font-semibold">{displayName} さん、ゲーム開始までお待ちください。</p>
+            <p className="text-lg font-semibold">{registeredTableNo}テーブル / {registeredName} さん、開始までお待ちください。</p>
           </div>
         ) : (
           <div className="rounded-2xl bg-white/80 p-6 text-center text-sm text-brand-blue-700/80">
-            画面中央のモーダルで本名（姓と名）を入力し、「参加する」を押してください。
+            画面中央のモーダルでテーブル番号とお名前を入力し、「参加する」を押してください。
           </div>
         )}
 
@@ -291,12 +289,13 @@ export default function JoinRoom({ code }: { code: string }) {
 
       <JoinModal
         visible={showModal}
-        lastName={lastName}
-        firstName={firstName}
-        onLastNameChange={setLastName}
-        onFirstNameChange={setFirstName}
+        tableNo={tableNo}
+        displayName={displayName}
+        onTableNoChange={setTableNo}
+        onDisplayNameChange={setDisplayName}
         onSubmit={handleJoin}
         error={modalError}
+        mode={mode}
       />
     </main>
   );
@@ -304,22 +303,29 @@ export default function JoinRoom({ code }: { code: string }) {
 
 type JoinModalProps = {
   visible: boolean;
-  lastName: string;
-  firstName: string;
-  onLastNameChange: (value: string) => void;
-  onFirstNameChange: (value: string) => void;
+  tableNo: string;
+  displayName: string;
+  onTableNoChange: (value: string) => void;
+  onDisplayNameChange: (value: string) => void;
   onSubmit: () => void;
   error: string | null;
+  mode: string;
 };
 
-function JoinModal({ visible, lastName, firstName, onLastNameChange, onFirstNameChange, onSubmit, error }: JoinModalProps) {
+function JoinModal({ visible, tableNo, displayName, onTableNoChange, onDisplayNameChange, onSubmit, error, mode }: JoinModalProps) {
   if (!visible) return null;
+
+  const guidanceText = mode === 'quiz'
+    ? '各テーブル代表者の方のみ登録してください。'
+    : mode === 'countup'
+      ? '全員ご参加ください。'
+      : 'テーブル番号とお名前を入力してください。';
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink/60 px-6">
       <div className="glass-panel w-full max-w-md rounded-2xl px-6 py-8 shadow-brand">
         <h2 className="text-2xl font-semibold text-brand-terra-600">参加登録</h2>
-        <p className="mt-2 text-sm text-brand-blue-700/80">お席で配布されたQRコードからアクセスしています。下記に本名を入力してください。</p>
+        <p className="mt-2 text-sm text-brand-blue-700/80">{guidanceText}</p>
         <form
           className="mt-6 space-y-4"
           onSubmit={(event) => {
@@ -328,30 +334,31 @@ function JoinModal({ visible, lastName, firstName, onLastNameChange, onFirstName
           }}
         >
           <div className="space-y-2">
-            <label className="text-sm font-medium text-brand-blue-700" htmlFor="last-name">
-              姓
+            <label className="text-sm font-medium text-brand-blue-700" htmlFor="table-no">
+              テーブル番号
             </label>
             <input
-              id="last-name"
+              id="table-no"
               className="w-full rounded-xl border border-brand-blue-200 bg-white px-4 py-3 text-base focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-blue-400"
-              value={lastName}
-              onChange={(event) => onLastNameChange(event.target.value)}
-              placeholder="例：山田"
-              autoComplete="family-name"
+              value={tableNo}
+              onChange={(event) => onTableNoChange(event.target.value)}
+              placeholder="例：A-3 / 5 / C"
+              maxLength={8}
               required
             />
           </div>
           <div className="space-y-2">
-            <label className="text-sm font-medium text-brand-blue-700" htmlFor="first-name">
-              名
+            <label className="text-sm font-medium text-brand-blue-700" htmlFor="display-name">
+              お名前
             </label>
             <input
-              id="first-name"
+              id="display-name"
               className="w-full rounded-xl border border-brand-blue-200 bg-white px-4 py-3 text-base focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-blue-400"
-              value={firstName}
-              onChange={(event) => onFirstNameChange(event.target.value)}
-              placeholder="例：花子"
-              autoComplete="given-name"
+              value={displayName}
+              onChange={(event) => onDisplayNameChange(event.target.value)}
+              placeholder="例：山田花子"
+              autoComplete="name"
+              maxLength={30}
               required
             />
           </div>

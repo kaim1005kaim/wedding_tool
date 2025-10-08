@@ -111,6 +111,7 @@ function buildLeaderboard(room: RoomState) {
     .map((player, index) => ({
       playerId: player.id,
       displayName: player.displayName,
+      tableNo: player.tableNo ?? null,
       totalPoints: player.totalPoints,
       rank: index + 1,
       delta: player.lastDelta
@@ -325,7 +326,7 @@ const io = new Server(httpServer, {
   }
 });
 
-aio.on('connection', (socket) => {
+io.on('connection', (socket) => {
   const initialRoomId = (socket.handshake.query.roomId as string | undefined) ?? randomUUID();
   const room = getRoom(initialRoomId);
   socket.data.roomId = room.id;

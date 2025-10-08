@@ -45,12 +45,12 @@ async function main() {
     disabled: false
   });
 
-  const players = Array.from({ length: 5 }, (_, index) => ({
+  const players = Array.from({ length: 12 }, (_, index) => ({
     id: randomUUID(),
     room_id: roomId,
     display_name: `Guest ${index + 1}`,
-    table_no: ['A', 'B', 'C', 'D', 'E'][index] ?? null,
-    seat_no: String(index + 1)
+    table_no: `${['A', 'A', 'B', 'B', 'C', 'C', 'D', 'D', 'E', 'E', 'F', 'F'][index]}-${(index % 2) + 1}`,
+    seat_no: null
   }));
 
   await client.from('players').insert(players).onConflict('id').ignore();
@@ -108,6 +108,7 @@ async function main() {
     leaderboard: players.map((player, index) => ({
       playerId: player.id,
       name: player.display_name,
+      tableNo: player.table_no,
       points: 0,
       rank: index + 1
     })),
