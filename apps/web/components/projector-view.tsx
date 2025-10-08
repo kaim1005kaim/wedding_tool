@@ -358,6 +358,11 @@ function QuizBoard({ activeQuiz, quizResult }: QuizPanelProps) {
   const total = counts.reduce((acc, value) => acc + value, 0) || 1;
   const correctIndex = quizResult?.correctIndex ?? -1;
 
+  // Get background image based on question number (ord)
+  // Q1-Q5 use respective colors, Q6+ use Q1 color
+  const backgroundOrd = activeQuiz?.ord ? Math.min(activeQuiz.ord, 5) : 1;
+  const backgroundImage = `/quiz-backgrounds/${backgroundOrd}-view.png`;
+
   return (
     <motion.section
       initial={{ opacity: 0, y: 30 }}
@@ -365,6 +370,12 @@ function QuizBoard({ activeQuiz, quizResult }: QuizPanelProps) {
       exit={{ opacity: 0, y: -30 }}
       transition={{ duration: 0.5, ease: 'easeOut' }}
       className="glass-panel grid h-full gap-8 rounded-2xl p-10 shadow-brand lg:grid-cols-2"
+      style={{
+        backgroundImage: `url(${backgroundImage})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat'
+      }}
     >
       <div className="space-y-6">
         <h2 className="text-4xl font-semibold text-brand-blue-700">クイズ</h2>

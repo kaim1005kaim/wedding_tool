@@ -15,6 +15,8 @@ export type LeaderboardEntry = {
   totalPoints: number;
   rank: number;
   delta: number;
+  quizPoints: number;
+  countupTapCount: number;
 };
 
 export type RoomStoreState = {
@@ -71,7 +73,9 @@ export const useRoomStore = create<RoomStoreState & RoomStoreActions>((set) => (
         tableNo: entry.tableNo ?? null,
         totalPoints: entry.totalPoints,
         rank: entry.rank,
-        delta: entry.delta ?? 0
+        delta: entry.delta ?? 0,
+        quizPoints: entry.quizPoints ?? 0,
+        countupTapCount: entry.countupTapCount ?? 0
       })),
       activeQuiz: payload.activeQuiz ?? null,
       quizResult: payload.quizResult ?? null,

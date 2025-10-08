@@ -22,6 +22,8 @@ export const leaderboardEntrySchema = z.object({
   name: z.string(),
   tableNo: z.string().nullable().optional(),
   points: z.number().int().nonnegative(),
+  quizPoints: z.number().int().nonnegative().optional().default(0),
+  countupTapCount: z.number().int().nonnegative().optional().default(0),
   rank: z.number().int().min(1).optional()
 });
 
@@ -37,6 +39,7 @@ export const roomSnapshotSchema = z.object({
       question: z.string(),
       choices: z.array(z.string()).length(4),
       deadlineTs: z.number().int(),
+      ord: z.number().int().min(1),
       startTs: z.number().int().optional(),
       representativeByTable: z.boolean().optional().default(true),
       suddenDeath: z.object({

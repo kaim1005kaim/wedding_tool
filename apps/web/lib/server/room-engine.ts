@@ -147,6 +147,7 @@ export async function showQuiz(
       question: data.question,
       choices: data.choices ?? [],
       deadlineTs,
+      ord: data.ord,
       startTs,
       representativeByTable,
       ...(suddenDeath && { suddenDeath })
@@ -223,7 +224,7 @@ export async function refreshLeaderboardSnapshot(roomId: string, limit = 20) {
   const client = getSupabaseServiceRoleClient();
   const { data, error } = await client
     .from('scores')
-    .select('player_id, total_points, players:players(display_name)')
+    .select('player_id, total_points, quiz_points, countup_tap_count, players:players(display_name)')
     .eq('room_id', roomId)
     .order('total_points', { ascending: false })
     .limit(limit);
@@ -236,6 +237,8 @@ export async function refreshLeaderboardSnapshot(roomId: string, limit = 20) {
     playerId: row.player_id,
     name: row.players?.display_name ?? 'Unknown',
     points: row.total_points ?? 0,
+    quizPoints: row.quiz_points ?? 0,
+    countupTapCount: row.countup_tap_count ?? 0,
     rank: index + 1
   }));
 

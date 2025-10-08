@@ -159,6 +159,8 @@ export type LeaderboardEntryInput = {
   playerId: string;
   name: string;
   points: number;
+  quizPoints?: number;
+  countupTapCount?: number;
   rank?: number;
 };
 
@@ -168,6 +170,8 @@ export async function updateSnapshotLeaderboard(roomId: string, entries: Leaderb
       playerId: entry.playerId,
       name: entry.name,
       points: entry.points,
+      quizPoints: entry.quizPoints ?? 0,
+      countupTapCount: entry.countupTapCount ?? 0,
       rank: entry.rank ?? index + 1
     }))
   });
@@ -177,7 +181,7 @@ export async function recomputeLeaderboard(roomId: string, limit = 20) {
   const client = getSupabaseServiceRoleClient();
   const { data, error } = await client
     .from('scores')
-    .select('player_id, total_points, players:players(display_name)')
+    .select('player_id, total_points, quiz_points, countup_tap_count, players:players(display_name)')
     .eq('room_id', roomId)
     .order('total_points', { ascending: false })
     .limit(limit);
@@ -190,6 +194,8 @@ export async function recomputeLeaderboard(roomId: string, limit = 20) {
     playerId: row.player_id,
     name: row.players?.display_name ?? 'Unknown',
     points: row.total_points ?? 0,
+    quizPoints: row.quiz_points ?? 0,
+    countupTapCount: row.countup_tap_count ?? 0,
     rank: index + 1
   }));
 

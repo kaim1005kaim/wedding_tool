@@ -14,7 +14,7 @@ export async function GET() {
   try {
     const { data: rooms, error } = await supabase
       .from('rooms')
-      .select('id, code, created_at, updated_at')
+      .select('id, code, created_at')
       .order('created_at', { ascending: false });
 
     if (error) {

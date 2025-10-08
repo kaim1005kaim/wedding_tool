@@ -39,7 +39,8 @@ export const quizShowBroadcastSchema = z.object({
   quizId: z.string().uuid(),
   question: z.string(),
   choices: z.array(z.string()).length(4),
-  deadlineTs: z.number()
+  deadlineTs: z.number(),
+  ord: z.number().int().min(1)
 });
 
 export const quizResultBroadcastSchema = z.object({
@@ -69,7 +70,9 @@ export const stateUpdateBroadcastSchema = z.object({
       tableNo: z.string().nullable().optional(),
       totalPoints: z.number().int().nonnegative(),
       rank: z.number().int().min(1),
-      delta: z.number().int()
+      delta: z.number().int(),
+      quizPoints: z.number().int().nonnegative(),
+      countupTapCount: z.number().int().nonnegative()
     })
   ),
   activeQuiz: quizShowBroadcastSchema.nullable().optional(),
