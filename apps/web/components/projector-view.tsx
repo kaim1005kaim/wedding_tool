@@ -6,6 +6,7 @@ import { useRoomStore } from '../lib/store/room-store';
 import type { LeaderboardEntry, RoomStoreState } from '../lib/store/room-store';
 import ParticleEffect from './ParticleEffect';
 import type { ParticleConfig } from './ParticleEffect';
+import { PatternBackground, DecorativeShapes } from './BackgroundPatterns';
 
 const CHOICE_LABELS = ['A', 'B', 'C', 'D'];
 
@@ -126,12 +127,14 @@ export default function ProjectorView({ roomId: _roomId }: { roomId: string }) {
   return (
     <main
       ref={containerRef}
-      className="flex min-h-screen items-center justify-center bg-gradient-to-br from-brand-blue-100 via-ecru to-brand-terra-100 text-ink"
+      className="flex min-h-screen items-center justify-center bg-white text-black relative overflow-hidden"
       style={{ padding: isFullscreen ? '0' : '1.5rem' }}
     >
-      <div className={`relative aspect-video w-full overflow-hidden shadow-brand-xl ${isFullscreen ? 'max-w-none rounded-none h-screen' : 'max-w-[1920px] rounded-3xl'}`}>
-        <div className="absolute inset-0 pointer-events-none bg-gradient-to-br from-brand-blue-50/50 via-transparent to-brand-terra-50/50" />
-        <div className={`relative flex h-full flex-col ${isFullscreen ? 'gap-8 px-16 py-12' : 'gap-6 px-12 py-8'}`}>
+      <PatternBackground pattern="chevron" />
+      <DecorativeShapes variant="mixed" />
+
+      <div className={`relative aspect-video w-full overflow-hidden shadow-brand-xl border-3 border-black z-10 ${isFullscreen ? 'max-w-none rounded-none h-screen' : 'max-w-[1920px] rounded-2xl'}`}>
+        <div className={`relative flex h-full flex-col bg-white ${isFullscreen ? 'gap-6 px-12 py-10' : 'gap-5 px-10 py-8'}`}>
           <Header mode={mode} countdownMs={countdownMs} isFullscreen={isFullscreen} onToggleFullscreen={toggleFullscreen} />
           <div className="flex-1 overflow-hidden">
             <AnimatePresence mode="wait">{renderSection(mode, topTen, activeQuiz, quizResult, lotteryResult, isSpinning, lotteryKey)}</AnimatePresence>
@@ -141,15 +144,15 @@ export default function ProjectorView({ roomId: _roomId }: { roomId: string }) {
 
       {/* Fullscreen hint - only show when not in fullscreen */}
       {!isFullscreen && (
-        <div className="fixed bottom-8 right-8 z-50 rounded-xl bg-white/90 px-4 py-3 shadow-brand-lg backdrop-blur-sm slide-up">
+        <div className="fixed bottom-8 right-8 z-50 rounded-xl bg-white px-4 py-3 shadow-brand-lg border-3 border-black slide-up">
           <button
             onClick={toggleFullscreen}
-            className="flex items-center gap-2 text-sm font-semibold text-brand-blue-700 transition-colors hover:text-brand-terra-600"
+            className="flex items-center gap-2 text-sm font-bold text-black transition-colors hover:text-pop-blue"
           >
             <span className="text-xl">⛶</span>
             <div className="text-left">
               <p>全画面表示</p>
-              <p className="text-xs text-brand-blue-700/60">F キー</p>
+              <p className="text-xs text-black/60">F キー</p>
             </div>
           </button>
         </div>
@@ -180,32 +183,32 @@ function Header({
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
       transition={{ duration: 0.5, ease: 'easeOut' }}
-      className="glass-panel-strong rounded-3xl px-12 py-10 shadow-brand-lg"
+      className="rounded-2xl bg-pop-yellow px-10 py-8 shadow-brand-lg border-3 border-black"
     >
-      <div className="flex flex-col gap-6 text-center md:flex-row md:items-center md:justify-between md:text-left">
-        <div className="flex items-center justify-center gap-6 md:justify-start">
-          <div className="flex h-20 w-20 items-center justify-center rounded-3xl bg-gradient-secondary text-5xl shadow-brand-md">
+      <div className="flex flex-col gap-5 text-center md:flex-row md:items-center md:justify-between md:text-left">
+        <div className="flex items-center justify-center gap-5 md:justify-start">
+          <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-white text-4xl shadow-brand-md border-3 border-black">
             {modeIcon}
           </div>
           <div className="space-y-1">
-            <p className="text-xs font-bold uppercase tracking-[0.4em] text-brand-blue-700/70">Wedding Party Game</p>
-            <p className="text-display-sm font-serif font-bold tracking-tight text-brand-terra-600">
+            <p className="text-xs font-bold uppercase tracking-[0.3em] text-black/60">Wedding Party Game</p>
+            <p className="text-3xl font-bold tracking-tight text-black">
               {labelForMode(mode)}
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-4">
-          <div className="rounded-2xl bg-white/80 px-8 py-4 shadow-brand-sm backdrop-blur-sm">
-            <p className="text-xs font-bold uppercase tracking-[0.35em] text-brand-blue-700/70">Countdown</p>
+        <div className="flex items-center gap-3">
+          <div className="rounded-xl bg-white px-6 py-3 shadow-brand-sm border-3 border-black">
+            <p className="text-xs font-bold uppercase tracking-[0.25em] text-black/60">Countdown</p>
             <div className="mt-1 flex items-center justify-center gap-2">
-              <p className="text-display-sm font-bold text-brand-blue-700 count-up">{countdown}</p>
-              <p className="text-2xl font-semibold text-brand-blue-700/60">秒</p>
+              <p className="text-4xl font-bold text-black count-up">{countdown}</p>
+              <p className="text-xl font-bold text-black/70">秒</p>
             </div>
           </div>
           {!isFullscreen && (
             <button
               onClick={onToggleFullscreen}
-              className="flex h-16 w-16 items-center justify-center rounded-2xl bg-white/80 text-2xl shadow-brand-sm backdrop-blur-sm transition-all duration-300 hover:scale-110 hover:bg-brand-blue-50 hover:shadow-brand"
+              className="flex h-14 w-14 items-center justify-center rounded-xl bg-white text-2xl shadow-brand-sm border-3 border-black transition-all duration-300 hover:scale-110 hover:bg-pop-blue"
               title="全画面表示 (F キー)"
             >
               ⛶
@@ -249,7 +252,7 @@ function CountupBoard({ entries }: { entries: LeaderboardEntry[] }) {
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -30 }}
       transition={{ duration: 0.5, ease: 'easeOut' }}
-      className="flex h-full flex-col gap-6"
+      className="flex h-full flex-col gap-5"
     >
       {/* Top 3 - Large Display */}
       <div className="grid grid-cols-3 gap-4">
@@ -260,30 +263,22 @@ function CountupBoard({ entries }: { entries: LeaderboardEntry[] }) {
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.4 }}
-            className={`glass-panel-strong flex flex-col items-center rounded-2xl p-6 shadow-brand-lg ${
+            className={`flex flex-col items-center rounded-2xl p-6 shadow-brand-lg border-3 border-black ${
               entry.rank === 1
-                ? 'bg-gradient-to-br from-yellow-100 to-yellow-50 border-3 border-yellow-400'
+                ? 'bg-pop-yellow'
                 : entry.rank === 2
-                  ? 'bg-gradient-to-br from-gray-100 to-gray-50 border-3 border-gray-400'
-                  : 'bg-gradient-to-br from-orange-100 to-orange-50 border-3 border-orange-400'
+                  ? 'bg-pop-blue'
+                  : 'bg-pop-orange'
             }`}
           >
-            <div
-              className={`mb-3 flex h-16 w-16 items-center justify-center rounded-full text-4xl ${
-                entry.rank === 1
-                  ? 'bg-gradient-to-br from-yellow-400 to-yellow-600 text-white'
-                  : entry.rank === 2
-                    ? 'bg-gradient-to-br from-gray-300 to-gray-500 text-white'
-                    : 'bg-gradient-to-br from-orange-400 to-orange-600 text-white'
-              }`}
-            >
+            <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-full text-3xl bg-white border-3 border-black">
               {['🥇', '🥈', '🥉'][entry.rank - 1]}
             </div>
-            <p className="mb-1 text-center text-xl font-bold text-brand-blue-700">{entry.displayName}</p>
-            {entry.tableNo && <p className="mb-2 text-sm text-brand-blue-700/60">テーブル {entry.tableNo}</p>}
-            <div className="rounded-full bg-brand-terra-600 px-5 py-2 shadow-md">
-              <span className="text-2xl font-bold text-white">{entry.totalPoints}</span>
-              <span className="ml-1 text-sm text-white/80">pt</span>
+            <p className="mb-1 text-center text-xl font-bold text-black">{entry.displayName}</p>
+            {entry.tableNo && <p className="mb-2 text-sm text-black/70 font-bold">テーブル {entry.tableNo}</p>}
+            <div className="rounded-full bg-white px-5 py-2 shadow-md border-3 border-black">
+              <span className="text-2xl font-bold text-black">{entry.totalPoints}</span>
+              <span className="ml-1 text-sm text-black/80 font-bold">pt</span>
             </div>
           </motion.div>
         ))}
@@ -291,20 +286,20 @@ function CountupBoard({ entries }: { entries: LeaderboardEntry[] }) {
 
       {/* Rest - Compact Grid */}
       {rest.length > 0 && (
-        <div className="glass-panel-strong flex-1 overflow-auto rounded-2xl p-6 shadow-brand">
+        <div className="flex-1 overflow-auto rounded-2xl p-5 shadow-brand bg-white border-3 border-black">
           <div className="grid grid-cols-4 gap-2">
             {rest.map((entry) => (
               <div
                 key={entry.playerId}
-                className="flex items-center justify-between rounded-lg bg-white/90 px-3 py-2 text-sm shadow-sm"
+                className="flex items-center justify-between rounded-lg bg-pop-pink px-3 py-2 text-sm shadow-sm border-2 border-black"
               >
                 <div className="flex items-center gap-2 min-w-0">
-                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-brand-blue-100 text-xs font-bold text-brand-blue-700">
+                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-white text-xs font-bold text-black border-2 border-black">
                     {entry.rank}
                   </span>
-                  <span className="truncate font-semibold text-brand-blue-700">{entry.displayName}</span>
+                  <span className="truncate font-bold text-black">{entry.displayName}</span>
                 </div>
-                <span className="ml-2 shrink-0 font-bold text-brand-terra-700">{entry.totalPoints}</span>
+                <span className="ml-2 shrink-0 font-bold text-black">{entry.totalPoints}</span>
               </div>
             ))}
           </div>
@@ -324,11 +319,11 @@ function IdleBoard({ leaderboard }: { leaderboard: LeaderboardEntry[] }) {
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.95 }}
       transition={{ duration: 0.5, ease: 'easeOut' }}
-      className="flex h-full flex-col gap-6"
+      className="flex h-full flex-col gap-5"
     >
-      <div className="glass-panel rounded-2xl p-8 text-center shadow-brand">
-        <h2 className="text-4xl font-semibold text-brand-blue-700">まもなくゲームが始まります</h2>
-        <p className="mt-4 text-lg text-brand-blue-700/80">スマホの画面を確認してください。</p>
+      <div className="rounded-2xl bg-pop-green p-8 text-center shadow-brand border-3 border-black">
+        <h2 className="text-3xl font-bold text-black">まもなくゲームが始まります</h2>
+        <p className="mt-3 text-lg text-black/80 font-bold">スマホの画面を確認してください。</p>
       </div>
 
       {leaderboard.length > 0 && (
@@ -339,30 +334,22 @@ function IdleBoard({ leaderboard }: { leaderboard: LeaderboardEntry[] }) {
               {top3.map((entry) => (
                 <div
                   key={entry.playerId}
-                  className={`glass-panel-strong flex flex-col items-center rounded-2xl p-6 shadow-brand-lg ${
+                  className={`flex flex-col items-center rounded-2xl p-6 shadow-brand-lg border-3 border-black ${
                     entry.rank === 1
-                      ? 'bg-gradient-to-br from-yellow-100 to-yellow-50 border-3 border-yellow-400'
+                      ? 'bg-pop-yellow'
                       : entry.rank === 2
-                        ? 'bg-gradient-to-br from-gray-100 to-gray-50 border-3 border-gray-400'
-                        : 'bg-gradient-to-br from-orange-100 to-orange-50 border-3 border-orange-400'
+                        ? 'bg-pop-blue'
+                        : 'bg-pop-orange'
                   }`}
                 >
-                  <div
-                    className={`mb-3 flex h-16 w-16 items-center justify-center rounded-full text-4xl ${
-                      entry.rank === 1
-                        ? 'bg-gradient-to-br from-yellow-400 to-yellow-600 text-white'
-                        : entry.rank === 2
-                          ? 'bg-gradient-to-br from-gray-300 to-gray-500 text-white'
-                          : 'bg-gradient-to-br from-orange-400 to-orange-600 text-white'
-                    }`}
-                  >
+                  <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-full text-3xl bg-white border-3 border-black">
                     {['🥇', '🥈', '🥉'][entry.rank - 1]}
                   </div>
-                  <p className="mb-1 text-center text-xl font-bold text-brand-blue-700">{entry.displayName}</p>
-                  {entry.tableNo && <p className="mb-2 text-sm text-brand-blue-700/60">テーブル {entry.tableNo}</p>}
-                  <div className="rounded-full bg-brand-terra-600 px-5 py-2 shadow-md">
-                    <span className="text-2xl font-bold text-white">{entry.totalPoints}</span>
-                    <span className="ml-1 text-sm text-white/80">pt</span>
+                  <p className="mb-1 text-center text-xl font-bold text-black">{entry.displayName}</p>
+                  {entry.tableNo && <p className="mb-2 text-sm text-black/70 font-bold">テーブル {entry.tableNo}</p>}
+                  <div className="rounded-full bg-white px-5 py-2 shadow-md border-3 border-black">
+                    <span className="text-2xl font-bold text-black">{entry.totalPoints}</span>
+                    <span className="ml-1 text-sm text-black/80 font-bold">pt</span>
                   </div>
                 </div>
               ))}
@@ -371,20 +358,20 @@ function IdleBoard({ leaderboard }: { leaderboard: LeaderboardEntry[] }) {
 
           {/* Rest */}
           {rest.length > 0 && (
-            <div className="glass-panel-strong flex-1 overflow-auto rounded-2xl p-6 shadow-brand">
+            <div className="flex-1 overflow-auto rounded-2xl p-5 shadow-brand bg-white border-3 border-black">
               <div className="grid grid-cols-4 gap-2">
                 {rest.map((entry) => (
                   <div
                     key={entry.playerId}
-                    className="flex items-center justify-between rounded-lg bg-white/90 px-3 py-2 text-sm shadow-sm"
+                    className="flex items-center justify-between rounded-lg bg-pop-pink px-3 py-2 text-sm shadow-sm border-2 border-black"
                   >
                     <div className="flex items-center gap-2 min-w-0">
-                      <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-brand-blue-100 text-xs font-bold text-brand-blue-700">
+                      <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-white text-xs font-bold text-black border-2 border-black">
                         {entry.rank}
                       </span>
-                      <span className="truncate font-semibold text-brand-blue-700">{entry.displayName}</span>
+                      <span className="truncate font-bold text-black">{entry.displayName}</span>
                     </div>
-                    <span className="ml-2 shrink-0 font-bold text-brand-terra-700">{entry.totalPoints}</span>
+                    <span className="ml-2 shrink-0 font-bold text-black">{entry.totalPoints}</span>
                   </div>
                 ))}
               </div>
@@ -417,7 +404,7 @@ function QuizBoard({ activeQuiz, quizResult }: QuizPanelProps) {
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -30 }}
       transition={{ duration: 0.5, ease: 'easeOut' }}
-      className="glass-panel grid h-full gap-8 rounded-2xl p-10 shadow-brand lg:grid-cols-2"
+      className="grid h-full gap-6 rounded-2xl p-8 shadow-brand lg:grid-cols-2 border-3 border-black bg-white"
       style={{
         backgroundImage: `url(${backgroundImage})`,
         backgroundSize: 'cover',
@@ -425,53 +412,54 @@ function QuizBoard({ activeQuiz, quizResult }: QuizPanelProps) {
         backgroundRepeat: 'no-repeat'
       }}
     >
-      <div className="space-y-6">
-        <h2 className="text-4xl font-semibold text-brand-blue-700">クイズ</h2>
+      <div className="space-y-5">
+        <h2 className="text-4xl font-bold text-black bg-pop-yellow px-4 py-2 rounded-xl inline-block border-3 border-black">クイズ</h2>
         {activeQuiz ? (
           <>
-            <p className="text-2xl font-medium leading-relaxed text-brand-blue-700/90">{activeQuiz.question}</p>
-            <ul className="grid gap-4 md:grid-cols-2">
+            <p className="text-2xl font-bold leading-relaxed text-black bg-white/90 px-5 py-4 rounded-xl border-3 border-black">{activeQuiz.question}</p>
+            <ul className="grid gap-3 md:grid-cols-2">
               {activeQuiz.choices.map((choice, index) => (
                 <li
                   key={choice}
-                  className={`rounded-2xl px-8 py-6 text-2xl shadow-brand ${quizResult && index === correctIndex ? 'bg-brand-terra-50 border border-brand-terра-200 text-brand-terра-700' : 'bg-white/80 text-brand-blue-700'}`}
+                  className={`rounded-xl px-6 py-5 text-xl shadow-brand border-3 border-black ${quizResult && index === correctIndex ? 'bg-pop-green text-black' : 'bg-white text-black'}`}
                 >
-                  <div className="flex items-center gap-4">
-                    <span className="text-3xl font-semibold">{CHOICE_LABELS[index]}</span>
-                    <span className="flex-1 truncate text-left">{choice}</span>
+                  <div className="flex items-center gap-3">
+                    <span className="text-2xl font-bold">{CHOICE_LABELS[index]}</span>
+                    <span className="flex-1 truncate text-left font-bold">{choice}</span>
                   </div>
                 </li>
               ))}
             </ul>
           </>
         ) : (
-          <p className="text-xl text-brand-blue-700/70">次のクイズを準備中です。</p>
+          <p className="text-xl text-black/70 font-bold bg-white/90 px-5 py-4 rounded-xl border-3 border-black">次のクイズを準備中です。</p>
         )}
       </div>
-      <div className="space-y-4">
+      <div className="space-y-3 bg-white/90 p-5 rounded-xl border-3 border-black">
+        <h3 className="text-xl font-bold text-black mb-3">回答状況</h3>
         {quizResult ? (
           counts.map((count, index) => {
             const ratio = Math.round((count / total) * 100);
             return (
-              <div key={index} className="space-y-1">
-                <div className="flex items-center justify-between text-base text-brand-blue-700/70">
+              <div key={index} className="space-y-2">
+                <div className="flex items-center justify-between text-base text-black font-bold">
                   <span>{CHOICE_LABELS[index]}</span>
                   <span>{count}票</span>
                 </div>
-                <div className="h-6 overflow-hidden rounded-full bg-brand-blue-50">
+                <div className="h-7 overflow-hidden rounded-full bg-white border-3 border-black">
                   <motion.div
                     key={`${index}-${count}`}
                     initial={{ width: 0 }}
                     animate={{ width: `${ratio}%` }}
                     transition={{ duration: 0.6, ease: 'easeOut' }}
-                    className={`h-full ${index === correctIndex ? 'bg-brand-terra-400' : 'bg-brand-blue-400'}`}
+                    className={`h-full ${index === correctIndex ? 'bg-pop-green' : 'bg-pop-orange'}`}
                   />
                 </div>
               </div>
             );
           })
         ) : (
-          <p className="text-xl text-brand-blue-700/70">回答結果は正解公開後に表示されます。</p>
+          <p className="text-lg text-black/70 font-bold">回答結果は正解公開後に表示されます。</p>
         )}
       </div>
     </motion.section>
@@ -590,16 +578,16 @@ function LotteryBoard({ lotteryResult, isSpinning, leaderboard }: LotteryPanelPr
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.95 }}
       transition={{ duration: 0.5, ease: 'easeOut' }}
-      className="glass-panel flex h-full flex-col items-center justify-center gap-10 rounded-2xl px-12 py-20 text-center shadow-brand"
+      className="flex h-full flex-col items-center justify-center gap-10 rounded-2xl px-12 py-16 text-center shadow-brand bg-pop-red border-3 border-black"
     >
-      <span className="text-xl uppercase tracking-[0.45em] text-brand-blue-700/70">Lottery</span>
+      <span className="text-xl uppercase tracking-[0.4em] text-black/70 font-bold bg-white px-6 py-3 rounded-xl border-3 border-black">Lottery</span>
       {waiting ? (
-        <div className="space-y-6 text-brand-blue-700/70">
-          <p className="text-3xl font-semibold text-brand-blue-700">抽選カテゴリを選んでください</p>
-          <div className="flex flex-col items-center gap-4 text-2xl">
-            <span>・全員対象</span>
-            <span>・新郎友人</span>
-            <span>・新婦友人</span>
+        <div className="space-y-6 bg-white p-10 rounded-2xl border-3 border-black">
+          <p className="text-3xl font-bold text-black">抽選カテゴリを選んでください</p>
+          <div className="flex flex-col items-center gap-3 text-xl font-bold text-black">
+            <span className="bg-pop-yellow px-6 py-3 rounded-xl border-3 border-black w-full">・全員対象</span>
+            <span className="bg-pop-blue px-6 py-3 rounded-xl border-3 border-black w-full">・新郎友人</span>
+            <span className="bg-pop-pink px-6 py-3 rounded-xl border-3 border-black w-full">・新婦友人</span>
           </div>
         </div>
       ) : (
@@ -608,12 +596,12 @@ function LotteryBoard({ lotteryResult, isSpinning, leaderboard }: LotteryPanelPr
           initial={{ rotate: 0, scale: 0.85, opacity: 0 }}
           animate={{ rotate: isSpinning ? [0, 360, 360] : 0, scale: 1, opacity: 1 }}
           transition={{ duration: isSpinning ? 3 : 0.6, ease: 'easeOut' }}
-          className="rounded-[3.5rem] bg-brand-terra-50 px-16 py-14 shadow-brand"
+          className="rounded-3xl bg-white px-16 py-14 shadow-brand border-3 border-black"
         >
           {displayKind ? (
-            <p className="text-lg uppercase tracking-[0.5em] text-brand-terra-600">{displayKind}</p>
+            <p className="text-lg uppercase tracking-[0.4em] text-black/70 font-bold bg-pop-yellow px-4 py-2 rounded-lg inline-block border-3 border-black">{displayKind}</p>
           ) : null}
-          <p className="mt-6 text-[min(12vw,11rem)] font-serif font-bold text-brand-terra-700">{displayName}</p>
+          <p className="mt-6 text-[min(10vw,9rem)] font-bold text-black">{displayName}</p>
         </motion.div>
       )}
     </motion.section>
