@@ -217,7 +217,7 @@ export default function JoinRoom({ code }: { code: string }) {
     <main className="min-h-screen bg-white px-6 py-10 relative overflow-hidden">
       <PatternBackground pattern="chevron" />
       <DecorativeShapes variant="mixed" />
-      <Section className="relative z-10">
+      <div className="mx-auto w-full max-w-3xl relative z-10">
         <div className="mb-6 flex items-center justify-between rounded-xl bg-white px-5 py-3 shadow-brand-sm slide-up border-3 border-black">
           <div className="flex items-center gap-3">
             <span className={`flex h-6 w-6 items-center justify-center rounded-full ${connectionConfig[connection].dot} text-white text-xs font-bold`} aria-hidden="true">
@@ -255,10 +255,10 @@ export default function JoinRoom({ code }: { code: string }) {
             ⚠️ {error}
           </div>
         )}
-      </Section>
+      </div>
 
       {registered && (
-        <div className="mt-8 space-y-6 relative z-10">
+        <div className="mx-auto w-full max-w-3xl mt-8 space-y-6 relative z-10">
           <div className="rounded-2xl bg-white p-8 text-center shadow-brand-md slide-up border-3 border-black">
             <div className="mb-4 text-3xl">
               {mode === 'countup' ? '⚡' : mode === 'quiz' ? '🎯' : mode === 'lottery' ? '🎰' : '🎮'}
