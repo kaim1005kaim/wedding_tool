@@ -7,7 +7,9 @@ import { Button } from '@wedding_tool/ui';
 export default function AdminEntryPage() {
   const [roomCode, setRoomCode] = useState('');
   const [loading, setLoading] = useState(false);
+  const [creating, setCreating] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -19,6 +21,7 @@ export default function AdminEntryPage() {
 
     setLoading(true);
     setError(null);
+    setSuccessMessage(null);
 
     try {
       // Fetch room ID from room code
@@ -33,6 +36,39 @@ export default function AdminEntryPage() {
     } catch (err) {
       setError(err instanceof Error ? err.message : 'エラーが発生しました');
       setLoading(false);
+    }
+  };
+
+  const handleCreateRoom = async () => {
+    setCreating(true);
+    setError(null);
+    setSuccessMessage(null);
+
+    try {
+      const response = await fetch('/api/rooms/create', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        const data = await response.json() as { error?: string };
+        throw new Error(data.error ?? 'ルーム作成に失敗しました');
+      }
+
+      const data = await response.json() as { roomId: string; code: string };
+      setRoomCode(data.code);
+      setSuccessMessage(`新しいルームを作成しました: ${data.code}`);
+
+      // Auto-navigate after 2 seconds
+      setTimeout(() => {
+        router.push(`/admin/${data.roomId}`);
+      }, 2000);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'エラーが発生しました');
+    } finally {
+      setCreating(false);
     }
   };
 
@@ -67,14 +103,43 @@ export default function AdminEntryPage() {
           </div>
         )}
 
+        {successMessage && (
+          <div className="rounded-2xl bg-success-light px-5 py-3 text-sm font-semibold text-success shadow-brand-sm bounce-in">
+            ✓ {successMessage}
+          </div>
+        )}
+
         <Button
           type="submit"
           className="w-full rounded-2xl bg-gradient-secondary px-6 py-5 text-lg font-bold text-white shadow-brand-md transition-all duration-300 hover:scale-[1.02] hover:shadow-brand-lg active:scale-[0.98] disabled:opacity-60"
-          disabled={loading}
+          disabled={loading || creating}
         >
           {loading ? '読み込み中...' : '→ 管理画面へ'}
         </Button>
       </form>
+
+      <div className="w-full">
+        <div className="relative my-8">
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t-2 border-brand-blue-200"></div>
+          </div>
+          <div className="relative flex justify-center text-sm">
+            <span className="bg-gradient-to-br from-brand-blue-100 via-ecru to-brand-terra-100 px-4 font-semibold text-brand-blue-700">または</span>
+          </div>
+        </div>
+
+        <button
+          onClick={handleCreateRoom}
+          disabled={creating || loading}
+          className="w-full rounded-2xl border-2 border-brand-blue-300 bg-white/90 px-6 py-5 text-lg font-bold text-brand-blue-700 shadow-brand-sm transition-all duration-300 hover:scale-[1.02] hover:border-brand-blue-400 hover:bg-brand-blue-50 hover:shadow-brand active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed"
+        >
+          {creating ? '作成中...' : '+ 新しいルームを作成'}
+        </button>
+
+        <p className="mt-4 text-xs text-brand-blue-700/60">
+          新しいルームを作成すると、4桁のルームコードが自動生成されます
+        </p>
+      </div>
     </main>
   );
 }
