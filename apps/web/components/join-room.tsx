@@ -8,6 +8,7 @@ import { Section, PrimaryButton } from './brand';
 import type { LeaderboardEntry, RoomView } from '../lib/store/room-store';
 import ParticleEffect from './ParticleEffect';
 import type { ParticleConfig } from './ParticleEffect';
+import { PatternBackground, DecorativeShapes } from './BackgroundPatterns';
 
 type ConnectionStatus = 'good' | 'warn' | 'bad';
 
@@ -630,49 +631,51 @@ function CountupOverlay({ phase, countdownMs, leaderboard, onTap }: CountupOverl
           type="button"
           onPointerDown={handleTap}
           disabled={disabled}
-          className="fixed inset-0 z-30 flex select-none items-center justify-center bg-gradient-to-br from-brand-blue-500 via-brand-blue-600 to-brand-terra-500 transition-all duration-150 active:from-brand-terra-500 active:via-brand-terra-600 active:to-brand-blue-500 disabled:cursor-not-allowed disabled:opacity-80"
+          className="fixed inset-0 z-30 flex select-none items-center justify-center bg-white transition-all duration-150 disabled:cursor-not-allowed relative overflow-hidden"
         >
+        <PatternBackground pattern="dot" />
         {localCountdown !== null ? (
-          <div className="flex flex-col items-center gap-4 bounce-in">
-            <div className="rounded-full bg-white p-16 shadow-brand-xl">
-              <span className="text-[min(40vw,18rem)] font-bold leading-none text-brand-blue-700 drop-shadow-lg">
+          <div className="flex flex-col items-center gap-4 bounce-in relative z-10">
+            <div className="rounded-full bg-white p-16 shadow-brand-xl border-4 border-black">
+              <span className="text-[min(40vw,18rem)] font-bold leading-none text-black drop-shadow-lg">
                 {localCountdown}
               </span>
             </div>
-            <p className="text-3xl font-bold text-white drop-shadow-lg">準備してください！</p>
+            <p className="text-3xl font-bold text-black drop-shadow-lg bg-white px-6 py-3 rounded-2xl border-4 border-black">準備してください！</p>
           </div>
         ) : banner === 'start' ? (
-          <div className="flex flex-col items-center gap-6 bounce-in">
-            <div className="text-8xl animate-bounce">🚀</div>
-            <span className="text-[min(30vw,12rem)] font-bold uppercase tracking-wider text-white drop-shadow-2xl">
+          <div className="flex flex-col items-center gap-4 bounce-in px-4 relative z-10">
+            <div className="text-6xl animate-bounce">🚀</div>
+            <span className="text-[min(20vw,8rem)] font-bold uppercase tracking-wider text-black drop-shadow-2xl bg-pop-yellow px-8 py-4 rounded-2xl border-4 border-black">
               START!
             </span>
           </div>
         ) : banner === 'stop' ? (
-          <div className="flex flex-col items-center gap-6 bounce-in">
-            <div className="text-8xl">🎉</div>
-            <span className="text-[min(30vw,12rem)] font-bold uppercase tracking-wider text-white drop-shadow-2xl">
+          <div className="flex flex-col items-center gap-4 bounce-in px-4 relative z-10">
+            <div className="text-6xl">🎉</div>
+            <span className="text-[min(20vw,8rem)] font-bold uppercase tracking-wider text-black drop-shadow-2xl bg-pop-pink px-8 py-4 rounded-2xl border-4 border-black">
               STOP!
             </span>
           </div>
         ) : isTimerRunning ? (
-          <div className="flex flex-col items-center gap-8">
-            <div className="text-[min(25vw,10rem)] font-bold uppercase text-white drop-shadow-2xl animate-pulse">
+          <div className="flex flex-col items-center gap-8 relative z-10">
+            <div className="text-[min(25vw,10rem)] font-bold uppercase text-black drop-shadow-2xl bg-pop-yellow px-12 py-6 rounded-3xl border-8 border-black animate-pulse">
               TAP!
             </div>
-            <p className="text-2xl font-bold text-white drop-shadow-lg">連打してポイント獲得！</p>
+            <p className="text-2xl font-bold text-black drop-shadow-lg bg-white px-6 py-3 rounded-2xl border-4 border-black">連打してポイント獲得！</p>
           </div>
         ) : null}
         {flash && (
-          <span className="pointer-events-none absolute inset-x-0 top-1/3 text-center text-8xl font-bold text-white opacity-90 animate-bounce-in drop-shadow-2xl">
+          <span className="pointer-events-none absolute inset-x-0 top-1/3 text-center text-8xl font-bold text-black opacity-90 animate-bounce-in drop-shadow-2xl relative z-10">
             +1
           </span>
         )}
         </button>
       )}
       {showResults && topThree.length > 0 && (
-        <div className="fixed inset-0 z-40 flex items-center justify-center bg-gradient-to-br from-brand-blue-600 to-brand-blue-700 px-6">
-          <div className="glass-panel-strong w-full max-w-xl rounded-3xl p-10 shadow-brand-xl bounce-in">
+        <div className="fixed inset-0 z-40 flex items-center justify-center bg-white px-6 relative overflow-hidden">
+          <PatternBackground pattern="wave" />
+          <div className="bg-white w-full max-w-xl rounded-3xl p-10 shadow-brand-xl bounce-in border-8 border-black relative z-10">
             <div className="mb-8 text-center">
               <div className="mb-4 text-6xl">🏆</div>
               <h2 className="text-title-lg font-bold text-brand-terra-600">TOP 3 結果発表！</h2>

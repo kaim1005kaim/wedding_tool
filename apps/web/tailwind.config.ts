@@ -57,6 +57,14 @@ const config: Config = {
           yellow: '#ffff00',
           black: '#000000',
           white: '#ffffff'
+        },
+        pop: {
+          orange: '#FF6B35',
+          yellow: '#FFD23F',
+          red: '#E63946',
+          blue: '#1D9BF0',
+          pink: '#FF6BA8',
+          green: '#2A9D8F'
         }
       },
       backgroundImage: {
