@@ -18,6 +18,8 @@ export default function ProjectorView({ roomId: _roomId }: { roomId: string }) {
   const topTen = useMemo(() => leaderboard.slice(0, 10), [leaderboard]);
   const [lotteryKey, setLotteryKey] = useState(0);
   const [isSpinning, setIsSpinning] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!lotteryResult?.player?.id) return;
@@ -27,22 +29,99 @@ export default function ProjectorView({ roomId: _roomId }: { roomId: string }) {
     return () => window.clearTimeout(timer);
   }, [lotteryResult?.player?.id]);
 
+  // Fullscreen toggle
+  const toggleFullscreen = useCallback(async () => {
+    if (!document.fullscreenElement) {
+      try {
+        await containerRef.current?.requestFullscreen();
+        setIsFullscreen(true);
+      } catch (err) {
+        console.error('Failed to enter fullscreen:', err);
+      }
+    } else {
+      try {
+        await document.exitFullscreen();
+        setIsFullscreen(false);
+      } catch (err) {
+        console.error('Failed to exit fullscreen:', err);
+      }
+    }
+  }, []);
+
+  // Listen for fullscreen changes
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+  }, []);
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyPress = (e: KeyboardEvent) => {
+      // F key or F11 for fullscreen
+      if (e.key === 'f' || e.key === 'F' || e.key === 'F11') {
+        e.preventDefault();
+        toggleFullscreen();
+      }
+      // ESC to exit fullscreen (browser default, but we handle state)
+      if (e.key === 'Escape' && isFullscreen) {
+        setIsFullscreen(false);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyPress);
+    return () => window.removeEventListener('keydown', handleKeyPress);
+  }, [toggleFullscreen, isFullscreen]);
+
   return (
-    <main className="flex min-h-screen items-center justify-center bg-gradient-to-br from-brand-blue-100 via-ecru to-brand-terra-100 px-3 py-4 text-ink">
-      <div className="relative aspect-video w-full max-w-[min(1800px,100vw-24px)] overflow-hidden rounded-[3rem] shadow-brand-xl">
+    <main
+      ref={containerRef}
+      className="flex min-h-screen items-center justify-center bg-gradient-to-br from-brand-blue-100 via-ecru to-brand-terra-100 text-ink"
+      style={{ padding: isFullscreen ? '0' : '0.75rem 0.75rem' }}
+    >
+      <div className={`relative aspect-video w-full overflow-hidden shadow-brand-xl ${isFullscreen ? 'max-w-none rounded-none h-screen' : 'max-w-[min(1920px,100vw-24px)] rounded-[3rem]'}`}>
         <div className="absolute inset-0 pointer-events-none bg-gradient-to-br from-brand-blue-50/50 via-transparent to-brand-terra-50/50" />
         <div className="relative flex h-full flex-col gap-8 px-12 py-10">
-          <Header mode={mode} countdownMs={countdownMs} />
+          <Header mode={mode} countdownMs={countdownMs} isFullscreen={isFullscreen} onToggleFullscreen={toggleFullscreen} />
           <div className="flex-1 overflow-hidden">
             <AnimatePresence mode="wait">{renderSection(mode, topTen, activeQuiz, quizResult, lotteryResult, isSpinning, lotteryKey)}</AnimatePresence>
           </div>
         </div>
       </div>
+
+      {/* Fullscreen hint - only show when not in fullscreen */}
+      {!isFullscreen && (
+        <div className="fixed bottom-6 right-6 z-50 rounded-2xl bg-white/90 px-5 py-3 shadow-brand-lg backdrop-blur-sm slide-up">
+          <button
+            onClick={toggleFullscreen}
+            className="flex items-center gap-3 text-sm font-semibold text-brand-blue-700 transition-colors hover:text-brand-terra-600"
+          >
+            <span className="text-2xl">⛶</span>
+            <div className="text-left">
+              <p>全画面表示</p>
+              <p className="text-xs text-brand-blue-700/60">キーボード: F</p>
+            </div>
+          </button>
+        </div>
+      )}
     </main>
   );
 }
 
-function Header({ mode, countdownMs }: { mode: string; countdownMs: number }) {
+function Header({
+  mode,
+  countdownMs,
+  isFullscreen,
+  onToggleFullscreen
+}: {
+  mode: string;
+  countdownMs: number;
+  isFullscreen: boolean;
+  onToggleFullscreen: () => void;
+}) {
   const modeIcon = mode === 'countup' ? '⚡' : mode === 'quiz' ? '🎯' : mode === 'lottery' ? '🎰' : '🎮';
   const countdown = Math.max(0, Math.ceil(countdownMs / 1000));
 
@@ -67,7 +146,7 @@ function Header({ mode, countdownMs }: { mode: string; countdownMs: number }) {
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-8">
+        <div className="flex items-center gap-4">
           <div className="rounded-2xl bg-white/80 px-8 py-4 shadow-brand-sm backdrop-blur-sm">
             <p className="text-xs font-bold uppercase tracking-[0.35em] text-brand-blue-700/70">Countdown</p>
             <div className="mt-1 flex items-center justify-center gap-2">
@@ -75,6 +154,15 @@ function Header({ mode, countdownMs }: { mode: string; countdownMs: number }) {
               <p className="text-2xl font-semibold text-brand-blue-700/60">秒</p>
             </div>
           </div>
+          {!isFullscreen && (
+            <button
+              onClick={onToggleFullscreen}
+              className="flex h-16 w-16 items-center justify-center rounded-2xl bg-white/80 text-2xl shadow-brand-sm backdrop-blur-sm transition-all duration-300 hover:scale-110 hover:bg-brand-blue-50 hover:shadow-brand"
+              title="全画面表示 (F キー)"
+            >
+              ⛶
+            </button>
+          )}
         </div>
       </div>
     </motion.header>

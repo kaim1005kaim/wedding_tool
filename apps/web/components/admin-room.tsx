@@ -444,27 +444,39 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
   }
 
   return (
-    <main className="min-h-screen bg-ecru px-6 py-10">
-      <Section title="管理パネル" subtitle={`Room ${roomId}`}>
-        <div className="mb-6 grid gap-4 rounded-2xl bg-white/85 p-6 shadow-brand sm:grid-cols-3">
-          <StatusItem label="モード" value={labelForMode(mode)} icon={Gauge} />
-          <StatusItem label="フェーズ" value={phaseLabel(phase)} icon={PauseCircle} />
-          <StatusItem label="カウントダウン" value={`${Math.max(0, Math.ceil(countdownMs / 1000))} 秒`} icon={ListChecks} />
-        </div>
+    <main className="min-h-screen bg-gradient-to-br from-brand-blue-100 via-ecru to-brand-terra-100 px-6 py-10">
+      <div className="mx-auto max-w-7xl">
+        <Section title="管理パネル" subtitle={`Room ${roomId}`}>
+          <div className="mb-8 grid gap-6 rounded-3xl bg-white/90 p-8 shadow-brand-lg backdrop-blur-sm sm:grid-cols-3">
+            <StatusItem label="モード" value={labelForMode(mode)} icon={Gauge} />
+            <StatusItem label="フェーズ" value={phaseLabel(phase)} icon={PauseCircle} />
+            <StatusItem label="カウントダウン" value={`${Math.max(0, Math.ceil(countdownMs / 1000))} 秒`} icon={ListChecks} />
+          </div>
 
-        <div className="mb-6 flex justify-end">
-          <AdminButton
-            variant="secondary"
-            icon={Settings}
-            onClick={openManagement}
-            className="w-12 justify-center px-3"
-            aria-label="詳細設定"
-          />
-        </div>
+          <div className="mb-6 flex items-center justify-between">
+            <div className="rounded-2xl bg-white/80 px-6 py-3 shadow-brand-sm backdrop-blur-sm">
+              <p className="text-sm font-semibold text-brand-blue-700">
+                💡 投影画面を別タブで開き、全画面表示（Fキー）してプロジェクターに投影してください
+              </p>
+            </div>
+            <AdminButton
+              variant="secondary"
+              icon={Settings}
+              onClick={openManagement}
+              className="w-12 justify-center px-3"
+              aria-label="詳細設定"
+            />
+          </div>
 
-        {error && <p className="mb-4 text-sm text-error" role="alert">{error}</p>}
+          {error && (
+            <div className="mb-6 rounded-2xl bg-error-light px-5 py-4 shadow-brand-sm">
+              <p className="text-sm font-semibold text-error" role="alert">
+                ⚠️ {error}
+              </p>
+            </div>
+          )}
 
-        <div className="grid gap-6 lg:grid-cols-2">
+          <div className="grid gap-6 lg:grid-cols-2 xl:grid-cols-3">
           <AdminCard title="モード切替" description="ゲームの進行モードを選択します" icon={Gauge}>
             <div className="grid gap-3 sm:grid-cols-2">
               <AdminButton variant={mode === 'idle' ? 'primary' : 'secondary'} icon={PauseCircle} onClick={() => send({ type: 'mode:switch', payload: { to: 'idle' } })}>
@@ -727,16 +739,18 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
           </div>
         )}
 
-        {isCloudMode && (
-          <AdminCard title="ログ / 抽選履歴" description="進行状況の確認" icon={ListChecks}>
-            <div className="mb-4 inline-flex rounded-full bg-brand-blue-50 p-1 text-sm">
-              <TabButton label="操作ログ" active={activeLogTab === 'logs'} onClick={() => setActiveLogTab('logs')} />
-              <TabButton label="抽選履歴" active={activeLogTab === 'lottery'} onClick={() => setActiveLogTab('lottery')} />
-            </div>
-            {activeLogTab === 'logs' ? <LogsList logs={logs} /> : <LotteryList entries={lotteries} />}
-          </AdminCard>
-        )}
-      </Section>
+          {isCloudMode && (
+            <AdminCard title="ログ / 抽選履歴" description="進行状況の確認" icon={ListChecks}>
+              <div className="mb-4 inline-flex rounded-full bg-brand-blue-50 p-1 text-sm">
+                <TabButton label="操作ログ" active={activeLogTab === 'logs'} onClick={() => setActiveLogTab('logs')} />
+                <TabButton label="抽選履歴" active={activeLogTab === 'lottery'} onClick={() => setActiveLogTab('lottery')} />
+              </div>
+              {activeLogTab === 'logs' ? <LogsList logs={logs} /> : <LotteryList entries={lotteries} />}
+            </AdminCard>
+          )}
+        </div>
+        </Section>
+      </div>
 
       <ConfirmDialog state={confirm} onClose={() => setConfirm(null)} />
     </main>
@@ -753,11 +767,13 @@ type ConfirmState = {
 
 function StatusItem({ label, value, icon: Icon }: { label: string; value: string; icon: LucideIcon }) {
   return (
-    <div className="flex items-center gap-3 rounded-xl bg-brand-blue-50/70 px-4 py-3 text-sm text-brand-blue-700">
-      <Icon className="h-5 w-5 text-brand-blue-700" />
+    <div className="flex items-center gap-4 rounded-2xl bg-gradient-to-br from-brand-blue-50 to-white p-5 shadow-brand-sm transition-all duration-300 hover:shadow-brand hover:scale-[1.02]">
+      <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-secondary shadow-brand-sm">
+        <Icon className="h-6 w-6 text-white" />
+      </div>
       <div>
-        <p className="text-xs uppercase tracking-wide text-brand-blue-700/70">{label}</p>
-        <p className="text-base font-semibold text-ink">{value}</p>
+        <p className="text-xs font-bold uppercase tracking-wider text-brand-blue-700/70">{label}</p>
+        <p className="mt-1 text-xl font-bold text-brand-blue-700">{value}</p>
       </div>
     </div>
   );
