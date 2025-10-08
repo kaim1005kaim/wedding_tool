@@ -214,34 +214,36 @@ export default function JoinRoom({ code }: { code: string }) {
   };
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-brand-blue-50/30 via-ecru to-brand-terra-50/30 px-6 py-10">
-      <Section>
-        <div className="mb-6 flex items-center justify-between rounded-2xl bg-white/90 px-5 py-3 shadow-brand-sm slide-up backdrop-blur-sm">
+    <main className="min-h-screen bg-white px-6 py-10 relative overflow-hidden">
+      <PatternBackground pattern="chevron" />
+      <DecorativeShapes variant="mixed" />
+      <Section className="relative z-10">
+        <div className="mb-6 flex items-center justify-between rounded-xl bg-white px-5 py-3 shadow-brand-sm slide-up border-3 border-black">
           <div className="flex items-center gap-3">
-            <span className={`flex h-6 w-6 items-center justify-center rounded-full ${connectionConfig[connection].dot} text-white text-xs font-bold animate-pulse-ring`} aria-hidden="true">
+            <span className={`flex h-6 w-6 items-center justify-center rounded-full ${connectionConfig[connection].dot} text-white text-xs font-bold`} aria-hidden="true">
               {connectionConfig[connection].icon}
             </span>
-            <span className="font-medium text-brand-blue-700">{connectionConfig[connection].label}</span>
+            <span className="font-bold text-black">{connectionConfig[connection].label}</span>
           </div>
-          <span className="text-xs text-brand-blue-700/60">リアルタイム接続</span>
+          <span className="text-xs font-bold text-black">接続中</span>
         </div>
 
         {registered ? (
-          <div className="glass-panel-strong rounded-3xl border-2 border-brand-terra-200/50 px-8 py-6 text-center shadow-brand-md bounce-in" aria-live="polite">
+          <div className="rounded-2xl bg-pop-yellow px-8 py-6 text-center shadow-brand-md bounce-in border-3 border-black" aria-live="polite">
             <div className="mb-3 text-4xl">🎉</div>
-            <p className="text-xl font-bold text-brand-blue-700">参加登録完了！</p>
-            <p className="mt-3 text-lg text-brand-blue-700/80">
-              <span className="rounded-full bg-brand-terra-100 px-4 py-1 font-semibold text-brand-terra-700">{registeredTableNo}</span>
-              <span className="mx-2">テーブル</span>
+            <p className="text-xl font-bold text-black">参加登録完了！</p>
+            <p className="mt-3 text-lg text-black">
+              <span className="rounded-full bg-white px-4 py-1 font-bold text-black border-2 border-black">{registeredTableNo}</span>
+              <span className="mx-2 font-bold">テーブル</span>
             </p>
-            <p className="mt-2 text-2xl font-bold text-brand-terra-600">{registeredName} さん</p>
-            <p className="mt-4 text-sm text-brand-blue-700/70">ゲーム開始までお待ちください</p>
+            <p className="mt-2 text-2xl font-bold text-black">{registeredName} さん</p>
+            <p className="mt-4 text-sm font-bold text-black">ゲーム開始までお待ちください</p>
           </div>
         ) : (
-          <div className="rounded-3xl bg-gradient-to-br from-white/90 to-white/70 p-8 text-center shadow-brand-md backdrop-blur-sm slide-up">
+          <div className="rounded-2xl bg-pop-blue p-8 text-center shadow-brand-md slide-up border-3 border-black">
             <div className="mb-4 text-5xl">📱</div>
-            <p className="text-lg font-semibold text-brand-blue-700">参加登録してください</p>
-            <p className="mt-3 text-sm leading-relaxed text-brand-blue-700/70">
+            <p className="text-lg font-bold text-white">参加登録してください</p>
+            <p className="mt-3 text-sm leading-relaxed text-white font-semibold">
               画面中央のモーダルでテーブル番号とお名前を入力し、<br />
               「参加する」ボタンを押してください
             </p>
@@ -256,15 +258,15 @@ export default function JoinRoom({ code }: { code: string }) {
       </Section>
 
       {registered && (
-        <div className="mt-8 space-y-6">
-          <div className="glass-panel-strong rounded-3xl p-8 text-center shadow-brand-md slide-up">
+        <div className="mt-8 space-y-6 relative z-10">
+          <div className="rounded-2xl bg-white p-8 text-center shadow-brand-md slide-up border-3 border-black">
             <div className="mb-4 text-3xl">
               {mode === 'countup' ? '⚡' : mode === 'quiz' ? '🎯' : mode === 'lottery' ? '🎰' : '🎮'}
             </div>
-            <h2 className="text-title-sm font-bold text-brand-blue-700">
+            <h2 className="text-title-sm font-bold text-black">
               {mode === 'countup' ? 'タップチャレンジ' : mode === 'quiz' ? 'クイズ' : mode === 'lottery' ? '抽選' : 'ゲーム'}
             </h2>
-            <p className="mt-4 text-base leading-relaxed text-brand-blue-700/80">
+            <p className="mt-4 text-base leading-relaxed text-black font-medium">
               {mode === 'countup'
                 ? phase === 'running'
                   ? '画面全体に表示される TAP ボタンをテンポ良くタップして、スコアを伸ばしましょう！'
@@ -285,27 +287,27 @@ export default function JoinRoom({ code }: { code: string }) {
             if (!hasScore) return null;
 
             return (
-              <div className="glass-panel rounded-3xl p-8 shadow-brand-md slide-up">
+              <div className="rounded-2xl bg-pop-pink p-8 shadow-brand-md slide-up border-3 border-black">
                 <div className="text-center">
                   <div className="mb-4 text-5xl">🎯</div>
-                  <h2 className="mb-2 text-title-sm font-bold text-brand-blue-700">あなたのスコア</h2>
-                  <div className="mb-6 rounded-2xl bg-gradient-to-br from-brand-terra-50 to-brand-blue-50 p-6">
-                    <div className="mb-2 text-6xl font-bold text-brand-terra-700">
+                  <h2 className="mb-4 text-title-sm font-bold text-black">あなたのスコア</h2>
+                  <div className="mb-6 rounded-xl bg-white p-6 border-3 border-black">
+                    <div className="mb-2 text-6xl font-bold text-black">
                       {myEntry.totalPoints}
-                      <span className="ml-2 text-3xl font-medium">pt</span>
+                      <span className="ml-2 text-3xl font-bold">pt</span>
                     </div>
                     {myEntry.quizPoints !== undefined && myEntry.quizPoints > 0 && (
-                      <p className="text-sm text-brand-blue-700">
-                        クイズ: <span className="font-bold">{myEntry.quizPoints}問正解</span>
+                      <p className="text-sm text-black font-semibold">
+                        クイズ: {myEntry.quizPoints}問正解
                       </p>
                     )}
                     {myEntry.countupTapCount !== undefined && myEntry.countupTapCount > 0 && (
-                      <p className="text-sm text-brand-blue-700">
-                        タップ: <span className="font-bold">{myEntry.countupTapCount}回</span>
+                      <p className="text-sm text-black font-semibold">
+                        タップ: {myEntry.countupTapCount}回
                       </p>
                     )}
                   </div>
-                  <p className="text-sm text-brand-blue-700/70">
+                  <p className="text-sm text-black font-bold">
                     全体のランキングは投影画面でご確認ください
                   </p>
                 </div>
@@ -372,13 +374,14 @@ function JoinModal({ visible, tableNo, displayName, onTableNoChange, onDisplayNa
   const guidanceIcon = mode === 'quiz' ? '🎯' : mode === 'countup' ? '⚡' : '🎮';
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-gradient-to-br from-ink/70 to-ink/90 px-6 backdrop-blur-sm">
-      <div className="glass-panel-strong w-full max-w-md rounded-3xl px-8 py-10 shadow-brand-xl bounce-in">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-white px-6 relative overflow-hidden">
+      <PatternBackground pattern="stripe" />
+      <div className="bg-white w-full max-w-md rounded-2xl px-8 py-10 shadow-brand-xl bounce-in border-3 border-black relative z-10">
         <div className="mb-6 text-center">
           <div className="mb-4 text-5xl">{guidanceIcon}</div>
-          <h2 className="text-title-md font-bold text-brand-terra-600">参加登録</h2>
-          <div className="mt-3 rounded-2xl bg-brand-blue-50/70 px-4 py-3">
-            <p className="text-sm font-medium leading-relaxed text-brand-blue-700">{guidanceText}</p>
+          <h2 className="text-title-md font-bold text-black">参加登録</h2>
+          <div className="mt-3 rounded-xl bg-pop-yellow px-4 py-3 border-2 border-black">
+            <p className="text-sm font-bold leading-relaxed text-black">{guidanceText}</p>
           </div>
         </div>
         <form
@@ -389,13 +392,13 @@ function JoinModal({ visible, tableNo, displayName, onTableNoChange, onDisplayNa
           }}
         >
           <div className="space-y-2">
-            <label className="flex items-center gap-2 text-sm font-bold text-brand-blue-700" htmlFor="table-no">
+            <label className="flex items-center gap-2 text-sm font-bold text-black" htmlFor="table-no">
               <span>📍</span>
               <span>テーブル番号</span>
             </label>
             <input
               id="table-no"
-              className="w-full rounded-2xl border-2 border-brand-blue-200 bg-white px-5 py-4 text-lg font-semibold shadow-brand-sm transition-all duration-300 placeholder:text-brand-blue-300 hover:border-brand-blue-300 focus:border-brand-blue-500 focus:shadow-brand focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-blue-400"
+              className="w-full rounded-xl border-3 border-black bg-white px-5 py-4 text-lg font-bold shadow-brand-sm transition-all duration-300 placeholder:text-gray-400 hover:shadow-brand-md focus:shadow-brand focus-visible:outline-none"
               value={tableNo}
               onChange={(event) => onTableNoChange(event.target.value)}
               placeholder="例：A-3 / 5 / C"
@@ -404,13 +407,13 @@ function JoinModal({ visible, tableNo, displayName, onTableNoChange, onDisplayNa
             />
           </div>
           <div className="space-y-2">
-            <label className="flex items-center gap-2 text-sm font-bold text-brand-blue-700" htmlFor="display-name">
+            <label className="flex items-center gap-2 text-sm font-bold text-black" htmlFor="display-name">
               <span>👤</span>
               <span>お名前</span>
             </label>
             <input
               id="display-name"
-              className="w-full rounded-2xl border-2 border-brand-blue-200 bg-white px-5 py-4 text-lg font-semibold shadow-brand-sm transition-all duration-300 placeholder:text-brand-blue-300 hover:border-brand-blue-300 focus:border-brand-blue-500 focus:shadow-brand focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-blue-400"
+              className="w-full rounded-xl border-3 border-black bg-white px-5 py-4 text-lg font-bold shadow-brand-sm transition-all duration-300 placeholder:text-gray-400 hover:shadow-brand-md focus:shadow-brand focus-visible:outline-none"
               value={displayName}
               onChange={(event) => onDisplayNameChange(event.target.value)}
               placeholder="例：山田花子"
@@ -420,11 +423,15 @@ function JoinModal({ visible, tableNo, displayName, onTableNoChange, onDisplayNa
             />
           </div>
           {error && (
-            <div className="rounded-2xl bg-error-light px-4 py-3 text-sm font-semibold text-error shadow-brand-sm bounce-in" role="alert">
+            <div className="rounded-xl bg-pop-red px-4 py-3 text-sm font-bold text-white shadow-brand-sm bounce-in border-2 border-black" role="alert">
               ⚠️ {error}
             </div>
           )}
-          <PrimaryButton type="submit" className="mt-6" disabled={isJoining}>
+          <button
+            type="submit"
+            className="mt-6 w-full rounded-xl bg-pop-green px-6 py-4 font-bold text-white text-lg border-3 border-black shadow-brand-md hover:scale-105 transition-transform disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled={isJoining}
+          >
             {isJoining ? (
               <span className="flex items-center justify-center gap-2 text-lg">
                 <svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -436,7 +443,7 @@ function JoinModal({ visible, tableNo, displayName, onTableNoChange, onDisplayNa
             ) : (
               <span className="text-lg">🎉 参加する</span>
             )}
-          </PrimaryButton>
+          </button>
         </form>
       </div>
     </div>
@@ -636,33 +643,33 @@ function CountupOverlay({ phase, countdownMs, leaderboard, onTap }: CountupOverl
         <PatternBackground pattern="dot" />
         {localCountdown !== null ? (
           <div className="flex flex-col items-center gap-4 bounce-in relative z-10">
-            <div className="rounded-full bg-white p-16 shadow-brand-xl border-4 border-black">
-              <span className="text-[min(40vw,18rem)] font-bold leading-none text-black drop-shadow-lg">
+            <div className="rounded-full bg-white p-16 shadow-brand-xl border-3 border-black">
+              <span className="text-[min(40vw,18rem)] font-bold leading-none text-black">
                 {localCountdown}
               </span>
             </div>
-            <p className="text-3xl font-bold text-black drop-shadow-lg bg-white px-6 py-3 rounded-2xl border-4 border-black">準備してください！</p>
+            <p className="text-3xl font-bold text-black bg-white px-6 py-3 rounded-xl border-3 border-black">準備してください！</p>
           </div>
         ) : banner === 'start' ? (
           <div className="flex flex-col items-center gap-4 bounce-in px-4 relative z-10">
             <div className="text-6xl animate-bounce">🚀</div>
-            <span className="text-[min(20vw,8rem)] font-bold uppercase tracking-wider text-black drop-shadow-2xl bg-pop-yellow px-8 py-4 rounded-2xl border-4 border-black">
+            <span className="text-[min(20vw,8rem)] font-bold uppercase tracking-wider text-black bg-pop-yellow px-8 py-4 rounded-xl border-3 border-black">
               START!
             </span>
           </div>
         ) : banner === 'stop' ? (
           <div className="flex flex-col items-center gap-4 bounce-in px-4 relative z-10">
             <div className="text-6xl">🎉</div>
-            <span className="text-[min(20vw,8rem)] font-bold uppercase tracking-wider text-black drop-shadow-2xl bg-pop-pink px-8 py-4 rounded-2xl border-4 border-black">
+            <span className="text-[min(20vw,8rem)] font-bold uppercase tracking-wider text-black bg-pop-pink px-8 py-4 rounded-xl border-3 border-black">
               STOP!
             </span>
           </div>
         ) : isTimerRunning ? (
           <div className="flex flex-col items-center gap-8 relative z-10">
-            <div className="text-[min(25vw,10rem)] font-bold uppercase text-black drop-shadow-2xl bg-pop-yellow px-12 py-6 rounded-3xl border-8 border-black animate-pulse">
+            <div className="text-[min(25vw,10rem)] font-bold uppercase text-black bg-pop-yellow px-12 py-6 rounded-2xl border-3 border-black animate-pulse">
               TAP!
             </div>
-            <p className="text-2xl font-bold text-black drop-shadow-lg bg-white px-6 py-3 rounded-2xl border-4 border-black">連打してポイント獲得！</p>
+            <p className="text-2xl font-bold text-black bg-white px-6 py-3 rounded-xl border-3 border-black">連打してポイント獲得！</p>
           </div>
         ) : null}
         {flash && (
@@ -675,43 +682,47 @@ function CountupOverlay({ phase, countdownMs, leaderboard, onTap }: CountupOverl
       {showResults && topThree.length > 0 && (
         <div className="fixed inset-0 z-40 flex items-center justify-center bg-white px-6 relative overflow-hidden">
           <PatternBackground pattern="wave" />
-          <div className="bg-white w-full max-w-xl rounded-3xl p-10 shadow-brand-xl bounce-in border-8 border-black relative z-10">
+          <div className="bg-white w-full max-w-xl rounded-2xl p-10 shadow-brand-xl bounce-in border-3 border-black relative z-10">
             <div className="mb-8 text-center">
               <div className="mb-4 text-6xl">🏆</div>
-              <h2 className="text-title-lg font-bold text-brand-terra-600">TOP 3 結果発表！</h2>
-              <p className="mt-2 text-sm text-brand-blue-700/70">おめでとうございます！</p>
+              <h2 className="text-title-lg font-bold text-black whitespace-nowrap">TOP 3 結果発表！</h2>
+              <p className="mt-2 text-sm font-bold text-black">おめでとうございます！</p>
             </div>
             <ul className="space-y-4">
               {topThree.map((entry, index) => (
                 <li
                   key={entry.playerId}
-                  className={`group flex items-center justify-between rounded-2xl px-6 py-5 shadow-brand-md transition-all duration-300 hover:shadow-brand-lg hover:scale-[1.02] ${
+                  className={`flex items-center justify-between rounded-xl px-6 py-5 shadow-brand-md border-3 border-black ${
                     index === 0
-                      ? 'bg-gradient-to-r from-yellow-100 to-yellow-50 border-2 border-yellow-400'
+                      ? 'bg-pop-yellow'
                       : index === 1
-                        ? 'bg-gradient-to-r from-gray-100 to-gray-50 border-2 border-gray-400'
-                        : 'bg-gradient-to-r from-orange-100 to-orange-50 border-2 border-orange-400'
+                        ? 'bg-pop-blue'
+                        : 'bg-pop-orange'
                   }`}
                 >
-                  <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-4 flex-1">
                     <span className="text-4xl">{medalForRank(index + 1)}</span>
-                    <div>
-                      <p className="text-lg font-bold text-brand-blue-700 group-hover:text-brand-terra-600 transition-colors">
+                    <div className="flex-1">
+                      <p className="text-lg font-bold text-black">
                         {entry.displayName}
                       </p>
-                      <p className="text-xs text-brand-blue-700/60">Rank #{entry.rank}</p>
+                      <p className="text-xs font-bold text-black opacity-70">Rank #{entry.rank}</p>
                     </div>
                   </div>
-                  <div className="text-right">
-                    <p className="text-3xl font-bold text-brand-terra-600">{entry.totalPoints}</p>
-                    <p className="text-xs font-medium text-brand-blue-700/70">points</p>
+                  <div className="text-right ml-4">
+                    <p className="text-3xl font-bold text-black">{entry.totalPoints}</p>
+                    <p className="text-xs font-bold text-black opacity-70">points</p>
                   </div>
                 </li>
               ))}
             </ul>
-            <PrimaryButton type="button" className="mt-8" onClick={() => setShowResults(false)}>
-              <span className="text-lg">✓ 閉じる</span>
-            </PrimaryButton>
+            <button
+              type="button"
+              className="mt-8 w-full rounded-xl bg-pop-green px-6 py-4 font-bold text-white text-lg border-3 border-black shadow-brand-md hover:scale-105 transition-transform"
+              onClick={() => setShowResults(false)}
+            >
+              ✓ 閉じる
+            </button>
           </div>
         </div>
       )}

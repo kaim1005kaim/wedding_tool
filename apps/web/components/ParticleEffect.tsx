@@ -17,12 +17,15 @@ export interface ParticleConfig {
   spread?: number;
 }
 
-const BAUHAUS_COLORS = {
-  red: new THREE.Color(0xff0000),
-  blue: new THREE.Color(0x0000ff),
-  yellow: new THREE.Color(0xffff00),
+const POP_COLORS = {
+  red: new THREE.Color(0xE63946),
+  blue: new THREE.Color(0x1D9BF0),
+  yellow: new THREE.Color(0xFFD23F),
   black: new THREE.Color(0x000000),
-  white: new THREE.Color(0xffffff)
+  white: new THREE.Color(0xffffff),
+  orange: new THREE.Color(0xFF6B35),
+  pink: new THREE.Color(0xFF6BA8),
+  green: new THREE.Color(0x2A9D8F)
 };
 
 class Particle {
@@ -64,7 +67,7 @@ class Particle {
     this.maxLife = 1.0;
     this.size = size;
     this.shape = shape;
-    this.color = BAUHAUS_COLORS[color].clone();
+    this.color = POP_COLORS[color].clone();
 
     // Create geometry based on shape
     let geometry: THREE.BufferGeometry;
