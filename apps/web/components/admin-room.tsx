@@ -444,18 +444,18 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
   }
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-brand-blue-100 via-ecru to-brand-terra-100 p-6">
+    <main className="min-h-screen bg-slate-50 p-6">
       <div className="mx-auto w-full px-4">
         <Section title="管理パネル" subtitle={`Room ${roomId}`}>
-          <div className="mb-5 grid grid-cols-3 gap-4 rounded-xl bg-white/90 p-5 shadow-brand-lg backdrop-blur-sm">
+          <div className="mb-6 grid grid-cols-3 gap-4 rounded-2xl bg-white p-6 shadow-lg border border-slate-200">
             <StatusItem label="モード" value={labelForMode(mode)} icon={Gauge} />
             <StatusItem label="フェーズ" value={phaseLabel(phase)} icon={PauseCircle} />
             <StatusItem label="カウントダウン" value={`${Math.max(0, Math.ceil(countdownMs / 1000))} 秒`} icon={ListChecks} />
           </div>
 
-          <div className="mb-5 flex items-center justify-between gap-4">
-            <div className="flex-1 rounded-lg bg-white/80 px-4 py-2 shadow-brand-sm backdrop-blur-sm">
-              <p className="text-xs font-semibold text-brand-blue-700">
+          <div className="mb-6 flex items-center justify-between gap-4">
+            <div className="flex-1 rounded-xl bg-blue-50 px-5 py-3 border border-blue-200">
+              <p className="text-sm font-medium text-blue-700">
                 💡 投影画面を別タブで開き、全画面表示（Fキー）してプロジェクターに投影してください
               </p>
             </div>
@@ -471,16 +471,16 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
           </div>
 
           {error && (
-            <div className="mb-5 rounded-xl bg-error-light px-5 py-3 shadow-brand-sm">
+            <div className="mb-6 rounded-xl bg-red-50 px-5 py-4 border border-red-200">
               <p className="text-sm font-semibold text-error" role="alert">
                 ⚠️ {error}
               </p>
             </div>
           )}
 
-          <div className="grid grid-cols-3 gap-5">
+          <div className="grid grid-cols-2 gap-6 xl:grid-cols-4">
           <AdminCard title="モード切替" description="ゲームの進行モードを選択します" icon={Gauge}>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-4">
               <AdminButton variant={mode === 'idle' ? 'primary' : 'secondary'} icon={PauseCircle} onClick={() => send({ type: 'mode:switch', payload: { to: 'idle' } })}>
                 待機モード
               </AdminButton>
@@ -497,7 +497,7 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
           </AdminCard>
 
           <AdminCard title="ゲーム制御" description="タップチャレンジは3秒カウント後に10秒で自動終了します" icon={Play}>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-4">
               <AdminButton icon={Play} onClick={async () => {
                 if (autoStopRef.current) {
                   clearTimeout(autoStopRef.current);
@@ -538,7 +538,7 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
                 <span className="font-medium">代表者制（各テーブル1回答まで）</span>
               </label>
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-4">
               <AdminButton icon={ListChecks} onClick={() => send({ type: 'quiz:next', payload: undefined })}>
                 次のクイズ
               </AdminButton>
@@ -555,7 +555,7 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
           </AdminCard>
 
           <AdminCard title="抽選" description="候補リストからランダムに選出します" icon={Dice1}>
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-3 gap-4">
               <AdminButton variant="secondary" icon={Dice1} onClick={() => handleLottery('all')}>
                 全員対象
               </AdminButton>
@@ -768,13 +768,13 @@ type ConfirmState = {
 
 function StatusItem({ label, value, icon: Icon }: { label: string; value: string; icon: LucideIcon }) {
   return (
-    <div className="flex items-center gap-3 rounded-xl bg-gradient-to-br from-brand-blue-50 to-white p-4 shadow-brand-sm transition-all duration-300 hover:shadow-brand hover:scale-[1.02]">
-      <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-secondary shadow-brand-sm">
-        <Icon className="h-5 w-5 text-white" />
+    <div className="flex items-center gap-4 rounded-xl bg-slate-50 p-4 border border-slate-200">
+      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-blue-500 shadow-md">
+        <Icon className="h-6 w-6 text-white" />
       </div>
-      <div>
-        <p className="text-xs font-bold uppercase tracking-wider text-brand-blue-700/70">{label}</p>
-        <p className="mt-0.5 text-lg font-bold text-brand-blue-700">{value}</p>
+      <div className="min-w-0">
+        <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">{label}</p>
+        <p className="mt-1 text-xl font-bold text-slate-800">{value}</p>
       </div>
     </div>
   );
@@ -789,12 +789,14 @@ type AdminCardProps = {
 
 function AdminCard({ title, description, icon: Icon, children }: AdminCardProps) {
   return (
-    <div className="glass-panel rounded-xl p-5 shadow-brand">
-      <div className="mb-4 flex items-center gap-2">
-        <Icon className="h-5 w-5 text-brand-terra-600 shrink-0" />
-        <div className="min-w-0">
-          <h3 className="text-base font-semibold text-brand-blue-700">{title}</h3>
-          {description && <p className="text-xs text-brand-blue-700/70">{description}</p>}
+    <div className="rounded-2xl bg-white p-6 shadow-lg border border-slate-200">
+      <div className="mb-5 flex items-start gap-3">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-500 shadow-md">
+          <Icon className="h-5 w-5 text-white" />
+        </div>
+        <div className="min-w-0 flex-1">
+          <h3 className="text-lg font-bold text-slate-800">{title}</h3>
+          {description && <p className="mt-1 text-sm text-slate-500">{description}</p>}
         </div>
       </div>
       {children}
@@ -808,17 +810,17 @@ type AdminButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
 };
 
 function AdminButton({ variant = 'primary', icon: Icon, className = '', children, type = 'button', ...props }: AdminButtonProps) {
-  const base = 'flex min-h-[2.75rem] items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold transition whitespace-nowrap focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 disabled:opacity-60';
+  const base = 'flex min-h-[3.5rem] items-center justify-center gap-2.5 rounded-xl px-6 py-3 text-base font-semibold transition-all duration-200 whitespace-nowrap focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 disabled:opacity-50 disabled:cursor-not-allowed';
   const variantClass =
     variant === 'primary'
-      ? 'bg-brand-terra-600 text-white hover:bg-brand-terra-700 focus-visible:outline-brand-terra-400'
+      ? 'bg-blue-500 text-white shadow-lg hover:bg-blue-600 hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] focus-visible:outline-blue-400'
       : variant === 'danger'
-        ? 'bg-error text-white hover:bg-error/90 focus-visible:outline-error/80'
-        : 'bg-brand-blue-200 text-brand-blue-700 hover:bg-brand-blue-200/80 focus-visible:outline-brand-blue-400';
+        ? 'bg-red-500 text-white shadow-lg hover:bg-red-600 hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] focus-visible:outline-red-400'
+        : 'bg-white text-slate-700 shadow-md hover:shadow-lg hover:bg-slate-50 hover:text-blue-600 border-2 border-slate-200 hover:border-blue-300 focus-visible:outline-blue-400';
 
   return (
     <button type={type} className={`${base} ${variantClass} ${className}`} {...props}>
-      {Icon && <Icon className="h-4 w-4 shrink-0" />}
+      {Icon && <Icon className="h-5 w-5 shrink-0" />}
       {children}
     </button>
   );
