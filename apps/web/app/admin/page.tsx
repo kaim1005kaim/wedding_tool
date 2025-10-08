@@ -37,31 +37,44 @@ export default function AdminEntryPage() {
   };
 
   return (
-    <main className="mx-auto flex min-h-screen w-full max-w-md flex-col items-center justify-center gap-6 p-6 text-center">
-      <h1 className="text-3xl font-semibold">管理画面</h1>
-      <p className="text-sm text-slate-300">ルームコードを入力してください</p>
+    <main className="mx-auto flex min-h-screen w-full max-w-md flex-col items-center justify-center gap-8 bg-gradient-to-br from-brand-blue-100 via-ecru to-brand-terra-100 p-6 text-center">
+      <div className="slide-up">
+        <div className="mb-6 text-6xl">🔐</div>
+        <h1 className="text-title-lg font-bold text-brand-blue-700">管理画面</h1>
+        <p className="mt-3 text-base text-brand-blue-700/70">ルームコードを入力してください</p>
+      </div>
 
-      <form onSubmit={handleSubmit} className="w-full space-y-4">
-        <input
-          type="text"
-          className="w-full rounded border border-slate-300 bg-white px-4 py-3 text-center text-lg uppercase text-slate-900 placeholder:text-slate-400"
-          value={roomCode}
-          onChange={(e) => setRoomCode(e.target.value.toUpperCase())}
-          placeholder="例: AB12"
-          disabled={loading}
-        />
+      <form onSubmit={handleSubmit} className="w-full space-y-6">
+        <div className="glass-panel-strong rounded-3xl p-8 shadow-brand-lg bounce-in">
+          <label className="mb-3 flex items-center justify-center gap-2 text-sm font-bold text-brand-blue-700">
+            <span>🎮</span>
+            <span>ルームコード</span>
+          </label>
+          <input
+            type="text"
+            className="w-full rounded-2xl border-2 border-brand-blue-200 bg-white px-6 py-5 text-center text-2xl font-bold uppercase tracking-wider text-slate-900 shadow-brand-sm transition-all duration-300 placeholder:text-slate-400 hover:border-brand-blue-300 focus:border-brand-blue-500 focus:shadow-brand focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-blue-400"
+            value={roomCode}
+            onChange={(e) => setRoomCode(e.target.value.toUpperCase())}
+            placeholder="AB12"
+            disabled={loading}
+            maxLength={6}
+          />
+        </div>
 
-        {error && <p className="text-sm text-rose-300">{error}</p>}
+        {error && (
+          <div className="rounded-2xl bg-error-light px-5 py-3 text-sm font-semibold text-error shadow-brand-sm bounce-in">
+            ⚠️ {error}
+          </div>
+        )}
 
         <Button
           type="submit"
-          className="w-full px-4 py-3 text-lg"
+          className="w-full rounded-2xl bg-gradient-secondary px-6 py-5 text-lg font-bold text-white shadow-brand-md transition-all duration-300 hover:scale-[1.02] hover:shadow-brand-lg active:scale-[0.98] disabled:opacity-60"
           disabled={loading}
         >
-          {loading ? 'Loading...' : '管理画面へ'}
+          {loading ? '読み込み中...' : '→ 管理画面へ'}
         </Button>
       </form>
-
     </main>
   );
 }

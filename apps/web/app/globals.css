@@ -6,25 +6,52 @@
   /* Base */
   --ecru: #F7F3EA;
   --ink: #1F2A37;
-  /* Blues */
+
+  /* Blues - Extended */
   --blue-50: #EEF6FB;
+  --blue-100: #D9EBFA;
   --blue-200: #BFD9EF;
+  --blue-300: #99C5E7;
   --blue-400: #7FB2DA;
+  --blue-500: #5A95C8;
   --blue-600: #397AAE;
   --blue-700: #275E8B;
-  /* Terracotta */
+  --blue-800: #1A4565;
+  --blue-900: #0F2D45;
+
+  /* Terracotta - Extended */
   --terra-50: #F6ECE8;
+  --terra-100: #EED9D0;
   --terra-200: #E3BBAA;
+  --terra-300: #D8986F;
   --terra-400: #C46B47;
+  --terra-500: #B0583A;
   --terra-600: #9E4C33;
   --terra-700: #7E3C29;
-  /* System */
+  --terra-800: #5F2D1F;
+  --terra-900: #401E15;
+
+  /* System Colors */
   --success: #3AA76D;
+  --success-light: #E8F7EF;
   --warning: #D97706;
+  --warning-light: #FEF3E8;
   --error: #CC3333;
-  /* Surfaces */
+  --error-light: #FCE8E8;
+
+  /* Gradients */
+  --gradient-primary: linear-gradient(135deg, var(--blue-500) 0%, var(--blue-700) 100%);
+  --gradient-secondary: linear-gradient(135deg, var(--terra-400) 0%, var(--terra-600) 100%);
+  --gradient-accent: linear-gradient(135deg, var(--blue-400) 0%, var(--terra-400) 100%);
+  --gradient-celebration: linear-gradient(135deg, #FFD700 0%, #FFA500 50%, #FF6347 100%);
+
+  /* Surfaces & Elevation */
   --panel: #FFFFFF;
+  --shadow-sm: 0 2px 8px rgba(16, 24, 40, 0.06);
   --shadow: 0 6px 18px rgba(16, 24, 40, 0.08);
+  --shadow-md: 0 12px 32px rgba(16, 24, 40, 0.12);
+  --shadow-lg: 0 24px 48px rgba(16, 24, 40, 0.16);
+  --shadow-xl: 0 32px 64px rgba(16, 24, 40, 0.20);
 }
 
 body {
@@ -40,9 +67,18 @@ body {
 }
 
 .glass-panel {
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.65), rgba(255, 255, 255, 0.5));
-  backdrop-filter: saturate(120%) blur(8px);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.75), rgba(255, 255, 255, 0.6));
+  backdrop-filter: saturate(130%) blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
 }
+
+.glass-panel-strong {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.8));
+  backdrop-filter: saturate(140%) blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+}
+
+/* ========== Animations ========== */
 
 @keyframes sparkle-pop {
   0% {
@@ -58,6 +94,128 @@ body {
   }
 }
 
+@keyframes confetti-fall {
+  0% {
+    transform: translateY(-100vh) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(100vh) rotate(720deg);
+    opacity: 0.3;
+  }
+}
+
+@keyframes pulse-ring {
+  0% {
+    transform: scale(0.95);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 0.7;
+  }
+  100% {
+    transform: scale(0.95);
+    opacity: 1;
+  }
+}
+
+@keyframes ripple {
+  0% {
+    transform: scale(0);
+    opacity: 0.6;
+  }
+  100% {
+    transform: scale(4);
+    opacity: 0;
+  }
+}
+
+@keyframes slide-up {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes bounce-in {
+  0% {
+    transform: scale(0.3);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  70% {
+    transform: scale(0.9);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -1000px 0;
+  }
+  100% {
+    background-position: 1000px 0;
+  }
+}
+
+@keyframes count-up {
+  from {
+    transform: translateY(10px) scale(1.2);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+}
+
+/* ========== Utility Classes ========== */
+
 .sparkle-pop {
   animation: sparkle-pop 0.6s ease-out forwards;
+}
+
+.confetti-fall {
+  animation: confetti-fall 3s ease-in forwards;
+}
+
+.pulse-ring {
+  animation: pulse-ring 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.ripple {
+  animation: ripple 0.6s ease-out;
+}
+
+.slide-up {
+  animation: slide-up 0.5s ease-out;
+}
+
+.bounce-in {
+  animation: bounce-in 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+.shimmer {
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.3) 50%,
+    transparent 100%
+  );
+  background-size: 1000px 100%;
+  animation: shimmer 2s infinite;
+}
+
+.count-up {
+  animation: count-up 0.4s ease-out;
 }

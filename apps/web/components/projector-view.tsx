@@ -28,10 +28,10 @@ export default function ProjectorView({ roomId: _roomId }: { roomId: string }) {
   }, [lotteryResult?.player?.id]);
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-ecru px-3 py-4 text-ink">
-      <div className="relative aspect-video w-full max-w-[min(1800px,100vw-24px)] overflow-hidden rounded-[2rem] shadow-brand">
-        <div className="absolute inset-0 pointer-events-none bg-gradient-to-br from-brand-blue-50 via-transparent to-brand-terra-50" />
-        <div className="relative flex h-full flex-col gap-6 px-12 py-10">
+    <main className="flex min-h-screen items-center justify-center bg-gradient-to-br from-brand-blue-100 via-ecru to-brand-terra-100 px-3 py-4 text-ink">
+      <div className="relative aspect-video w-full max-w-[min(1800px,100vw-24px)] overflow-hidden rounded-[3rem] shadow-brand-xl">
+        <div className="absolute inset-0 pointer-events-none bg-gradient-to-br from-brand-blue-50/50 via-transparent to-brand-terra-50/50" />
+        <div className="relative flex h-full flex-col gap-8 px-12 py-10">
           <Header mode={mode} countdownMs={countdownMs} />
           <div className="flex-1 overflow-hidden">
             <AnimatePresence mode="wait">{renderSection(mode, topTen, activeQuiz, quizResult, lotteryResult, isSpinning, lotteryKey)}</AnimatePresence>
@@ -43,6 +43,9 @@ export default function ProjectorView({ roomId: _roomId }: { roomId: string }) {
 }
 
 function Header({ mode, countdownMs }: { mode: string; countdownMs: number }) {
+  const modeIcon = mode === 'countup' ? '⚡' : mode === 'quiz' ? '🎯' : mode === 'lottery' ? '🎰' : '🎮';
+  const countdown = Math.max(0, Math.ceil(countdownMs / 1000));
+
   return (
     <motion.header
       key={`header-${mode}`}
@@ -50,20 +53,27 @@ function Header({ mode, countdownMs }: { mode: string; countdownMs: number }) {
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
       transition={{ duration: 0.5, ease: 'easeOut' }}
-      className="glass-panel rounded-2xl px-10 py-8 shadow-brand"
+      className="glass-panel-strong rounded-3xl px-12 py-10 shadow-brand-lg"
     >
-      <div className="flex flex-col gap-4 text-center text-brand-blue-700/80 md:flex-row md:items-center md:justify-between md:text-left">
-        <div className="space-y-2">
-          <p className="text-6xl font-serif font-semibold tracking-wide text-brand-terra-600 md:text-7xl">Wedding Party Game</p>
-        </div>
-        <div className="flex flex-col items-center gap-3 text-sm md:items-end">
-          <div className="text-center md:text-right">
-            <p className="text-xs uppercase tracking-[0.35em]">Current Mode</p>
-            <p className="text-3xl font-semibold text-brand-blue-700">{labelForMode(mode)}</p>
+      <div className="flex flex-col gap-6 text-center md:flex-row md:items-center md:justify-between md:text-left">
+        <div className="flex items-center justify-center gap-6 md:justify-start">
+          <div className="flex h-20 w-20 items-center justify-center rounded-3xl bg-gradient-secondary text-5xl shadow-brand-md">
+            {modeIcon}
           </div>
-          <div className="text-center md:text-right">
-            <p className="text-xs uppercase tracking-[0.35em]">Countdown</p>
-            <p className="text-4xl font-semibold text-brand-blue-700">{Math.max(0, Math.ceil(countdownMs / 1000))} 秒</p>
+          <div className="space-y-1">
+            <p className="text-xs font-bold uppercase tracking-[0.4em] text-brand-blue-700/70">Wedding Party Game</p>
+            <p className="text-display-sm font-serif font-bold tracking-tight text-brand-terra-600">
+              {labelForMode(mode)}
+            </p>
+          </div>
+        </div>
+        <div className="flex items-center gap-8">
+          <div className="rounded-2xl bg-white/80 px-8 py-4 shadow-brand-sm backdrop-blur-sm">
+            <p className="text-xs font-bold uppercase tracking-[0.35em] text-brand-blue-700/70">Countdown</p>
+            <div className="mt-1 flex items-center justify-center gap-2">
+              <p className="text-display-sm font-bold text-brand-blue-700 count-up">{countdown}</p>
+              <p className="text-2xl font-semibold text-brand-blue-700/60">秒</p>
+            </div>
           </div>
         </div>
       </div>
@@ -103,28 +113,61 @@ function CountupBoard({ entries }: { entries: LeaderboardEntry[] }) {
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -30 }}
       transition={{ duration: 0.5, ease: 'easeOut' }}
-      className="grid h-full gap-6 lg:grid-cols-2"
+      className="grid h-full gap-8 lg:grid-cols-2"
     >
       {columns.map((column, colIndex) => (
-        <div key={colIndex} className="glass-panel flex flex-col rounded-2xl p-8 shadow-brand">
-          <h2 className="text-3xl font-semibold text-brand-blue-700">タップスコア</h2>
-          <div className="mt-5 flex-1 space-y-4 overflow-hidden">
+        <div key={colIndex} className="glass-panel-strong flex flex-col rounded-3xl p-10 shadow-brand-lg">
+          <div className="mb-6 flex items-center gap-3">
+            <span className="text-4xl">⚡</span>
+            <h2 className="text-title-md font-bold text-brand-blue-700">タップスコア</h2>
+          </div>
+          <div className="flex-1 space-y-3 overflow-hidden">
             <AnimatePresence initial={false}>
-              {column.map((entry) => (
+              {column.map((entry, index) => (
                 <motion.div
                   key={entry.playerId}
                   layout
-                  initial={{ opacity: 0, y: 15 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -15 }}
-                  transition={{ duration: 0.3 }}
-                  className={`flex items-center justify-between rounded-xl px-6 py-4 text-2xl shadow-brand ${entry.rank <= 3 ? 'bg-brand-blue-50 border border-brand-terra-200' : 'bg-white/85'}`}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: 20 }}
+                  transition={{ duration: 0.4, ease: 'easeOut' }}
+                  className={`group flex items-center justify-between rounded-2xl px-8 py-5 text-2xl shadow-brand-md transition-all duration-300 hover:shadow-brand-lg hover:scale-[1.02] ${
+                    entry.rank === 1
+                      ? 'bg-gradient-to-r from-yellow-100 to-yellow-50 border-2 border-yellow-400'
+                      : entry.rank === 2
+                        ? 'bg-gradient-to-r from-gray-100 to-gray-50 border-2 border-gray-400'
+                        : entry.rank === 3
+                          ? 'bg-gradient-to-r from-orange-100 to-orange-50 border-2 border-orange-400'
+                          : 'bg-white/90'
+                  }`}
                 >
-                  <span className="font-medium text-brand-blue-700">
-                    {entry.rank}. {entry.displayName}
-                    {entry.tableNo && <span className="ml-2 text-lg text-brand-blue-700/60">({entry.tableNo})</span>}
-                  </span>
-                  <span className="font-semibold text-brand-terra-600">{entry.totalPoints} pt</span>
+                  <div className="flex items-center gap-4">
+                    <span
+                      className={`flex h-12 w-12 items-center justify-center rounded-full font-bold ${
+                        entry.rank === 1
+                          ? 'bg-gradient-to-br from-yellow-400 to-yellow-600 text-white text-2xl'
+                          : entry.rank === 2
+                            ? 'bg-gradient-to-br from-gray-300 to-gray-500 text-white text-2xl'
+                            : entry.rank === 3
+                              ? 'bg-gradient-to-br from-orange-400 to-orange-600 text-white text-2xl'
+                              : 'bg-brand-blue-100 text-brand-blue-700'
+                      }`}
+                    >
+                      {entry.rank <= 3 ? ['🥇', '🥈', '🥉'][entry.rank - 1] : entry.rank}
+                    </span>
+                    <div>
+                      <p className="font-bold text-brand-blue-700 group-hover:text-brand-terra-600 transition-colors">
+                        {entry.displayName}
+                      </p>
+                      {entry.tableNo && (
+                        <p className="text-sm text-brand-blue-700/60">テーブル {entry.tableNo}</p>
+                      )}
+                    </div>
+                  </div>
+                  <div className="rounded-full bg-brand-terra-100 px-6 py-2 shadow-brand-sm">
+                    <span className="font-bold text-brand-terra-700 count-up">{entry.totalPoints}</span>
+                    <span className="ml-1 text-lg text-brand-terra-600/70">pt</span>
+                  </div>
                 </motion.div>
               ))}
             </AnimatePresence>
