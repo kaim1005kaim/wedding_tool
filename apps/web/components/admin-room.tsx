@@ -444,18 +444,18 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
   }
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-brand-blue-100 via-ecru to-brand-terra-100 px-4 py-6 sm:px-6 sm:py-8">
-      <div className="mx-auto max-w-6xl">
+    <main className="min-h-screen bg-gradient-to-br from-brand-blue-100 via-ecru to-brand-terra-100 p-6">
+      <div className="mx-auto max-w-7xl">
         <Section title="管理パネル" subtitle={`Room ${roomId}`}>
-          <div className="mb-6 grid gap-4 rounded-2xl bg-white/90 p-6 shadow-brand-lg backdrop-blur-sm sm:grid-cols-3">
+          <div className="mb-5 grid grid-cols-3 gap-4 rounded-xl bg-white/90 p-5 shadow-brand-lg backdrop-blur-sm">
             <StatusItem label="モード" value={labelForMode(mode)} icon={Gauge} />
             <StatusItem label="フェーズ" value={phaseLabel(phase)} icon={PauseCircle} />
             <StatusItem label="カウントダウン" value={`${Math.max(0, Math.ceil(countdownMs / 1000))} 秒`} icon={ListChecks} />
           </div>
 
-          <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div className="rounded-xl bg-white/80 px-4 py-2.5 shadow-brand-sm backdrop-blur-sm">
-              <p className="text-xs font-semibold text-brand-blue-700 sm:text-sm">
+          <div className="mb-5 flex items-center justify-between gap-4">
+            <div className="flex-1 rounded-lg bg-white/80 px-4 py-2 shadow-brand-sm backdrop-blur-sm">
+              <p className="text-xs font-semibold text-brand-blue-700">
                 💡 投影画面を別タブで開き、全画面表示（Fキー）してプロジェクターに投影してください
               </p>
             </div>
@@ -463,22 +463,22 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
               variant="secondary"
               icon={Settings}
               onClick={openManagement}
-              className="w-full justify-center sm:w-auto sm:px-4"
+              className="shrink-0"
               aria-label="詳細設定"
             >
-              <span className="sm:inline">設定</span>
+              設定
             </AdminButton>
           </div>
 
           {error && (
-            <div className="mb-6 rounded-2xl bg-error-light px-5 py-4 shadow-brand-sm">
+            <div className="mb-5 rounded-xl bg-error-light px-5 py-3 shadow-brand-sm">
               <p className="text-sm font-semibold text-error" role="alert">
                 ⚠️ {error}
               </p>
             </div>
           )}
 
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-3 gap-4">
           <AdminCard title="モード切替" description="ゲームの進行モードを選択します" icon={Gauge}>
             <div className="grid gap-3 sm:grid-cols-2">
               <AdminButton variant={mode === 'idle' ? 'primary' : 'secondary'} icon={PauseCircle} onClick={() => send({ type: 'mode:switch', payload: { to: 'idle' } })}>

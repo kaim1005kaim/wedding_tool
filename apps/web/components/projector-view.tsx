@@ -80,11 +80,11 @@ export default function ProjectorView({ roomId: _roomId }: { roomId: string }) {
     <main
       ref={containerRef}
       className="flex min-h-screen items-center justify-center bg-gradient-to-br from-brand-blue-100 via-ecru to-brand-terra-100 text-ink"
-      style={{ padding: isFullscreen ? '0' : '0.75rem 0.75rem' }}
+      style={{ padding: isFullscreen ? '0' : '1.5rem' }}
     >
-      <div className={`relative aspect-video w-full overflow-hidden shadow-brand-xl ${isFullscreen ? 'max-w-none rounded-none h-screen' : 'max-w-[min(1920px,100vw-24px)] rounded-[3rem]'}`}>
+      <div className={`relative aspect-video w-full overflow-hidden shadow-brand-xl ${isFullscreen ? 'max-w-none rounded-none h-screen' : 'max-w-[1920px] rounded-3xl'}`}>
         <div className="absolute inset-0 pointer-events-none bg-gradient-to-br from-brand-blue-50/50 via-transparent to-brand-terra-50/50" />
-        <div className="relative flex h-full flex-col gap-8 px-12 py-10">
+        <div className={`relative flex h-full flex-col ${isFullscreen ? 'gap-8 px-16 py-12' : 'gap-6 px-12 py-8'}`}>
           <Header mode={mode} countdownMs={countdownMs} isFullscreen={isFullscreen} onToggleFullscreen={toggleFullscreen} />
           <div className="flex-1 overflow-hidden">
             <AnimatePresence mode="wait">{renderSection(mode, topTen, activeQuiz, quizResult, lotteryResult, isSpinning, lotteryKey)}</AnimatePresence>
@@ -94,15 +94,15 @@ export default function ProjectorView({ roomId: _roomId }: { roomId: string }) {
 
       {/* Fullscreen hint - only show when not in fullscreen */}
       {!isFullscreen && (
-        <div className="fixed bottom-6 right-6 z-50 rounded-2xl bg-white/90 px-5 py-3 shadow-brand-lg backdrop-blur-sm slide-up">
+        <div className="fixed bottom-8 right-8 z-50 rounded-xl bg-white/90 px-4 py-3 shadow-brand-lg backdrop-blur-sm slide-up">
           <button
             onClick={toggleFullscreen}
-            className="flex items-center gap-3 text-sm font-semibold text-brand-blue-700 transition-colors hover:text-brand-terra-600"
+            className="flex items-center gap-2 text-sm font-semibold text-brand-blue-700 transition-colors hover:text-brand-terra-600"
           >
-            <span className="text-2xl">⛶</span>
+            <span className="text-xl">⛶</span>
             <div className="text-left">
               <p>全画面表示</p>
-              <p className="text-xs text-brand-blue-700/60">キーボード: F</p>
+              <p className="text-xs text-brand-blue-700/60">F キー</p>
             </div>
           </button>
         </div>
