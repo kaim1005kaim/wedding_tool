@@ -4,6 +4,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useRoomStore } from '../lib/store/room-store';
 import type { LeaderboardEntry, RoomStoreState } from '../lib/store/room-store';
+import ParticleEffect from './ParticleEffect';
+import type { ParticleConfig } from './ParticleEffect';
 
 const CHOICE_LABELS = ['A', 'B', 'C', 'D'];
 
@@ -19,7 +21,9 @@ export default function ProjectorView({ roomId: _roomId }: { roomId: string }) {
   const [lotteryKey, setLotteryKey] = useState(0);
   const [isSpinning, setIsSpinning] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [particleTrigger, setParticleTrigger] = useState<ParticleConfig | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const prevModeRef = useRef<typeof mode>();
 
   useEffect(() => {
     if (!lotteryResult?.player?.id) return;
@@ -28,6 +32,49 @@ export default function ProjectorView({ roomId: _roomId }: { roomId: string }) {
     const timer = window.setTimeout(() => setIsSpinning(false), 3000);
     return () => window.clearTimeout(timer);
   }, [lotteryResult?.player?.id]);
+
+  // Trigger particles on mode transitions
+  useEffect(() => {
+    if (prevModeRef.current !== undefined && prevModeRef.current !== mode) {
+      // Emit particles at center of screen on mode change
+      const centerX = window.innerWidth / 2;
+      const centerY = window.innerHeight / 2;
+
+      const colors: Array<'red' | 'blue' | 'yellow'> = ['red', 'blue', 'yellow'];
+      const shapes: Array<'circle' | 'square' | 'triangle'> = ['circle', 'square', 'triangle'];
+
+      setParticleTrigger({
+        x: centerX,
+        y: centerY,
+        count: 50,
+        shape: shapes[Math.floor(Math.random() * shapes.length)],
+        color: colors[Math.floor(Math.random() * colors.length)],
+        size: 12,
+        velocity: 200,
+        spread: 2
+      });
+    }
+    prevModeRef.current = mode;
+  }, [mode]);
+
+  // Trigger particles on quiz result reveal
+  useEffect(() => {
+    if (quizResult) {
+      const centerX = window.innerWidth / 2;
+      const centerY = window.innerHeight / 2;
+
+      setParticleTrigger({
+        x: centerX,
+        y: centerY,
+        count: 40,
+        shape: 'circle',
+        color: 'yellow',
+        size: 15,
+        velocity: 180,
+        spread: 1.8
+      });
+    }
+  }, [quizResult?.quizId]);
 
   // Fullscreen toggle
   const toggleFullscreen = useCallback(async () => {
@@ -107,6 +154,7 @@ export default function ProjectorView({ roomId: _roomId }: { roomId: string }) {
           </button>
         </div>
       )}
+      <ParticleEffect trigger={particleTrigger} />
     </main>
   );
 }

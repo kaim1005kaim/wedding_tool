@@ -6,6 +6,8 @@ import { useRoomStore } from '../lib/store/room-store';
 import { appConfig } from '../lib/env';
 import { Section, PrimaryButton } from './brand';
 import type { LeaderboardEntry, RoomView } from '../lib/store/room-store';
+import ParticleEffect from './ParticleEffect';
+import type { ParticleConfig } from './ParticleEffect';
 
 type ConnectionStatus = 'good' | 'warn' | 'bad';
 
@@ -451,12 +453,12 @@ function CountupOverlay({ phase, countdownMs, leaderboard, onTap }: CountupOverl
   const [localCountdown, setLocalCountdown] = useState<number | null>(null);
   const [flash, setFlash] = useState(false);
   const [showResults, setShowResults] = useState(false);
-  const [sparkles, setSparkles] = useState<Array<{ id: string; left: number; top: number }>>([]);
   const [phaseEndTime, setPhaseEndTime] = useState<number | null>(null);
   const [timeLeftSeconds, setTimeLeftSeconds] = useState<number | null>(null);
   const [isTimerRunning, setIsTimerRunning] = useState(false);
   const [isFinished, setIsFinished] = useState(false);
   const [banner, setBanner] = useState<'start' | 'stop' | null>(null);
+  const [particleTrigger, setParticleTrigger] = useState<ParticleConfig | null>(null);
   const prevPhaseRef = useRef<typeof phase>();
   const startDelayRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const stopDelayRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -590,23 +592,24 @@ function CountupOverlay({ phase, countdownMs, leaderboard, onTap }: CountupOverl
   const showPad = !showResults && (phase === 'running' || banner === 'stop');
   const displaySeconds = isTimerRunning && banner !== 'stop' && timeLeftSeconds !== null ? timeLeftSeconds : '';
 
-  const handleTap = () => {
+  const handleTap = (e: React.PointerEvent) => {
     if (disabled) return;
     navigator.vibrate?.(10);
     setFlash(true);
     window.setTimeout(() => setFlash(false), 150);
     void onTap();
 
-    const sparkleId = typeof crypto !== 'undefined' && 'randomUUID' in crypto ? crypto.randomUUID() : Math.random().toString(36).slice(2);
-    const sparkle = {
-      id: sparkleId,
-      left: 30 + Math.random() * 40,
-      top: 40 + Math.random() * 20
-    };
-    setSparkles((prev) => [...prev, sparkle]);
-    window.setTimeout(() => {
-      setSparkles((prev) => prev.filter((item) => item.id !== sparkle.id));
-    }, 600);
+    // Emit Bauhaus particles at tap location
+    setParticleTrigger({
+      x: e.clientX,
+      y: e.clientY,
+      count: 15,
+      shape: 'circle',
+      color: 'yellow',
+      size: 8,
+      velocity: 150,
+      spread: 1.5
+    });
   };
 
   const topThree = leaderboard.slice(0, 3);
@@ -627,7 +630,7 @@ function CountupOverlay({ phase, countdownMs, leaderboard, onTap }: CountupOverl
           type="button"
           onPointerDown={handleTap}
           disabled={disabled}
-          className="fixed inset-0 z-30 flex select-none items-center justify-center bg-gradient-to-br from-brand-blue-400 via-brand-blue-500 to-brand-terra-400 transition-all duration-150 active:from-brand-terra-400 active:via-brand-terra-500 active:to-brand-blue-400 disabled:cursor-not-allowed disabled:opacity-60"
+          className="fixed inset-0 z-30 flex select-none items-center justify-center bg-gradient-to-br from-brand-blue-500 via-brand-blue-600 to-brand-terra-500 transition-all duration-150 active:from-brand-terra-500 active:via-brand-terra-600 active:to-brand-blue-500 disabled:cursor-not-allowed disabled:opacity-80"
         >
         {localCountdown !== null ? (
           <div className="flex flex-col items-center gap-4 bounce-in">
@@ -665,19 +668,10 @@ function CountupOverlay({ phase, countdownMs, leaderboard, onTap }: CountupOverl
             +1
           </span>
         )}
-        {sparkles.map((sparkle) => (
-          <span
-            key={sparkle.id}
-            className="pointer-events-none absolute text-6xl sparkle-pop drop-shadow-lg"
-            style={{ left: `${sparkle.left}%`, top: `${sparkle.top}%` }}
-          >
-            ⭐
-          </span>
-        ))}
         </button>
       )}
       {showResults && topThree.length > 0 && (
-        <div className="fixed inset-0 z-40 flex items-center justify-center bg-gradient-to-br from-ink/80 to-ink/90 px-6 backdrop-blur-sm">
+        <div className="fixed inset-0 z-40 flex items-center justify-center bg-gradient-to-br from-brand-blue-600 to-brand-blue-700 px-6">
           <div className="glass-panel-strong w-full max-w-xl rounded-3xl p-10 shadow-brand-xl bounce-in">
             <div className="mb-8 text-center">
               <div className="mb-4 text-6xl">🏆</div>
@@ -718,6 +712,7 @@ function CountupOverlay({ phase, countdownMs, leaderboard, onTap }: CountupOverl
           </div>
         </div>
       )}
+      <ParticleEffect trigger={particleTrigger} />
     </>
   );
 }
@@ -751,6 +746,7 @@ function QuizOverlay({ phase, countdownMs, roomId, playerToken }: QuizOverlayPro
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [timeLeftSeconds, setTimeLeftSeconds] = useState<number | null>(null);
   const [phaseEndTime, setPhaseEndTime] = useState<number | null>(null);
+  const [particleTrigger, setParticleTrigger] = useState<ParticleConfig | null>(null);
 
   // Reset selection when quiz changes
   useEffect(() => {
@@ -793,13 +789,49 @@ function QuizOverlay({ phase, countdownMs, roomId, playerToken }: QuizOverlayPro
     return () => clearInterval(id);
   }, [phase, phaseEndTime]);
 
-  const handleChoiceSelect = async (choiceIndex: number) => {
+  // Emit particles when quiz result is revealed
+  useEffect(() => {
+    if (quizResult && selectedChoice !== null) {
+      const isCorrect = selectedChoice === quizResult.correctIndex;
+      const centerX = window.innerWidth / 2;
+      const centerY = window.innerHeight / 2;
+
+      setParticleTrigger({
+        x: centerX,
+        y: centerY,
+        count: isCorrect ? 40 : 20,
+        shape: isCorrect ? 'circle' : 'square',
+        color: isCorrect ? 'yellow' : 'red',
+        size: isCorrect ? 15 : 10,
+        velocity: isCorrect ? 180 : 100,
+        spread: isCorrect ? 1.8 : 1.2
+      });
+    }
+  }, [quizResult?.quizId, selectedChoice]);
+
+  const handleChoiceSelect = async (choiceIndex: number, event: React.MouseEvent) => {
     if (!activeQuiz || !roomId || !playerToken || selectedChoice !== null || quizResult) {
       return;
     }
 
     setSelectedChoice(choiceIndex);
     setIsSubmitting(true);
+
+    // Emit Bauhaus particles at click location
+    const rect = event.currentTarget.getBoundingClientRect();
+    const x = event.clientX - rect.left;
+    const y = event.clientY - rect.top;
+
+    setParticleTrigger({
+      x: event.clientX,
+      y: event.clientY,
+      count: 20,
+      shape: 'circle',
+      color: 'blue',
+      size: 10,
+      velocity: 120,
+      spread: 1.2
+    });
 
     try {
       const response = await fetch(`/api/rooms/${roomId}/quiz/answer`, {
@@ -895,7 +927,7 @@ function QuizOverlay({ phase, countdownMs, roomId, playerToken }: QuizOverlayPro
             return (
               <button
                 key={index}
-                onClick={() => handleChoiceSelect(index)}
+                onClick={(e) => handleChoiceSelect(index, e)}
                 disabled={hasAnswered || isSubmitting || !!quizResult}
                 className={buttonClass}
               >
@@ -943,6 +975,7 @@ function QuizOverlay({ phase, countdownMs, roomId, playerToken }: QuizOverlayPro
           </div>
         )}
       </div>
+      <ParticleEffect trigger={particleTrigger} />
     </div>
   );
 }

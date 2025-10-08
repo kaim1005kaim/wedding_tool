@@ -50,6 +50,13 @@ const config: Config = {
             800: 'var(--terra-800)',
             900: 'var(--terra-900)'
           }
+        },
+        bauhaus: {
+          red: '#ff0000',
+          blue: '#0000ff',
+          yellow: '#ffff00',
+          black: '#000000',
+          white: '#ffffff'
         }
       },
       backgroundImage: {
