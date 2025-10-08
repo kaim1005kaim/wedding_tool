@@ -565,7 +565,6 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
               </AdminButton>
             </div>
           </AdminCard>
-        </div>
 
         {manageOpen && (
           <div className="fixed inset-0 z-40 flex items-center justify-center bg-ink/60 px-6">
@@ -739,15 +738,15 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
           </div>
         )}
 
-          {isCloudMode && (
-            <AdminCard title="ログ / 抽選履歴" description="進行状況の確認" icon={ListChecks}>
-              <div className="mb-4 inline-flex rounded-full bg-brand-blue-50 p-1 text-sm">
-                <TabButton label="操作ログ" active={activeLogTab === 'logs'} onClick={() => setActiveLogTab('logs')} />
-                <TabButton label="抽選履歴" active={activeLogTab === 'lottery'} onClick={() => setActiveLogTab('lottery')} />
-              </div>
-              {activeLogTab === 'logs' ? <LogsList logs={logs} /> : <LotteryList entries={lotteries} />}
-            </AdminCard>
-          )}
+        {isCloudMode && (
+          <AdminCard title="ログ / 抽選履歴" description="進行状況の確認" icon={ListChecks}>
+            <div className="mb-4 inline-flex rounded-full bg-brand-blue-50 p-1 text-sm">
+              <TabButton label="操作ログ" active={activeLogTab === 'logs'} onClick={() => setActiveLogTab('logs')} />
+              <TabButton label="抽選履歴" active={activeLogTab === 'lottery'} onClick={() => setActiveLogTab('lottery')} />
+            </div>
+            {activeLogTab === 'logs' ? <LogsList logs={logs} /> : <LotteryList entries={lotteries} />}
+          </AdminCard>
+        )}
         </div>
         </Section>
       </div>
