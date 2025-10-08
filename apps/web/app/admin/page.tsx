@@ -1,8 +1,16 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@wedding_tool/ui';
+import { Trash2 } from 'lucide-react';
+
+type Room = {
+  id: string;
+  code: string;
+  created_at: string;
+  updated_at: string | null;
+};
 
 export default function AdminEntryPage() {
   const [roomCode, setRoomCode] = useState('');
@@ -10,6 +18,9 @@ export default function AdminEntryPage() {
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [rooms, setRooms] = useState<Room[]>([]);
+  const [loadingRooms, setLoadingRooms] = useState(true);
+  const [deletingRoomId, setDeletingRoomId] = useState<string | null>(null);
   const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -39,6 +50,23 @@ export default function AdminEntryPage() {
     }
   };
 
+  useEffect(() => {
+    const loadRooms = async () => {
+      try {
+        const response = await fetch('/api/rooms/list');
+        if (response.ok) {
+          const data = await response.json() as { rooms: Room[] };
+          setRooms(data.rooms);
+        }
+      } catch (err) {
+        console.error('Failed to load rooms:', err);
+      } finally {
+        setLoadingRooms(false);
+      }
+    };
+    void loadRooms();
+  }, []);
+
   const handleCreateRoom = async () => {
     setCreating(true);
     setError(null);
@@ -61,6 +89,13 @@ export default function AdminEntryPage() {
       setRoomCode(data.code);
       setSuccessMessage(`新しいルームを作成しました: ${data.code}`);
 
+      // Refresh room list
+      const listResponse = await fetch('/api/rooms/list');
+      if (listResponse.ok) {
+        const listData = await listResponse.json() as { rooms: Room[] };
+        setRooms(listData.rooms);
+      }
+
       // Auto-navigate after 2 seconds
       setTimeout(() => {
         router.push(`/admin/${data.roomId}`);
@@ -69,6 +104,32 @@ export default function AdminEntryPage() {
       setError(err instanceof Error ? err.message : 'エラーが発生しました');
     } finally {
       setCreating(false);
+    }
+  };
+
+  const handleDeleteRoom = async (roomId: string) => {
+    if (!confirm('このルームを削除しますか？この操作は取り消せません。')) {
+      return;
+    }
+
+    setDeletingRoomId(roomId);
+    try {
+      const response = await fetch(`/api/rooms/delete?roomId=${roomId}`, {
+        method: 'DELETE'
+      });
+
+      if (!response.ok) {
+        throw new Error('ルームの削除に失敗しました');
+      }
+
+      // Refresh room list
+      setRooms(rooms.filter(r => r.id !== roomId));
+      setSuccessMessage('ルームを削除しました');
+      setTimeout(() => setSuccessMessage(null), 3000);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'エラーが発生しました');
+    } finally {
+      setDeletingRoomId(null);
     }
   };
 
@@ -140,6 +201,43 @@ export default function AdminEntryPage() {
           <p className="text-center text-sm text-brand-blue-700/60">
             新しいルームを作成すると、4桁のルームコードが自動生成されます（デフォルトPIN: 1234）
           </p>
+        </div>
+
+        {/* Room List */}
+        <div className="glass-panel-strong rounded-2xl p-6 shadow-brand-lg">
+          <h2 className="mb-4 text-xl font-bold text-brand-blue-700">既存のルーム</h2>
+          {loadingRooms ? (
+            <p className="text-center text-sm text-brand-blue-700/60">読み込み中...</p>
+          ) : rooms.length === 0 ? (
+            <p className="text-center text-sm text-brand-blue-700/60">ルームがありません</p>
+          ) : (
+            <div className="space-y-3">
+              {rooms.map((room) => (
+                <div
+                  key={room.id}
+                  className="flex items-center justify-between rounded-xl border-2 border-brand-blue-200 bg-white p-4 shadow-sm hover:shadow-md transition-shadow"
+                >
+                  <button
+                    onClick={() => router.push(`/admin/${room.id}`)}
+                    className="flex-1 text-left"
+                  >
+                    <p className="text-xl font-bold text-brand-blue-700">{room.code}</p>
+                    <p className="text-xs text-brand-blue-700/60">
+                      作成日: {new Date(room.created_at).toLocaleString('ja-JP')}
+                    </p>
+                  </button>
+                  <button
+                    onClick={() => handleDeleteRoom(room.id)}
+                    disabled={deletingRoomId === room.id}
+                    className="ml-3 rounded-lg bg-red-100 p-2.5 text-red-600 transition-colors hover:bg-red-200 disabled:opacity-50"
+                    aria-label="ルームを削除"
+                  >
+                    <Trash2 className="h-5 w-5" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </main>

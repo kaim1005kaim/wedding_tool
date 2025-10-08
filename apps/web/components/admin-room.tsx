@@ -141,6 +141,33 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
     void loadLogs();
   }, [loadLogs]);
 
+  useEffect(() => {
+    const loadRoomCode = async () => {
+      try {
+        const response = await fetch(`/api/rooms/info?roomId=${roomId}`);
+        if (response.ok) {
+          const data = await response.json() as { code: string };
+          setRoomCode(data.code);
+        }
+      } catch (err) {
+        console.error('Failed to load room code:', err);
+      }
+    };
+    void loadRoomCode();
+  }, [roomId]);
+
+  const handleCopyUrl = async () => {
+    if (!roomCode) return;
+    const url = `${window.location.origin}/join/${roomCode}`;
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.error('Failed to copy URL:', err);
+    }
+  };
+
   const handleUnlock = async () => {
     if (pin.trim().length === 0) {
       setError('PINを入力してください');
@@ -458,6 +485,55 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
             <StatusItem label="フェーズ" value={phaseLabel(phase)} icon={PauseCircle} />
             <StatusItem label="カウントダウン" value={`${Math.max(0, Math.ceil(countdownMs / 1000))} 秒`} icon={ListChecks} />
           </div>
+
+          {roomCode && (
+            <div className="mb-6 rounded-2xl bg-white p-6 shadow-lg border border-slate-200">
+              <div className="flex items-start gap-6">
+                <div className="flex-1">
+                  <div className="mb-4 flex items-center gap-3">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-500 shadow-md">
+                      <QrCode className="h-5 w-5 text-white" />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-bold text-slate-800">参加用URL</h3>
+                      <p className="text-sm text-slate-500">参加者はこのURLから参加できます</p>
+                    </div>
+                  </div>
+                  <div className="rounded-xl bg-slate-50 p-4 border border-slate-200">
+                    <p className="mb-2 text-xs font-semibold text-slate-500 uppercase">Room Code</p>
+                    <p className="mb-3 text-2xl font-bold text-slate-800">{roomCode}</p>
+                    <p className="mb-3 text-sm text-slate-600 break-all">{`${typeof window !== 'undefined' ? window.location.origin : ''}/join/${roomCode}`}</p>
+                    <button
+                      onClick={handleCopyUrl}
+                      className="flex w-full items-center justify-center gap-2 rounded-lg bg-blue-500 px-4 py-3 text-sm font-semibold text-white shadow-md transition-all hover:bg-blue-600 hover:shadow-lg active:scale-[0.98]"
+                    >
+                      {copied ? (
+                        <>
+                          <Check className="h-4 w-4" />
+                          コピーしました
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="h-4 w-4" />
+                          URLをコピー
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </div>
+                <div className="shrink-0">
+                  <div className="rounded-xl bg-white p-4 shadow-md border border-slate-200">
+                    <QRCodeSVG
+                      value={`${typeof window !== 'undefined' ? window.location.origin : ''}/join/${roomCode}`}
+                      size={160}
+                      level="M"
+                      includeMargin
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
 
           <div className="mb-6 flex items-center justify-between gap-4">
             <div className="flex-1 rounded-xl bg-blue-50 px-5 py-3 border border-blue-200">
