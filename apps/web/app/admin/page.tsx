@@ -44,7 +44,7 @@ export default function AdminEntryPage() {
       <form onSubmit={handleSubmit} className="w-full space-y-4">
         <input
           type="text"
-          className="w-full rounded border border-slate-600 bg-slate-900 px-4 py-3 text-center text-lg uppercase"
+          className="w-full rounded border border-slate-300 bg-white px-4 py-3 text-center text-lg uppercase text-slate-900 placeholder:text-slate-400"
           value={roomCode}
           onChange={(e) => setRoomCode(e.target.value.toUpperCase())}
           placeholder="例: AB12"
