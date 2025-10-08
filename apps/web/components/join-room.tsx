@@ -613,8 +613,8 @@ function CountupOverlay({ phase, countdownMs, leaderboard, onTap }: CountupOverl
 
   return (
     <>
-      {/* Countdown Timer - Top Right */}
-      {showPad && displaySeconds !== '' && (
+      {/* Countdown Timer - Top Right - Only show when timer is actually running (not during 3-2-1 or START banner) */}
+      {showPad && displaySeconds !== '' && isTimerRunning && banner !== 'start' && localCountdown === null && (
         <div className="fixed top-4 right-4 z-40 pointer-events-none">
           <div className="rounded-2xl bg-brand-blue-600 px-5 py-3 shadow-brand-xl">
             <span className="text-4xl font-bold text-white drop-shadow">{displaySeconds}</span>
