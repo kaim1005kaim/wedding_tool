@@ -445,7 +445,7 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
 
   return (
     <main className="min-h-screen bg-gradient-to-br from-brand-blue-100 via-ecru to-brand-terra-100 p-6">
-      <div className="mx-auto max-w-7xl">
+      <div className="mx-auto w-full px-4">
         <Section title="管理パネル" subtitle={`Room ${roomId}`}>
           <div className="mb-5 grid grid-cols-3 gap-4 rounded-xl bg-white/90 p-5 shadow-brand-lg backdrop-blur-sm">
             <StatusItem label="モード" value={labelForMode(mode)} icon={Gauge} />
@@ -478,9 +478,9 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
             </div>
           )}
 
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-3 gap-5">
           <AdminCard title="モード切替" description="ゲームの進行モードを選択します" icon={Gauge}>
-            <div className="grid gap-3 sm:grid-cols-2">
+            <div className="grid grid-cols-2 gap-3">
               <AdminButton variant={mode === 'idle' ? 'primary' : 'secondary'} icon={PauseCircle} onClick={() => send({ type: 'mode:switch', payload: { to: 'idle' } })}>
                 待機モード
               </AdminButton>
@@ -497,7 +497,7 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
           </AdminCard>
 
           <AdminCard title="ゲーム制御" description="タップチャレンジは3秒カウント後に10秒で自動終了します" icon={Play}>
-            <div className="grid gap-3 sm:grid-cols-2">
+            <div className="grid grid-cols-2 gap-3">
               <AdminButton icon={Play} onClick={async () => {
                 if (autoStopRef.current) {
                   clearTimeout(autoStopRef.current);
@@ -538,7 +538,7 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
                 <span className="font-medium">代表者制（各テーブル1回答まで）</span>
               </label>
             </div>
-            <div className="grid gap-3 sm:grid-cols-2">
+            <div className="grid grid-cols-2 gap-3">
               <AdminButton icon={ListChecks} onClick={() => send({ type: 'quiz:next', payload: undefined })}>
                 次のクイズ
               </AdminButton>
@@ -555,7 +555,7 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
           </AdminCard>
 
           <AdminCard title="抽選" description="候補リストからランダムに選出します" icon={Dice1}>
-            <div className="grid gap-3 sm:grid-cols-3">
+            <div className="grid grid-cols-3 gap-3">
               <AdminButton variant="secondary" icon={Dice1} onClick={() => handleLottery('all')}>
                 全員対象
               </AdminButton>
@@ -789,10 +789,10 @@ type AdminCardProps = {
 
 function AdminCard({ title, description, icon: Icon, children }: AdminCardProps) {
   return (
-    <div className="glass-panel rounded-xl p-4 shadow-brand">
-      <div className="mb-3 flex items-center gap-2">
-        <Icon className="h-5 w-5 text-brand-terra-600" />
-        <div>
+    <div className="glass-panel rounded-xl p-5 shadow-brand">
+      <div className="mb-4 flex items-center gap-2">
+        <Icon className="h-5 w-5 text-brand-terra-600 shrink-0" />
+        <div className="min-w-0">
           <h3 className="text-base font-semibold text-brand-blue-700">{title}</h3>
           {description && <p className="text-xs text-brand-blue-700/70">{description}</p>}
         </div>
@@ -808,7 +808,7 @@ type AdminButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
 };
 
 function AdminButton({ variant = 'primary', icon: Icon, className = '', children, type = 'button', ...props }: AdminButtonProps) {
-  const base = 'flex h-10 items-center justify-center gap-2 rounded-lg px-3 text-sm font-semibold transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 disabled:opacity-60';
+  const base = 'flex min-h-[2.75rem] items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold transition whitespace-nowrap focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 disabled:opacity-60';
   const variantClass =
     variant === 'primary'
       ? 'bg-brand-terra-600 text-white hover:bg-brand-terra-700 focus-visible:outline-brand-terra-400'
@@ -818,7 +818,7 @@ function AdminButton({ variant = 'primary', icon: Icon, className = '', children
 
   return (
     <button type={type} className={`${base} ${variantClass} ${className}`} {...props}>
-      {Icon && <Icon className="h-4 w-4" />}
+      {Icon && <Icon className="h-4 w-4 shrink-0" />}
       {children}
     </button>
   );
