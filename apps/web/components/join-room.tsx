@@ -270,56 +270,41 @@ export default function JoinRoom({ code }: { code: string }) {
             </p>
           </div>
 
-          <div className="glass-panel rounded-3xl p-8 shadow-brand-md slide-up">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-title-sm font-bold text-brand-blue-700">🏆 リーダーボード</h2>
-              <span className="rounded-full bg-brand-blue-100 px-3 py-1 text-xs font-semibold text-brand-blue-700">
-                TOP 10
-              </span>
-            </div>
-            {leaderboard.length === 0 ? (
-              <div className="rounded-2xl bg-brand-blue-50/50 px-6 py-8 text-center">
-                <div className="mb-3 text-4xl">📊</div>
-                <p className="text-sm text-brand-blue-700/70">ランキングはまだ表示されていません</p>
-              </div>
-            ) : (
-              <ul className="space-y-3">
-                {leaderboard.slice(0, 10).map((entry, index) => (
-                  <li
-                    key={entry.playerId}
-                    className={`group flex items-center justify-between rounded-2xl px-5 py-4 shadow-brand-sm transition-all duration-300 hover:shadow-brand hover:scale-[1.02] ${
-                      index < 3
-                        ? 'bg-gradient-to-r from-brand-terra-50 to-brand-blue-50 border-2 border-brand-terra-200'
-                        : 'bg-white/90'
-                    }`}
-                  >
-                    <div className="flex items-center gap-4">
-                      <span
-                        className={`flex h-8 w-8 items-center justify-center rounded-full font-bold text-sm ${
-                          index === 0
-                            ? 'bg-gradient-to-br from-yellow-400 to-yellow-600 text-white'
-                            : index === 1
-                              ? 'bg-gradient-to-br from-gray-300 to-gray-500 text-white'
-                              : index === 2
-                                ? 'bg-gradient-to-br from-orange-400 to-orange-600 text-white'
-                                : 'bg-brand-blue-100 text-brand-blue-700'
-                        }`}
-                      >
-                        {index < 3 ? ['🥇', '🥈', '🥉'][index] : entry.rank}
-                      </span>
-                      <span className="font-semibold text-brand-blue-700 group-hover:text-brand-terra-600 transition-colors">
-                        {entry.displayName}
-                      </span>
+          {/* Personal Score Display */}
+          {(() => {
+            const myEntry = leaderboard.find(entry => entry.displayName === registeredName);
+            const hasScore = myEntry && myEntry.totalPoints > 0;
+
+            if (!hasScore) return null;
+
+            return (
+              <div className="glass-panel rounded-3xl p-8 shadow-brand-md slide-up">
+                <div className="text-center">
+                  <div className="mb-4 text-5xl">🎯</div>
+                  <h2 className="mb-2 text-title-sm font-bold text-brand-blue-700">あなたのスコア</h2>
+                  <div className="mb-6 rounded-2xl bg-gradient-to-br from-brand-terra-50 to-brand-blue-50 p-6">
+                    <div className="mb-2 text-6xl font-bold text-brand-terra-700">
+                      {myEntry.totalPoints}
+                      <span className="ml-2 text-3xl font-medium">pt</span>
                     </div>
-                    <span className="rounded-full bg-brand-terra-100 px-4 py-1.5 font-bold text-brand-terra-700 text-sm">
-                      {entry.totalPoints}
-                      <span className="ml-1 text-xs font-medium">pt</span>
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
+                    {myEntry.quizPoints !== undefined && myEntry.quizPoints > 0 && (
+                      <p className="text-sm text-brand-blue-700">
+                        クイズ: <span className="font-bold">{myEntry.quizPoints}問正解</span>
+                      </p>
+                    )}
+                    {myEntry.countupTapCount !== undefined && myEntry.countupTapCount > 0 && (
+                      <p className="text-sm text-brand-blue-700">
+                        タップ: <span className="font-bold">{myEntry.countupTapCount}回</span>
+                      </p>
+                    )}
+                  </div>
+                  <p className="text-sm text-brand-blue-700/70">
+                    全体のランキングは投影画面でご確認ください
+                  </p>
+                </div>
+              </div>
+            );
+          })()}
         </div>
       )}
 

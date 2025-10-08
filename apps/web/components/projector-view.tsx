@@ -191,9 +191,9 @@ function renderSection(
 }
 
 function CountupBoard({ entries }: { entries: LeaderboardEntry[] }) {
-  const firstColumn = entries.slice(0, 5);
-  const secondColumn = entries.slice(5, 10);
-  const columns = [firstColumn, secondColumn];
+  // Top 3 highlighted, rest in compact grid
+  const top3 = entries.slice(0, 3);
+  const rest = entries.slice(3);
 
   return (
     <motion.section
@@ -201,93 +201,149 @@ function CountupBoard({ entries }: { entries: LeaderboardEntry[] }) {
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -30 }}
       transition={{ duration: 0.5, ease: 'easeOut' }}
-      className="grid h-full gap-8 lg:grid-cols-2"
+      className="flex h-full flex-col gap-6"
     >
-      {columns.map((column, colIndex) => (
-        <div key={colIndex} className="glass-panel-strong flex flex-col rounded-3xl p-10 shadow-brand-lg">
-          <div className="mb-6 flex items-center gap-3">
-            <span className="text-4xl">⚡</span>
-            <h2 className="text-title-md font-bold text-brand-blue-700">タップスコア</h2>
-          </div>
-          <div className="flex-1 space-y-3 overflow-hidden">
-            <AnimatePresence initial={false}>
-              {column.map((entry, index) => (
-                <motion.div
-                  key={entry.playerId}
-                  layout
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: 20 }}
-                  transition={{ duration: 0.4, ease: 'easeOut' }}
-                  className={`group flex items-center justify-between rounded-2xl px-8 py-5 text-2xl shadow-brand-md transition-all duration-300 hover:shadow-brand-lg hover:scale-[1.02] ${
-                    entry.rank === 1
-                      ? 'bg-gradient-to-r from-yellow-100 to-yellow-50 border-2 border-yellow-400'
-                      : entry.rank === 2
-                        ? 'bg-gradient-to-r from-gray-100 to-gray-50 border-2 border-gray-400'
-                        : entry.rank === 3
-                          ? 'bg-gradient-to-r from-orange-100 to-orange-50 border-2 border-orange-400'
-                          : 'bg-white/90'
-                  }`}
-                >
-                  <div className="flex items-center gap-4">
-                    <span
-                      className={`flex h-12 w-12 items-center justify-center rounded-full font-bold ${
-                        entry.rank === 1
-                          ? 'bg-gradient-to-br from-yellow-400 to-yellow-600 text-white text-2xl'
-                          : entry.rank === 2
-                            ? 'bg-gradient-to-br from-gray-300 to-gray-500 text-white text-2xl'
-                            : entry.rank === 3
-                              ? 'bg-gradient-to-br from-orange-400 to-orange-600 text-white text-2xl'
-                              : 'bg-brand-blue-100 text-brand-blue-700'
-                      }`}
-                    >
-                      {entry.rank <= 3 ? ['🥇', '🥈', '🥉'][entry.rank - 1] : entry.rank}
-                    </span>
-                    <div>
-                      <p className="font-bold text-brand-blue-700 group-hover:text-brand-terra-600 transition-colors">
-                        {entry.displayName}
-                      </p>
-                      {entry.tableNo && (
-                        <p className="text-sm text-brand-blue-700/60">テーブル {entry.tableNo}</p>
-                      )}
-                    </div>
-                  </div>
-                  <div className="rounded-full bg-brand-terra-100 px-6 py-2 shadow-brand-sm">
-                    <span className="font-bold text-brand-terra-700 count-up">{entry.totalPoints}</span>
-                    <span className="ml-1 text-lg text-brand-terra-600/70">pt</span>
-                  </div>
-                </motion.div>
-              ))}
-            </AnimatePresence>
+      {/* Top 3 - Large Display */}
+      <div className="grid grid-cols-3 gap-4">
+        {top3.map((entry) => (
+          <motion.div
+            key={entry.playerId}
+            layout
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.4 }}
+            className={`glass-panel-strong flex flex-col items-center rounded-2xl p-6 shadow-brand-lg ${
+              entry.rank === 1
+                ? 'bg-gradient-to-br from-yellow-100 to-yellow-50 border-3 border-yellow-400'
+                : entry.rank === 2
+                  ? 'bg-gradient-to-br from-gray-100 to-gray-50 border-3 border-gray-400'
+                  : 'bg-gradient-to-br from-orange-100 to-orange-50 border-3 border-orange-400'
+            }`}
+          >
+            <div
+              className={`mb-3 flex h-16 w-16 items-center justify-center rounded-full text-4xl ${
+                entry.rank === 1
+                  ? 'bg-gradient-to-br from-yellow-400 to-yellow-600 text-white'
+                  : entry.rank === 2
+                    ? 'bg-gradient-to-br from-gray-300 to-gray-500 text-white'
+                    : 'bg-gradient-to-br from-orange-400 to-orange-600 text-white'
+              }`}
+            >
+              {['🥇', '🥈', '🥉'][entry.rank - 1]}
+            </div>
+            <p className="mb-1 text-center text-xl font-bold text-brand-blue-700">{entry.displayName}</p>
+            {entry.tableNo && <p className="mb-2 text-sm text-brand-blue-700/60">テーブル {entry.tableNo}</p>}
+            <div className="rounded-full bg-brand-terra-600 px-5 py-2 shadow-md">
+              <span className="text-2xl font-bold text-white">{entry.totalPoints}</span>
+              <span className="ml-1 text-sm text-white/80">pt</span>
+            </div>
+          </motion.div>
+        ))}
+      </div>
+
+      {/* Rest - Compact Grid */}
+      {rest.length > 0 && (
+        <div className="glass-panel-strong flex-1 overflow-auto rounded-2xl p-6 shadow-brand">
+          <div className="grid grid-cols-4 gap-2">
+            {rest.map((entry) => (
+              <div
+                key={entry.playerId}
+                className="flex items-center justify-between rounded-lg bg-white/90 px-3 py-2 text-sm shadow-sm"
+              >
+                <div className="flex items-center gap-2 min-w-0">
+                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-brand-blue-100 text-xs font-bold text-brand-blue-700">
+                    {entry.rank}
+                  </span>
+                  <span className="truncate font-semibold text-brand-blue-700">{entry.displayName}</span>
+                </div>
+                <span className="ml-2 shrink-0 font-bold text-brand-terra-700">{entry.totalPoints}</span>
+              </div>
+            ))}
           </div>
         </div>
-      ))}
+      )}
     </motion.section>
   );
 }
 
 function IdleBoard({ leaderboard }: { leaderboard: LeaderboardEntry[] }) {
+  const top3 = leaderboard.slice(0, 3);
+  const rest = leaderboard.slice(3);
+
   return (
     <motion.section
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.95 }}
       transition={{ duration: 0.5, ease: 'easeOut' }}
-      className="glass-panel rounded-2xl p-10 text-center shadow-brand"
+      className="flex h-full flex-col gap-6"
     >
-      <h2 className="text-4xl font-semibold text-brand-blue-700">まもなくゲームが始まります</h2>
-      <p className="mt-4 text-lg text-brand-blue-700/80">スマホの画面を確認してください。</p>
-      <div className="mt-8 grid gap-4 md:grid-cols-2">
-        {leaderboard.slice(0, 6).map((entry) => (
-          <div key={entry.playerId} className="rounded-xl bg-white/85 px-6 py-4 text-left shadow-brand">
-            <span className="text-xl font-medium text-brand-blue-700">
-              {entry.rank}. {entry.displayName}
-              {entry.tableNo && <span className="ml-2 text-sm text-brand-blue-700/60">({entry.tableNo})</span>}
-            </span>
-            <span className="ml-2 text-base text-brand-blue-700/70">{entry.totalPoints} pt</span>
-          </div>
-        ))}
+      <div className="glass-panel rounded-2xl p-8 text-center shadow-brand">
+        <h2 className="text-4xl font-semibold text-brand-blue-700">まもなくゲームが始まります</h2>
+        <p className="mt-4 text-lg text-brand-blue-700/80">スマホの画面を確認してください。</p>
       </div>
+
+      {leaderboard.length > 0 && (
+        <>
+          {/* Top 3 */}
+          {top3.length > 0 && (
+            <div className="grid grid-cols-3 gap-4">
+              {top3.map((entry) => (
+                <div
+                  key={entry.playerId}
+                  className={`glass-panel-strong flex flex-col items-center rounded-2xl p-6 shadow-brand-lg ${
+                    entry.rank === 1
+                      ? 'bg-gradient-to-br from-yellow-100 to-yellow-50 border-3 border-yellow-400'
+                      : entry.rank === 2
+                        ? 'bg-gradient-to-br from-gray-100 to-gray-50 border-3 border-gray-400'
+                        : 'bg-gradient-to-br from-orange-100 to-orange-50 border-3 border-orange-400'
+                  }`}
+                >
+                  <div
+                    className={`mb-3 flex h-16 w-16 items-center justify-center rounded-full text-4xl ${
+                      entry.rank === 1
+                        ? 'bg-gradient-to-br from-yellow-400 to-yellow-600 text-white'
+                        : entry.rank === 2
+                          ? 'bg-gradient-to-br from-gray-300 to-gray-500 text-white'
+                          : 'bg-gradient-to-br from-orange-400 to-orange-600 text-white'
+                    }`}
+                  >
+                    {['🥇', '🥈', '🥉'][entry.rank - 1]}
+                  </div>
+                  <p className="mb-1 text-center text-xl font-bold text-brand-blue-700">{entry.displayName}</p>
+                  {entry.tableNo && <p className="mb-2 text-sm text-brand-blue-700/60">テーブル {entry.tableNo}</p>}
+                  <div className="rounded-full bg-brand-terra-600 px-5 py-2 shadow-md">
+                    <span className="text-2xl font-bold text-white">{entry.totalPoints}</span>
+                    <span className="ml-1 text-sm text-white/80">pt</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Rest */}
+          {rest.length > 0 && (
+            <div className="glass-panel-strong flex-1 overflow-auto rounded-2xl p-6 shadow-brand">
+              <div className="grid grid-cols-4 gap-2">
+                {rest.map((entry) => (
+                  <div
+                    key={entry.playerId}
+                    className="flex items-center justify-between rounded-lg bg-white/90 px-3 py-2 text-sm shadow-sm"
+                  >
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-brand-blue-100 text-xs font-bold text-brand-blue-700">
+                        {entry.rank}
+                      </span>
+                      <span className="truncate font-semibold text-brand-blue-700">{entry.displayName}</span>
+                    </div>
+                    <span className="ml-2 shrink-0 font-bold text-brand-terra-700">{entry.totalPoints}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </>
+      )}
     </motion.section>
   );
 }
