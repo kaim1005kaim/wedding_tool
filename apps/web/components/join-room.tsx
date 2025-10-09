@@ -587,7 +587,7 @@ function CountupOverlay({ phase, countdownMs, leaderboard, onTap }: CountupOverl
   }, [phase, phaseEndTime, isTimerRunning, triggerFinish]);
 
   const disabled = phase !== 'running' || localCountdown !== null || !isTimerRunning || banner === 'stop';
-  const showPad = phase === 'running' || banner === 'stop';
+  const showPad = phase === 'running';
   const displaySeconds = isTimerRunning && banner !== 'stop' && timeLeftSeconds !== null ? timeLeftSeconds : '';
 
   const handleTap = (e: React.PointerEvent) => {
@@ -634,6 +634,18 @@ function CountupOverlay({ phase, countdownMs, leaderboard, onTap }: CountupOverl
         </div>
       )}
 
+      {banner === 'stop' && (
+        <div className="mx-auto w-full max-w-3xl mt-8 space-y-6 relative z-10">
+          <div className="flex flex-col items-center gap-6 bounce-in">
+            <div className="text-6xl">🎉</div>
+            <span className="text-[min(20vw,8rem)] font-bold uppercase tracking-wider text-black bg-pop-pink px-8 py-4 rounded-xl border-3 border-black">
+              STOP!
+            </span>
+            <p className="text-xl font-bold text-black bg-white px-6 py-3 rounded-xl border-3 border-black">投影画面で結果を確認してください</p>
+          </div>
+        </div>
+      )}
+
       {showPad && (
         <div className="mx-auto w-full max-w-3xl mt-8 space-y-6 relative z-10">
           {localCountdown !== null ? (
@@ -651,14 +663,6 @@ function CountupOverlay({ phase, countdownMs, leaderboard, onTap }: CountupOverl
               <span className="text-[min(20vw,8rem)] font-bold uppercase tracking-wider text-black bg-pop-yellow px-8 py-4 rounded-xl border-3 border-black">
                 START!
               </span>
-            </div>
-          ) : banner === 'stop' ? (
-            <div className="flex flex-col items-center gap-6 bounce-in">
-              <div className="text-6xl">🎉</div>
-              <span className="text-[min(20vw,8rem)] font-bold uppercase tracking-wider text-black bg-pop-pink px-8 py-4 rounded-xl border-3 border-black">
-                STOP!
-              </span>
-              <p className="text-xl font-bold text-black bg-white px-6 py-3 rounded-xl border-3 border-black">投影画面で結果を確認してください</p>
             </div>
           ) : isTimerRunning ? (
             <button
