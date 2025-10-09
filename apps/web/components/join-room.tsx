@@ -667,14 +667,14 @@ function CountupOverlay({ phase, countdownMs, leaderboard, onTap }: CountupOverl
               type="button"
               onPointerDown={handleTap}
               disabled={disabled}
-              className="w-full rounded-3xl bg-pop-green px-12 py-16 text-center shadow-brand-xl border-3 border-black transition-all duration-150 hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full rounded-3xl bg-pop-yellow px-12 py-16 text-center shadow-brand-xl border-3 border-black transition-all duration-150 hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <div className="text-[min(25vw,10rem)] font-bold uppercase text-white animate-pulse">
+              <div className="text-[min(25vw,10rem)] font-bold uppercase text-black animate-pulse">
                 TAP!
               </div>
-              <p className="mt-4 text-2xl font-bold text-white">連打してポイント獲得！</p>
+              <p className="mt-4 text-2xl font-bold text-black">連打してポイント獲得！</p>
               {flash && (
-                <span className="block mt-4 text-6xl font-bold text-white opacity-90 animate-bounce-in">
+                <span className="block mt-4 text-6xl font-bold text-black opacity-90 animate-bounce-in">
                   +1
                 </span>
               )}
