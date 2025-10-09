@@ -257,7 +257,7 @@ export default function JoinRoom({ code }: { code: string }) {
         )}
       </div>
 
-      {registered && mode !== 'countup' && mode !== 'quiz' && phase !== 'countdown' && phase !== 'active' && (
+      {registered && mode !== 'countup' && mode !== 'quiz' && (
         <div className="mx-auto w-full max-w-3xl mt-8 space-y-6 relative z-10">
           <div className="rounded-2xl bg-white p-8 text-center shadow-brand-md slide-up border-3 border-black">
             <div className="mb-4 text-3xl">

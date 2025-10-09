@@ -551,6 +551,15 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
             </div>
             <AdminButton
               variant="secondary"
+              icon={Eye}
+              onClick={() => window.open(`/projector/${roomId}`, '_blank')}
+              className="shrink-0"
+              aria-label="投影画面を開く"
+            >
+              投影画面
+            </AdminButton>
+            <AdminButton
+              variant="secondary"
               icon={Settings}
               onClick={openManagement}
               className="shrink-0"
