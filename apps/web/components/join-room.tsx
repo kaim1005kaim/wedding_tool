@@ -532,7 +532,6 @@ function CountupOverlay({ phase, countdownMs, leaderboard, onTap }: CountupOverl
       setBanner(null);
       setPhaseEndTime(null);
       setTimeLeftSeconds(null);
-      setShowResults(false);
     }
 
     prevPhaseRef.current = phase;
