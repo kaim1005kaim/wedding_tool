@@ -13,7 +13,7 @@ import { PatternBackground, DecorativeShapes } from './BackgroundPatterns';
 type ConnectionStatus = 'good' | 'warn' | 'bad';
 
 const START_BANNER_DURATION_MS = 800;
-const STOP_BANNER_DURATION_MS = 1000;
+const STOP_BANNER_DURATION_MS = 3000;
 
 export default function JoinRoom({ code }: { code: string }) {
   const [tableNo, setTableNo] = useState('');
@@ -613,7 +613,7 @@ function CountupOverlay({ phase, countdownMs, leaderboard, onTap }: CountupOverl
   return (
     <>
       {/* Waiting screen for idle phase */}
-      {!showPad && phase === 'idle' && (
+      {!showPad && !isFinished && phase === 'idle' && (
         <div className="mx-auto w-full max-w-3xl mt-8 space-y-6 relative z-10">
           <div className="rounded-2xl bg-white p-8 text-center shadow-brand-md slide-up border-3 border-black">
             <div className="mb-4 text-3xl">🎮</div>
@@ -634,13 +634,17 @@ function CountupOverlay({ phase, countdownMs, leaderboard, onTap }: CountupOverl
         </div>
       )}
 
-      {banner === 'stop' && (
+      {isFinished && phase === 'running' && (
         <div className="mx-auto w-full max-w-3xl mt-8 space-y-6 relative z-10">
           <div className="flex flex-col items-center gap-6 bounce-in">
-            <div className="text-6xl">🎉</div>
-            <span className="text-[min(20vw,8rem)] font-bold uppercase tracking-wider text-black bg-pop-pink px-8 py-4 rounded-xl border-3 border-black">
-              STOP!
-            </span>
+            {banner === 'stop' && (
+              <>
+                <div className="text-6xl">🎉</div>
+                <span className="text-[min(20vw,8rem)] font-bold uppercase tracking-wider text-black bg-pop-pink px-8 py-4 rounded-xl border-3 border-black">
+                  STOP!
+                </span>
+              </>
+            )}
             <p className="text-xl font-bold text-black bg-white px-6 py-3 rounded-xl border-3 border-black">投影画面で結果を確認してください</p>
           </div>
         </div>
@@ -665,22 +669,26 @@ function CountupOverlay({ phase, countdownMs, leaderboard, onTap }: CountupOverl
               </span>
             </div>
           ) : isTimerRunning ? (
-            <button
-              type="button"
-              onPointerDown={handleTap}
-              disabled={disabled}
-              className="w-full rounded-3xl bg-pop-yellow px-12 py-16 text-center shadow-brand-xl border-3 border-black transition-all duration-150 hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <div className="text-[min(25vw,10rem)] font-bold uppercase text-black animate-pulse">
-                TAP!
-              </div>
-              <p className="mt-4 text-2xl font-bold text-black">連打してポイント獲得！</p>
+            <div className="relative">
+              <button
+                type="button"
+                onPointerDown={handleTap}
+                disabled={disabled}
+                className="w-full rounded-3xl bg-pop-yellow px-12 py-12 text-center shadow-brand-xl border-3 border-black transition-all duration-100 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <div className="text-[min(25vw,10rem)] font-bold uppercase text-black animate-pulse">
+                  TAP!
+                </div>
+                <p className="mt-3 text-2xl font-bold text-black">連打してポイント獲得！</p>
+              </button>
               {flash && (
-                <span className="block mt-4 text-6xl font-bold text-black opacity-90 animate-bounce-in">
-                  +1
-                </span>
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                  <span className="text-8xl font-bold text-white opacity-90 animate-bounce-in drop-shadow-lg">
+                    +1
+                  </span>
+                </div>
               )}
-            </button>
+            </div>
           ) : null}
         </div>
       )}
