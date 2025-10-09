@@ -517,7 +517,6 @@ function CountupOverlay({ phase, countdownMs, leaderboard, onTap }: CountupOverl
       setIsTimerRunning(false);
       setIsFinished(false);
       setBanner(null);
-      setShowResults(false);
     }
 
     if (phase === 'ended' && prev !== 'ended') {
