@@ -257,7 +257,7 @@ export default function JoinRoom({ code }: { code: string }) {
         )}
       </div>
 
-      {registered && ((mode !== 'countup' && mode !== 'quiz') || (mode === 'countup' && phase === 'idle')) && (
+      {registered && mode !== 'countup' && mode !== 'quiz' && (
         <div className="mx-auto w-full max-w-3xl mt-8 space-y-6 relative z-10">
           <div className="rounded-2xl bg-white p-8 text-center shadow-brand-md slide-up border-3 border-black">
             <div className="mb-4 text-3xl">
@@ -618,6 +618,19 @@ function CountupOverlay({ phase, countdownMs, leaderboard, onTap }: CountupOverl
 
   return (
     <>
+      {/* Waiting screen for idle phase */}
+      {!showPad && !showResults && phase === 'idle' && (
+        <div className="mx-auto w-full max-w-3xl mt-8 space-y-6 relative z-10">
+          <div className="rounded-2xl bg-white p-8 text-center shadow-brand-md slide-up border-3 border-black">
+            <div className="mb-4 text-3xl">🎮</div>
+            <h2 className="text-title-sm font-bold text-black">ゲーム</h2>
+            <p className="mt-4 text-base leading-relaxed text-black font-medium">
+              まもなくゲームが始まります。画面の指示に従ってください。
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Countdown Timer - Top Right - Only show when timer is actually running (not during 3-2-1 or START banner) */}
       {showPad && displaySeconds !== '' && isTimerRunning && banner !== 'start' && localCountdown === null && (
         <div className="fixed top-4 right-4 z-[70] pointer-events-none">
