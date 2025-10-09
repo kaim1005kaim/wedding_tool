@@ -257,7 +257,7 @@ export default function JoinRoom({ code }: { code: string }) {
         )}
       </div>
 
-      {registered && mode !== 'countup' && mode !== 'quiz' && (
+      {registered && mode !== 'countup' && mode !== 'quiz' && phase !== 'countdown' && phase !== 'active' && (
         <div className="mx-auto w-full max-w-3xl mt-8 space-y-6 relative z-10">
           <div className="rounded-2xl bg-white p-8 text-center shadow-brand-md slide-up border-3 border-black">
             <div className="mb-4 text-3xl">
@@ -676,17 +676,17 @@ function CountupOverlay({ phase, countdownMs, leaderboard, onTap }: CountupOverl
       {showResults && topThree.length > 0 && (
         <div className="fixed inset-0 z-[70] flex items-center justify-center bg-white px-6 relative overflow-hidden">
           <PatternBackground pattern="wave" />
-          <div className="bg-white w-full max-w-xl rounded-2xl p-10 shadow-brand-xl bounce-in border-3 border-black relative z-10">
-            <div className="mb-8 text-center">
-              <div className="mb-4 text-6xl">🏆</div>
-              <h2 className="text-title-lg font-bold text-black whitespace-nowrap">TOP 3 結果発表！</h2>
+          <div className="bg-white w-full max-w-md rounded-2xl p-8 shadow-brand-xl bounce-in border-3 border-black relative z-10">
+            <div className="mb-6 text-center">
+              <div className="mb-3 text-5xl">🏆</div>
+              <h2 className="text-3xl font-bold text-black">TOP 3 結果発表！</h2>
               <p className="mt-2 text-sm font-bold text-black">おめでとうございます！</p>
             </div>
-            <ul className="space-y-4">
+            <ul className="space-y-3">
               {topThree.map((entry, index) => (
                 <li
                   key={entry.playerId}
-                  className={`flex items-center justify-between rounded-xl px-6 py-5 shadow-brand-md border-3 border-black ${
+                  className={`rounded-xl px-5 py-4 shadow-brand-md border-3 border-black ${
                     index === 0
                       ? 'bg-pop-yellow'
                       : index === 1
@@ -694,25 +694,25 @@ function CountupOverlay({ phase, countdownMs, leaderboard, onTap }: CountupOverl
                         : 'bg-pop-orange'
                   }`}
                 >
-                  <div className="flex items-center gap-4 flex-1">
-                    <span className="text-4xl">{medalForRank(index + 1)}</span>
-                    <div className="flex-1">
-                      <p className="text-lg font-bold text-black">
+                  <div className="flex items-center justify-center gap-3">
+                    <span className="text-3xl shrink-0">{medalForRank(index + 1)}</span>
+                    <div className="flex-1 min-w-0 text-center">
+                      <p className="text-base font-bold text-black truncate">
                         {entry.displayName}
                       </p>
                       <p className="text-xs font-bold text-black opacity-70">Rank #{entry.rank}</p>
                     </div>
-                  </div>
-                  <div className="text-right ml-4">
-                    <p className="text-3xl font-bold text-black">{entry.totalPoints}</p>
-                    <p className="text-xs font-bold text-black opacity-70">points</p>
+                    <div className="shrink-0 text-center bg-white px-3 py-2 rounded-lg border-2 border-black">
+                      <p className="text-xl font-bold text-black">{entry.totalPoints}</p>
+                      <p className="text-xs font-bold text-black opacity-70">pt</p>
+                    </div>
                   </div>
                 </li>
               ))}
             </ul>
             <button
               type="button"
-              className="mt-8 w-full rounded-xl bg-pop-green px-6 py-4 font-bold text-white text-lg border-3 border-black shadow-brand-md hover:scale-105 transition-transform"
+              className="mt-6 w-full rounded-xl bg-pop-green px-6 py-3 font-bold text-white text-base border-3 border-black shadow-brand-md hover:scale-105 transition-transform"
               onClick={() => setShowResults(false)}
             >
               ✓ 閉じる
