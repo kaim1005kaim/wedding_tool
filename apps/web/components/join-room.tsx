@@ -454,7 +454,6 @@ type CountupOverlayProps = {
 function CountupOverlay({ phase, countdownMs, leaderboard, onTap }: CountupOverlayProps) {
   const [localCountdown, setLocalCountdown] = useState<number | null>(null);
   const [flash, setFlash] = useState(false);
-  const [showResults, setShowResults] = useState(false);
   const [phaseEndTime, setPhaseEndTime] = useState<number | null>(null);
   const [timeLeftSeconds, setTimeLeftSeconds] = useState<number | null>(null);
   const [isTimerRunning, setIsTimerRunning] = useState(false);
@@ -500,7 +499,6 @@ function CountupOverlay({ phase, countdownMs, leaderboard, onTap }: CountupOverl
     setBanner('stop');
     clearStopDelay();
     stopDelayRef.current = setTimeout(() => {
-      setShowResults(true);
       setBanner(null);
       stopDelayRef.current = null;
     }, STOP_BANNER_DURATION_MS);
@@ -591,7 +589,7 @@ function CountupOverlay({ phase, countdownMs, leaderboard, onTap }: CountupOverl
   }, [phase, phaseEndTime, isTimerRunning, triggerFinish]);
 
   const disabled = phase !== 'running' || localCountdown !== null || !isTimerRunning || banner === 'stop';
-  const showPad = !showResults && (phase === 'running' || banner === 'stop');
+  const showPad = phase === 'running' || banner === 'stop';
   const displaySeconds = isTimerRunning && banner !== 'stop' && timeLeftSeconds !== null ? timeLeftSeconds : '';
 
   const handleTap = (e: React.PointerEvent) => {
@@ -614,12 +612,10 @@ function CountupOverlay({ phase, countdownMs, leaderboard, onTap }: CountupOverl
     });
   };
 
-  const topThree = leaderboard.slice(0, 3);
-
   return (
     <>
       {/* Waiting screen for idle phase */}
-      {!showPad && !showResults && phase === 'idle' && (
+      {!showPad && phase === 'idle' && (
         <div className="mx-auto w-full max-w-3xl mt-8 space-y-6 relative z-10">
           <div className="rounded-2xl bg-white p-8 text-center shadow-brand-md slide-up border-3 border-black">
             <div className="mb-4 text-3xl">🎮</div>
@@ -641,96 +637,49 @@ function CountupOverlay({ phase, countdownMs, leaderboard, onTap }: CountupOverl
       )}
 
       {showPad && (
-        <button
-          type="button"
-          onPointerDown={handleTap}
-          disabled={disabled}
-          className="fixed inset-0 z-[60] flex select-none items-center justify-center bg-white transition-all duration-150 disabled:cursor-not-allowed relative overflow-hidden"
-        >
-        <PatternBackground pattern="dot" />
-        {localCountdown !== null ? (
-          <div className="flex flex-col items-center gap-4 bounce-in relative z-10">
-            <div className="rounded-full bg-white p-16 shadow-brand-xl border-3 border-black">
-              <span className="text-[min(40vw,18rem)] font-bold leading-none text-black">
-                {localCountdown}
+        <div className="mx-auto w-full max-w-3xl mt-8 space-y-6 relative z-10">
+          {localCountdown !== null ? (
+            <div className="flex flex-col items-center gap-6 bounce-in">
+              <div className="rounded-full bg-white p-16 shadow-brand-xl border-3 border-black">
+                <span className="text-[min(40vw,18rem)] font-bold leading-none text-black">
+                  {localCountdown}
+                </span>
+              </div>
+              <p className="text-3xl font-bold text-black bg-white px-6 py-3 rounded-xl border-3 border-black">準備してください！</p>
+            </div>
+          ) : banner === 'start' ? (
+            <div className="flex flex-col items-center gap-6 bounce-in">
+              <div className="text-6xl animate-bounce">🚀</div>
+              <span className="text-[min(20vw,8rem)] font-bold uppercase tracking-wider text-black bg-pop-yellow px-8 py-4 rounded-xl border-3 border-black">
+                START!
               </span>
             </div>
-            <p className="text-3xl font-bold text-black bg-white px-6 py-3 rounded-xl border-3 border-black">準備してください！</p>
-          </div>
-        ) : banner === 'start' ? (
-          <div className="flex flex-col items-center gap-4 bounce-in px-4 relative z-10">
-            <div className="text-6xl animate-bounce">🚀</div>
-            <span className="text-[min(20vw,8rem)] font-bold uppercase tracking-wider text-black bg-pop-yellow px-8 py-4 rounded-xl border-3 border-black">
-              START!
-            </span>
-          </div>
-        ) : banner === 'stop' ? (
-          <div className="flex flex-col items-center gap-4 bounce-in px-4 relative z-10">
-            <div className="text-6xl">🎉</div>
-            <span className="text-[min(20vw,8rem)] font-bold uppercase tracking-wider text-black bg-pop-pink px-8 py-4 rounded-xl border-3 border-black">
-              STOP!
-            </span>
-          </div>
-        ) : isTimerRunning ? (
-          <div className="flex flex-col items-center gap-8 relative z-10">
-            <div className="text-[min(25vw,10rem)] font-bold uppercase text-black bg-pop-yellow px-12 py-6 rounded-2xl border-3 border-black animate-pulse">
-              TAP!
+          ) : banner === 'stop' ? (
+            <div className="flex flex-col items-center gap-6 bounce-in">
+              <div className="text-6xl">🎉</div>
+              <span className="text-[min(20vw,8rem)] font-bold uppercase tracking-wider text-black bg-pop-pink px-8 py-4 rounded-xl border-3 border-black">
+                STOP!
+              </span>
+              <p className="text-xl font-bold text-black bg-white px-6 py-3 rounded-xl border-3 border-black">投影画面で結果を確認してください</p>
             </div>
-            <p className="text-2xl font-bold text-black bg-white px-6 py-3 rounded-xl border-3 border-black">連打してポイント獲得！</p>
-          </div>
-        ) : null}
-        {flash && (
-          <span className="pointer-events-none absolute inset-x-0 top-1/3 text-center text-8xl font-bold text-black opacity-90 animate-bounce-in drop-shadow-2xl relative z-10">
-            +1
-          </span>
-        )}
-        </button>
-      )}
-      {showResults && topThree.length > 0 && (
-        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-white px-6 relative overflow-hidden">
-          <PatternBackground pattern="wave" />
-          <div className="bg-white w-full max-w-md rounded-2xl p-8 shadow-brand-xl bounce-in border-3 border-black relative z-10">
-            <div className="mb-6 text-center">
-              <div className="mb-3 text-5xl">🏆</div>
-              <h2 className="text-3xl font-bold text-black">TOP 3 結果発表！</h2>
-              <p className="mt-2 text-sm font-bold text-black">おめでとうございます！</p>
-            </div>
-            <ul className="space-y-3">
-              {topThree.map((entry, index) => (
-                <li
-                  key={entry.playerId}
-                  className={`rounded-xl px-5 py-4 shadow-brand-md border-3 border-black ${
-                    index === 0
-                      ? 'bg-pop-yellow'
-                      : index === 1
-                        ? 'bg-pop-blue'
-                        : 'bg-pop-orange'
-                  }`}
-                >
-                  <div className="flex items-center justify-center gap-3">
-                    <span className="text-3xl shrink-0">{medalForRank(index + 1)}</span>
-                    <div className="flex-1 min-w-0 text-center">
-                      <p className="text-base font-bold text-black truncate">
-                        {entry.displayName}
-                      </p>
-                      <p className="text-xs font-bold text-black opacity-70">Rank #{entry.rank}</p>
-                    </div>
-                    <div className="shrink-0 text-center bg-white px-3 py-2 rounded-lg border-2 border-black">
-                      <p className="text-xl font-bold text-black">{entry.totalPoints}</p>
-                      <p className="text-xs font-bold text-black opacity-70">pt</p>
-                    </div>
-                  </div>
-                </li>
-              ))}
-            </ul>
+          ) : isTimerRunning ? (
             <button
               type="button"
-              className="mt-6 w-full rounded-xl bg-pop-green px-6 py-3 font-bold text-white text-base border-3 border-black shadow-brand-md hover:scale-105 transition-transform"
-              onClick={() => setShowResults(false)}
+              onPointerDown={handleTap}
+              disabled={disabled}
+              className="w-full rounded-3xl bg-pop-green px-12 py-16 text-center shadow-brand-xl border-3 border-black transition-all duration-150 hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              ✓ 閉じる
+              <div className="text-[min(25vw,10rem)] font-bold uppercase text-white animate-pulse">
+                TAP!
+              </div>
+              <p className="mt-4 text-2xl font-bold text-white">連打してポイント獲得！</p>
+              {flash && (
+                <span className="block mt-4 text-6xl font-bold text-white opacity-90 animate-bounce-in">
+                  +1
+                </span>
+              )}
             </button>
-          </div>
+          ) : null}
         </div>
       )}
       <ParticleEffect trigger={particleTrigger} />
