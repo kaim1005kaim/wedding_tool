@@ -3,41 +3,75 @@ import { tapDeltaEventSchema } from '@wedding_tool/schema';
 import { extractBearerToken } from '@/lib/server/auth-headers';
 import { verifyPlayerToken } from '@/lib/auth/jwt';
 import { applyTapDelta } from '@/lib/server/room-engine';
+import { handleApiError, authError, forbiddenError, rateLimitError } from '@/lib/server/error-handler';
 
 const RATE_WINDOW_MS = 1000;
 const MAX_DELTA_PER_WINDOW = 150;
 const MIN_INTERVAL_MS = 150;
+const RECORD_TTL_MS = 300000; // 5分でレコード削除
+const CLEANUP_INTERVAL_MS = 60000; // 1分ごとにクリーンアップ
+
+// メモリリーク対策: TTL付きMap + 定期クリーンアップ
 const tapRates = new Map<string, { windowStart: number; total: number; lastTs: number }>();
+let cleanupTimer: NodeJS.Timeout | null = null;
+
+// クリーンアップ処理を初期化
+function initCleanup() {
+  if (cleanupTimer) return;
+
+  cleanupTimer = setInterval(() => {
+    const now = Date.now();
+    let deletedCount = 0;
+
+    for (const [key, record] of tapRates.entries()) {
+      if (now - record.lastTs > RECORD_TTL_MS) {
+        tapRates.delete(key);
+        deletedCount++;
+      }
+    }
+
+    if (deletedCount > 0) {
+      console.log(`[RateLimit] Cleaned up ${deletedCount} expired records. Current size: ${tapRates.size}`);
+    }
+  }, CLEANUP_INTERVAL_MS);
+}
+
+// サーバー起動時にクリーンアップ開始
+initCleanup();
 
 export async function POST(request: Request, { params }: { params: { roomId: string } }) {
-  const authHeader = request.headers.get('authorization');
-  const token = extractBearerToken(authHeader);
-
-  if (!token) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-
-  let payload;
   try {
-    payload = await verifyPlayerToken(token);
+    const authHeader = request.headers.get('authorization');
+    const token = extractBearerToken(authHeader);
+
+    if (!token) {
+      return authError();
+    }
+
+    let payload;
+    try {
+      payload = await verifyPlayerToken(token);
+    } catch (error) {
+      return authError('トークンが無効です。再度ログインしてください。');
+    }
+
+    if (payload.roomId !== params.roomId) {
+      return forbiddenError();
+    }
+
+    const json = await request.json();
+    const { delta } = tapDeltaEventSchema.parse(json);
+
+    if (!checkRateLimit(payload.playerId)) {
+      return rateLimitError('タップが速すぎます。少し待ってからお試しください。', 1);
+    }
+
+    await applyTapDelta(payload.roomId, payload.playerId, delta);
+
+    return NextResponse.json({ ok: true });
   } catch (error) {
-    return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
+    return handleApiError(error, 'POST /api/rooms/[roomId]/tap');
   }
-
-  if (payload.roomId !== params.roomId) {
-    return NextResponse.json({ error: 'Token mismatch' }, { status: 403 });
-  }
-
-  const json = await request.json();
-  const { delta } = tapDeltaEventSchema.parse(json);
-
-  if (!checkRateLimit(payload.playerId)) {
-    return NextResponse.json({ error: 'Too many taps' }, { status: 429 });
-  }
-
-  await applyTapDelta(payload.roomId, payload.playerId, delta);
-
-  return NextResponse.json({ ok: true });
 }
 
 function checkRateLimit(playerId: string) {

@@ -1,12 +1,12 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, memo } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useRoomStore } from '../lib/store/room-store';
 import type { LeaderboardEntry, RoomStoreState } from '../lib/store/room-store';
 import ParticleEffect from './ParticleEffect';
 import type { ParticleConfig } from './ParticleEffect';
-import { PatternBackground, DecorativeShapes } from './BackgroundPatterns';
+import { ProjectorGradientBackground } from './NoiseGradientBackground';
 
 const CHOICE_LABELS = ['A', 'B', 'C', 'D'];
 
@@ -75,7 +75,7 @@ export default function ProjectorView({ roomId: _roomId }: { roomId: string }) {
         spread: 1.8
       });
     }
-  }, [quizResult?.quizId]);
+  }, [quizResult]);
 
   // Fullscreen toggle
   const toggleFullscreen = useCallback(async () => {
@@ -127,14 +127,15 @@ export default function ProjectorView({ roomId: _roomId }: { roomId: string }) {
   return (
     <main
       ref={containerRef}
-      className="flex min-h-screen items-center justify-center bg-white text-black relative overflow-hidden"
+      className="flex min-h-screen items-center justify-center relative overflow-hidden"
       style={{ padding: isFullscreen ? '0' : '1.5rem' }}
+      role="main"
+      aria-label="投影画面"
     >
-      <PatternBackground pattern="chevron" />
-      <DecorativeShapes variant="mixed" />
+      <ProjectorGradientBackground />
 
-      <div className={`relative aspect-video w-full overflow-hidden shadow-brand-xl border-3 border-black z-10 ${isFullscreen ? 'max-w-none rounded-none h-screen' : 'max-w-[1920px] rounded-2xl'}`}>
-        <div className={`relative flex h-full flex-col bg-white ${isFullscreen ? 'gap-6 px-12 py-10' : 'gap-5 px-10 py-8'}`}>
+      <div className={`relative aspect-video w-full overflow-hidden shadow-xl z-10 ${isFullscreen ? 'max-w-none rounded-none h-screen' : 'max-w-[1920px] rounded-2xl'}`} role="region" aria-label="ゲーム表示エリア">
+        <div className={`relative flex h-full flex-col glass-panel-strong ${isFullscreen ? 'gap-6 px-12 py-10' : 'gap-5 px-10 py-8'}`}>
           <Header mode={mode} countdownMs={countdownMs} isFullscreen={isFullscreen} onToggleFullscreen={toggleFullscreen} />
           <div className="flex-1 overflow-hidden">
             <AnimatePresence mode="wait">{renderSection(mode, topTen, activeQuiz, quizResult, lotteryResult, isSpinning, lotteryKey)}</AnimatePresence>
@@ -144,15 +145,16 @@ export default function ProjectorView({ roomId: _roomId }: { roomId: string }) {
 
       {/* Fullscreen hint - only show when not in fullscreen */}
       {!isFullscreen && (
-        <div className="fixed bottom-8 right-8 z-50 rounded-xl bg-white px-4 py-3 shadow-brand-lg border-3 border-black slide-up">
+        <div className="fixed bottom-8 right-8 z-50 rounded-xl glass-panel-strong shadow-lg px-4 py-3 slide-up border border-white/30" role="complementary" aria-label="全画面表示のヒント">
           <button
             onClick={toggleFullscreen}
-            className="flex items-center gap-2 text-sm font-bold text-black transition-colors hover:text-pop-blue"
+            className="flex items-center gap-2 text-sm font-bold text-ink transition-colors hover:text-denim-deep"
+            aria-label="全画面表示に切り替え (Fキー)"
           >
-            <span className="text-xl">⛶</span>
+            <span className="text-xl" aria-hidden="true">⛶</span>
             <div className="text-left">
               <p>全画面表示</p>
-              <p className="text-xs text-black/60">F キー</p>
+              <p className="text-xs text-ink/60">F キー</p>
             </div>
           </button>
         </div>
@@ -162,7 +164,7 @@ export default function ProjectorView({ roomId: _roomId }: { roomId: string }) {
   );
 }
 
-function Header({
+const Header = memo(function Header({
   mode,
   countdownMs,
   isFullscreen,
@@ -183,32 +185,32 @@ function Header({
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
       transition={{ duration: 0.5, ease: 'easeOut' }}
-      className="rounded-2xl bg-pop-yellow px-10 py-8 shadow-brand-lg border-3 border-black"
+      className="rounded-2xl glass-panel-strong px-10 py-8 shadow-lg border border-white/30"
     >
       <div className="flex flex-col gap-5 text-center md:flex-row md:items-center md:justify-between md:text-left">
         <div className="flex items-center justify-center gap-5 md:justify-start">
-          <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-white text-4xl shadow-brand-md border-3 border-black">
+          <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-terracotta text-4xl shadow-md">
             {modeIcon}
           </div>
           <div className="space-y-1">
-            <p className="text-xs font-bold uppercase tracking-[0.3em] text-black/60">Wedding Party Game</p>
-            <p className="text-3xl font-bold tracking-tight text-black">
+            <p className="text-xs font-bold uppercase tracking-[0.3em] text-ink/60">Wedding Party Game</p>
+            <p className="text-3xl font-bold tracking-tight text-ink">
               {labelForMode(mode)}
             </p>
           </div>
         </div>
         <div className="flex items-center gap-3">
-          <div className="rounded-xl bg-white px-6 py-3 shadow-brand-sm border-3 border-black">
-            <p className="text-xs font-bold uppercase tracking-[0.25em] text-black/60">Countdown</p>
+          <div className="rounded-xl glass-panel px-6 py-3 shadow-sm border border-white/20">
+            <p className="text-xs font-bold uppercase tracking-[0.25em] text-ink/60">Countdown</p>
             <div className="mt-1 flex items-center justify-center gap-2">
-              <p className="text-4xl font-bold text-black count-up">{countdown}</p>
-              <p className="text-xl font-bold text-black/70">秒</p>
+              <p className="text-4xl font-bold text-terra-clay count-up">{countdown}</p>
+              <p className="text-xl font-bold text-ink/70">秒</p>
             </div>
           </div>
           {!isFullscreen && (
             <button
               onClick={onToggleFullscreen}
-              className="flex h-14 w-14 items-center justify-center rounded-xl bg-white text-2xl shadow-brand-sm border-3 border-black transition-all duration-300 hover:scale-110 hover:bg-pop-blue"
+              className="flex h-14 w-14 items-center justify-center rounded-xl glass-panel text-2xl shadow-sm border border-white/20 transition-all duration-300 hover:scale-110 hover:bg-gradient-denim hover:text-white"
               title="全画面表示 (F キー)"
             >
               ⛶
@@ -218,7 +220,7 @@ function Header({
       </div>
     </motion.header>
   );
-}
+});
 
 function renderSection(
   mode: string,
@@ -241,7 +243,7 @@ function renderSection(
   }
 }
 
-function CountupBoard({ entries }: { entries: LeaderboardEntry[] }) {
+const CountupBoard = memo(function CountupBoard({ entries }: { entries: LeaderboardEntry[] }) {
   // Top 3 highlighted, rest in compact grid
   const top3 = entries.slice(0, 3);
   const rest = entries.slice(3);
@@ -253,6 +255,8 @@ function CountupBoard({ entries }: { entries: LeaderboardEntry[] }) {
       exit={{ opacity: 0, y: -30 }}
       transition={{ duration: 0.5, ease: 'easeOut' }}
       className="flex h-full flex-col gap-5"
+      role="region"
+      aria-label="タップチャレンジランキング"
     >
       {/* Top 3 - Large Display */}
       <div className="grid grid-cols-3 gap-4">
@@ -263,22 +267,22 @@ function CountupBoard({ entries }: { entries: LeaderboardEntry[] }) {
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.4 }}
-            className={`flex flex-col items-center rounded-2xl p-6 shadow-brand-lg border-3 border-black ${
+            className={`flex flex-col items-center rounded-2xl p-6 shadow-lg glass-panel-strong border border-white/30 ${
               entry.rank === 1
-                ? 'bg-pop-yellow'
+                ? 'ring-2 ring-accent-400'
                 : entry.rank === 2
-                  ? 'bg-pop-blue'
-                  : 'bg-pop-orange'
+                  ? 'ring-2 ring-denim-sky'
+                  : 'ring-2 ring-terra-clay'
             }`}
           >
-            <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-full text-3xl bg-white border-3 border-black">
+            <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-full text-3xl glass-panel shadow-md">
               {['🥇', '🥈', '🥉'][entry.rank - 1]}
             </div>
-            <p className="mb-1 text-center text-xl font-bold text-black">{entry.displayName}</p>
-            {entry.tableNo && <p className="mb-2 text-sm text-black/70 font-bold">テーブル {entry.tableNo}</p>}
-            <div className="rounded-full bg-white px-5 py-2 shadow-md border-3 border-black">
-              <span className="text-2xl font-bold text-black">{entry.totalPoints}</span>
-              <span className="ml-1 text-sm text-black/80 font-bold">pt</span>
+            <p className="mb-1 text-center text-xl font-bold text-ink">{entry.displayName}</p>
+            {entry.tableNo && <p className="mb-2 text-sm text-ink/70 font-bold">テーブル {entry.tableNo}</p>}
+            <div className="rounded-full glass-panel px-5 py-2 shadow-md">
+              <span className="text-2xl font-bold text-terra-clay">{entry.totalPoints}</span>
+              <span className="ml-1 text-sm text-ink/80 font-bold">pt</span>
             </div>
           </motion.div>
         ))}
@@ -286,20 +290,20 @@ function CountupBoard({ entries }: { entries: LeaderboardEntry[] }) {
 
       {/* Rest - Compact Grid */}
       {rest.length > 0 && (
-        <div className="flex-1 overflow-auto rounded-2xl p-5 shadow-brand bg-white border-3 border-black">
+        <div className="flex-1 overflow-auto rounded-2xl p-5 shadow-md glass-panel-strong border border-white/30">
           <div className="grid grid-cols-4 gap-2">
             {rest.map((entry) => (
               <div
                 key={entry.playerId}
-                className="flex items-center justify-between rounded-lg bg-pop-pink px-3 py-2 text-sm shadow-sm border-2 border-black"
+                className="flex items-center justify-between rounded-lg glass-panel px-3 py-2 text-sm shadow-sm border border-white/20"
               >
                 <div className="flex items-center gap-2 min-w-0">
-                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-white text-xs font-bold text-black border-2 border-black">
+                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-gradient-terracotta text-xs font-bold text-white">
                     {entry.rank}
                   </span>
-                  <span className="truncate font-bold text-black">{entry.displayName}</span>
+                  <span className="truncate font-bold text-ink">{entry.displayName}</span>
                 </div>
-                <span className="ml-2 shrink-0 font-bold text-black">{entry.totalPoints}</span>
+                <span className="ml-2 shrink-0 font-bold text-terra-clay">{entry.totalPoints}</span>
               </div>
             ))}
           </div>
@@ -307,9 +311,9 @@ function CountupBoard({ entries }: { entries: LeaderboardEntry[] }) {
       )}
     </motion.section>
   );
-}
+});
 
-function IdleBoard({ leaderboard }: { leaderboard: LeaderboardEntry[] }) {
+const IdleBoard = memo(function IdleBoard({ leaderboard }: { leaderboard: LeaderboardEntry[] }) {
   const top3 = leaderboard.slice(0, 3);
   const rest = leaderboard.slice(3);
 
@@ -321,9 +325,9 @@ function IdleBoard({ leaderboard }: { leaderboard: LeaderboardEntry[] }) {
       transition={{ duration: 0.5, ease: 'easeOut' }}
       className="flex h-full flex-col gap-5"
     >
-      <div className="rounded-2xl bg-pop-green p-8 text-center shadow-brand border-3 border-black">
-        <h2 className="text-3xl font-bold text-black">まもなくゲームが始まります</h2>
-        <p className="mt-3 text-lg text-black/80 font-bold">スマホの画面を確認してください。</p>
+      <div className="rounded-2xl glass-panel-strong p-8 text-center shadow-lg border border-white/30">
+        <h2 className="text-3xl font-bold text-ink">まもなくゲームが始まります</h2>
+        <p className="mt-3 text-lg text-ink/80 font-bold">スマホの画面を確認してください。</p>
       </div>
 
       {leaderboard.length > 0 && (
@@ -334,22 +338,22 @@ function IdleBoard({ leaderboard }: { leaderboard: LeaderboardEntry[] }) {
               {top3.map((entry) => (
                 <div
                   key={entry.playerId}
-                  className={`flex flex-col items-center rounded-2xl p-6 shadow-brand-lg border-3 border-black ${
+                  className={`flex flex-col items-center rounded-2xl p-6 shadow-lg glass-panel-strong border border-white/30 ${
                     entry.rank === 1
-                      ? 'bg-pop-yellow'
+                      ? 'ring-2 ring-accent-400'
                       : entry.rank === 2
-                        ? 'bg-pop-blue'
-                        : 'bg-pop-orange'
+                        ? 'ring-2 ring-denim-sky'
+                        : 'ring-2 ring-terra-clay'
                   }`}
                 >
-                  <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-full text-3xl bg-white border-3 border-black">
+                  <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-full text-3xl glass-panel shadow-md">
                     {['🥇', '🥈', '🥉'][entry.rank - 1]}
                   </div>
-                  <p className="mb-1 text-center text-xl font-bold text-black">{entry.displayName}</p>
-                  {entry.tableNo && <p className="mb-2 text-sm text-black/70 font-bold">テーブル {entry.tableNo}</p>}
-                  <div className="rounded-full bg-white px-5 py-2 shadow-md border-3 border-black">
-                    <span className="text-2xl font-bold text-black">{entry.totalPoints}</span>
-                    <span className="ml-1 text-sm text-black/80 font-bold">pt</span>
+                  <p className="mb-1 text-center text-xl font-bold text-ink">{entry.displayName}</p>
+                  {entry.tableNo && <p className="mb-2 text-sm text-ink/70 font-bold">テーブル {entry.tableNo}</p>}
+                  <div className="rounded-full glass-panel px-5 py-2 shadow-md">
+                    <span className="text-2xl font-bold text-terra-clay">{entry.totalPoints}</span>
+                    <span className="ml-1 text-sm text-ink/80 font-bold">pt</span>
                   </div>
                 </div>
               ))}
@@ -358,20 +362,20 @@ function IdleBoard({ leaderboard }: { leaderboard: LeaderboardEntry[] }) {
 
           {/* Rest */}
           {rest.length > 0 && (
-            <div className="flex-1 overflow-auto rounded-2xl p-5 shadow-brand bg-white border-3 border-black">
+            <div className="flex-1 overflow-auto rounded-2xl p-5 shadow-md glass-panel-strong border border-white/30">
               <div className="grid grid-cols-4 gap-2">
                 {rest.map((entry) => (
                   <div
                     key={entry.playerId}
-                    className="flex items-center justify-between rounded-lg bg-pop-pink px-3 py-2 text-sm shadow-sm border-2 border-black"
+                    className="flex items-center justify-between rounded-lg glass-panel px-3 py-2 text-sm shadow-sm border border-white/20"
                   >
                     <div className="flex items-center gap-2 min-w-0">
-                      <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-white text-xs font-bold text-black border-2 border-black">
+                      <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-gradient-terracotta text-xs font-bold text-white">
                         {entry.rank}
                       </span>
-                      <span className="truncate font-bold text-black">{entry.displayName}</span>
+                      <span className="truncate font-bold text-ink">{entry.displayName}</span>
                     </div>
-                    <span className="ml-2 shrink-0 font-bold text-black">{entry.totalPoints}</span>
+                    <span className="ml-2 shrink-0 font-bold text-terra-clay">{entry.totalPoints}</span>
                   </div>
                 ))}
               </div>
@@ -381,14 +385,14 @@ function IdleBoard({ leaderboard }: { leaderboard: LeaderboardEntry[] }) {
       )}
     </motion.section>
   );
-}
+});
 
 type QuizPanelProps = {
   activeQuiz: RoomStoreState['activeQuiz'];
   quizResult: RoomStoreState['quizResult'];
 };
 
-function QuizBoard({ activeQuiz, quizResult }: QuizPanelProps) {
+const QuizBoard = memo(function QuizBoard({ activeQuiz, quizResult }: QuizPanelProps) {
   const counts = quizResult?.perChoiceCounts ?? [0, 0, 0, 0];
   const total = counts.reduce((acc, value) => acc + value, 0) || 1;
   const correctIndex = quizResult?.correctIndex ?? -1;
@@ -404,24 +408,26 @@ function QuizBoard({ activeQuiz, quizResult }: QuizPanelProps) {
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -30 }}
       transition={{ duration: 0.5, ease: 'easeOut' }}
-      className="grid h-full gap-6 rounded-2xl p-8 shadow-brand lg:grid-cols-2 border-3 border-black bg-white"
+      className="grid h-full gap-6 rounded-2xl p-8 shadow-lg lg:grid-cols-2 glass-panel-strong border border-white/30"
       style={{
         backgroundImage: `url(${backgroundImage})`,
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         backgroundRepeat: 'no-repeat'
       }}
+      role="region"
+      aria-label="クイズ表示"
     >
       <div className="space-y-5">
-        <h2 className="text-4xl font-bold text-black bg-pop-yellow px-4 py-2 rounded-xl inline-block border-3 border-black">クイズ</h2>
+        <h2 className="text-4xl font-bold text-white bg-gradient-terracotta px-4 py-2 rounded-xl inline-block shadow-md">クイズ</h2>
         {activeQuiz ? (
           <>
-            <p className="text-2xl font-bold leading-relaxed text-black bg-white/90 px-5 py-4 rounded-xl border-3 border-black">{activeQuiz.question}</p>
+            <p className="text-2xl font-bold leading-relaxed text-ink glass-panel-strong px-5 py-4 rounded-xl border border-white/30">{activeQuiz.question}</p>
             <ul className="grid gap-3 md:grid-cols-2">
               {activeQuiz.choices.map((choice, index) => (
                 <li
                   key={choice}
-                  className={`rounded-xl px-6 py-5 text-xl shadow-brand border-3 border-black ${quizResult && index === correctIndex ? 'bg-pop-green text-black' : 'bg-white text-black'}`}
+                  className={`rounded-xl px-6 py-5 text-xl shadow-md border border-white/20 ${quizResult && index === correctIndex ? 'bg-success glass-panel-strong text-ink ring-2 ring-success-600' : 'glass-panel text-ink'}`}
                 >
                   <div className="flex items-center gap-3">
                     <span className="text-2xl font-bold">{CHOICE_LABELS[index]}</span>
@@ -432,39 +438,39 @@ function QuizBoard({ activeQuiz, quizResult }: QuizPanelProps) {
             </ul>
           </>
         ) : (
-          <p className="text-xl text-black/70 font-bold bg-white/90 px-5 py-4 rounded-xl border-3 border-black">次のクイズを準備中です。</p>
+          <p className="text-xl text-ink/70 font-bold glass-panel-strong px-5 py-4 rounded-xl border border-white/30">次のクイズを準備中です。</p>
         )}
       </div>
-      <div className="space-y-3 bg-white/90 p-5 rounded-xl border-3 border-black">
-        <h3 className="text-xl font-bold text-black mb-3">回答状況</h3>
+      <div className="space-y-3 glass-panel-strong p-5 rounded-xl border border-white/30">
+        <h3 className="text-xl font-bold text-ink mb-3">回答状況</h3>
         {quizResult ? (
           counts.map((count, index) => {
             const ratio = Math.round((count / total) * 100);
             return (
               <div key={index} className="space-y-2">
-                <div className="flex items-center justify-between text-base text-black font-bold">
+                <div className="flex items-center justify-between text-base text-ink font-bold">
                   <span>{CHOICE_LABELS[index]}</span>
                   <span>{count}票</span>
                 </div>
-                <div className="h-7 overflow-hidden rounded-full bg-white border-3 border-black">
+                <div className="h-7 overflow-hidden rounded-full glass-panel border border-white/20">
                   <motion.div
                     key={`${index}-${count}`}
                     initial={{ width: 0 }}
                     animate={{ width: `${ratio}%` }}
                     transition={{ duration: 0.6, ease: 'easeOut' }}
-                    className={`h-full ${index === correctIndex ? 'bg-pop-green' : 'bg-pop-orange'}`}
+                    className={`h-full ${index === correctIndex ? 'bg-success' : 'bg-gradient-terracotta'}`}
                   />
                 </div>
               </div>
             );
           })
         ) : (
-          <p className="text-lg text-black/70 font-bold">回答結果は正解公開後に表示されます。</p>
+          <p className="text-lg text-ink/70 font-bold">回答結果は正解公開後に表示されます。</p>
         )}
       </div>
     </motion.section>
   );
-}
+});
 
 type LotteryPanelProps = {
   lotteryResult: RoomStoreState['lotteryResult'];
@@ -472,7 +478,7 @@ type LotteryPanelProps = {
   leaderboard: LeaderboardEntry[];
 };
 
-function LotteryBoard({ lotteryResult, isSpinning, leaderboard }: LotteryPanelProps) {
+const LotteryBoard = memo(function LotteryBoard({ lotteryResult, isSpinning, leaderboard }: LotteryPanelProps) {
   const [displayName, setDisplayName] = useState<string | null>(null);
   const [displayKind, setDisplayKind] = useState<string | null>(null);
   const [isRevealing, setIsRevealing] = useState(false);
@@ -578,16 +584,16 @@ function LotteryBoard({ lotteryResult, isSpinning, leaderboard }: LotteryPanelPr
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.95 }}
       transition={{ duration: 0.5, ease: 'easeOut' }}
-      className="flex h-full flex-col items-center justify-center gap-10 rounded-2xl px-12 py-16 text-center shadow-brand bg-pop-red border-3 border-black"
+      className="flex h-full flex-col items-center justify-center gap-10 rounded-2xl px-12 py-16 text-center shadow-lg glass-panel-strong border border-white/30 bg-gradient-sunset"
     >
-      <span className="text-xl uppercase tracking-[0.4em] text-black/70 font-bold bg-white px-6 py-3 rounded-xl border-3 border-black">Lottery</span>
+      <span className="text-xl uppercase tracking-[0.4em] text-white/90 font-bold glass-panel-strong px-6 py-3 rounded-xl border border-white/30">Lottery</span>
       {waiting ? (
-        <div className="space-y-6 bg-white p-10 rounded-2xl border-3 border-black">
-          <p className="text-3xl font-bold text-black">抽選カテゴリを選んでください</p>
-          <div className="flex flex-col items-center gap-3 text-xl font-bold text-black">
-            <span className="bg-pop-yellow px-6 py-3 rounded-xl border-3 border-black w-full">・全員対象</span>
-            <span className="bg-pop-blue px-6 py-3 rounded-xl border-3 border-black w-full">・新郎友人</span>
-            <span className="bg-pop-pink px-6 py-3 rounded-xl border-3 border-black w-full">・新婦友人</span>
+        <div className="space-y-6 glass-panel-strong p-10 rounded-2xl border border-white/30">
+          <p className="text-3xl font-bold text-ink">抽選カテゴリを選んでください</p>
+          <div className="flex flex-col items-center gap-3 text-xl font-bold text-ink">
+            <span className="glass-panel px-6 py-3 rounded-xl border border-white/20 w-full hover:bg-gradient-terracotta hover:text-white transition-all">・全員対象</span>
+            <span className="glass-panel px-6 py-3 rounded-xl border border-white/20 w-full hover:bg-gradient-denim hover:text-white transition-all">・新郎友人</span>
+            <span className="glass-panel px-6 py-3 rounded-xl border border-white/20 w-full hover:bg-gradient-terracotta hover:text-white transition-all">・新婦友人</span>
           </div>
         </div>
       ) : (
@@ -596,17 +602,17 @@ function LotteryBoard({ lotteryResult, isSpinning, leaderboard }: LotteryPanelPr
           initial={{ rotate: 0, scale: 0.85, opacity: 0 }}
           animate={{ rotate: isSpinning ? [0, 360, 360] : 0, scale: 1, opacity: 1 }}
           transition={{ duration: isSpinning ? 3 : 0.6, ease: 'easeOut' }}
-          className="rounded-3xl bg-white px-16 py-14 shadow-brand border-3 border-black"
+          className="rounded-3xl glass-panel-strong px-16 py-14 shadow-lg border border-white/30"
         >
           {displayKind ? (
-            <p className="text-lg uppercase tracking-[0.4em] text-black/70 font-bold bg-pop-yellow px-4 py-2 rounded-lg inline-block border-3 border-black">{displayKind}</p>
+            <p className="text-lg uppercase tracking-[0.4em] text-white font-bold bg-gradient-terracotta px-4 py-2 rounded-lg inline-block shadow-md">{displayKind}</p>
           ) : null}
-          <p className="mt-6 text-[min(10vw,9rem)] font-bold text-black">{displayName}</p>
+          <p className="mt-6 text-[min(10vw,9rem)] font-bold text-ink">{displayName}</p>
         </motion.div>
       )}
     </motion.section>
   );
-}
+});
 
 function labelForMode(mode: string) {
   switch (mode) {

@@ -8,7 +8,7 @@ import { Section, PrimaryButton } from './brand';
 import type { LeaderboardEntry, RoomView } from '../lib/store/room-store';
 import ParticleEffect from './ParticleEffect';
 import type { ParticleConfig } from './ParticleEffect';
-import { PatternBackground, DecorativeShapes } from './BackgroundPatterns';
+import { MobileGradientBackground } from './NoiseGradientBackground';
 
 type ConnectionStatus = 'good' | 'warn' | 'bad';
 
@@ -214,36 +214,35 @@ export default function JoinRoom({ code }: { code: string }) {
   };
 
   return (
-    <main className="min-h-screen bg-white px-6 py-10 relative overflow-hidden">
-      <PatternBackground pattern="chevron" />
-      <DecorativeShapes variant="mixed" />
+    <main className="min-h-screen px-6 py-10 relative overflow-hidden">
+      <MobileGradientBackground />
       <div className="mx-auto w-full max-w-3xl relative z-10">
-        <div className="mb-6 flex items-center justify-between rounded-xl bg-white px-5 py-3 shadow-brand-sm slide-up border-3 border-black">
+        <div className="mb-6 flex items-center justify-between rounded-xl glass-panel-strong px-5 py-3 shadow-sm slide-up border border-white/30">
           <div className="flex items-center gap-3">
             <span className={`flex h-6 w-6 items-center justify-center rounded-full ${connectionConfig[connection].dot} text-white text-xs font-bold`} aria-hidden="true">
               {connectionConfig[connection].icon}
             </span>
-            <span className="font-bold text-black">{connectionConfig[connection].label}</span>
+            <span className="font-bold text-ink">{connectionConfig[connection].label}</span>
           </div>
-          <span className="text-xs font-bold text-black">接続中</span>
+          <span className="text-xs font-bold text-ink/70">接続中</span>
         </div>
 
         {registered ? (
-          <div className="rounded-2xl bg-pop-yellow px-8 py-6 text-center shadow-brand-md bounce-in border-3 border-black" aria-live="polite">
+          <div className="rounded-2xl glass-panel-strong px-8 py-6 text-center shadow-md bounce-in border border-white/30 ring-2 ring-accent-400" aria-live="polite">
             <div className="mb-3 text-4xl">🎉</div>
-            <p className="text-xl font-bold text-black">参加登録完了！</p>
-            <p className="mt-3 text-lg text-black">
-              <span className="rounded-full bg-white px-4 py-1 font-bold text-black border-2 border-black">{registeredTableNo}</span>
+            <p className="text-xl font-bold text-ink">参加登録完了！</p>
+            <p className="mt-3 text-lg text-ink">
+              <span className="rounded-full glass-panel px-4 py-1 font-bold text-terra-clay border border-white/20">{registeredTableNo}</span>
               <span className="mx-2 font-bold">テーブル</span>
             </p>
-            <p className="mt-2 text-2xl font-bold text-black">{registeredName} さん</p>
-            <p className="mt-4 text-sm font-bold text-black">ゲーム開始までお待ちください</p>
+            <p className="mt-2 text-2xl font-bold text-ink">{registeredName} さん</p>
+            <p className="mt-4 text-sm font-bold text-ink/70">ゲーム開始までお待ちください</p>
           </div>
         ) : (
-          <div className="rounded-2xl bg-pop-blue p-8 text-center shadow-brand-md slide-up border-3 border-black">
+          <div className="rounded-2xl glass-panel-strong p-8 text-center shadow-md slide-up border border-white/30">
             <div className="mb-4 text-5xl">📱</div>
-            <p className="text-lg font-bold text-white">参加登録してください</p>
-            <p className="mt-3 text-sm leading-relaxed text-white font-semibold">
+            <p className="text-lg font-bold text-ink">参加登録してください</p>
+            <p className="mt-3 text-sm leading-relaxed text-ink/80 font-semibold">
               画面中央のモーダルでテーブル番号とお名前を入力し、<br />
               「参加する」ボタンを押してください
             </p>
@@ -251,7 +250,7 @@ export default function JoinRoom({ code }: { code: string }) {
         )}
 
         {registered && error && (
-          <div className="mt-4 rounded-2xl bg-error-light px-5 py-3 text-sm text-error shadow-brand-sm bounce-in" role="alert">
+          <div className="mt-4 rounded-2xl glass-panel-strong px-5 py-3 text-sm text-error shadow-sm bounce-in border border-error/30" role="alert">
             ⚠️ {error}
           </div>
         )}
@@ -259,14 +258,14 @@ export default function JoinRoom({ code }: { code: string }) {
 
       {registered && mode !== 'countup' && mode !== 'quiz' && (
         <div className="mx-auto w-full max-w-3xl mt-8 space-y-6 relative z-10">
-          <div className="rounded-2xl bg-white p-8 text-center shadow-brand-md slide-up border-3 border-black">
+          <div className="rounded-2xl glass-panel-strong p-8 text-center shadow-md slide-up border border-white/30">
             <div className="mb-4 text-3xl">
               {mode === 'lottery' ? '🎰' : '🎮'}
             </div>
-            <h2 className="text-title-sm font-bold text-black">
+            <h2 className="text-title-sm font-bold text-ink">
               {mode === 'lottery' ? '抽選' : 'ゲーム'}
             </h2>
-            <p className="mt-4 text-base leading-relaxed text-black font-medium">
+            <p className="mt-4 text-base leading-relaxed text-ink/80 font-medium">
               {mode === 'lottery'
                 ? '抽選の結果発表をお待ちください。当選者はスクリーンに表示されます。'
                 : 'まもなくゲームが始まります。画面の指示に従ってください。'}
@@ -281,27 +280,27 @@ export default function JoinRoom({ code }: { code: string }) {
             if (!hasScore) return null;
 
             return (
-              <div className="rounded-2xl bg-pop-pink p-8 shadow-brand-md slide-up border-3 border-black">
+              <div className="rounded-2xl glass-panel-strong p-8 shadow-md slide-up border border-white/30 ring-2 ring-accent-400">
                 <div className="text-center">
                   <div className="mb-4 text-5xl">🎯</div>
-                  <h2 className="mb-4 text-title-sm font-bold text-black">あなたのスコア</h2>
-                  <div className="mb-6 rounded-xl bg-white p-6 border-3 border-black">
-                    <div className="mb-2 text-6xl font-bold text-black">
+                  <h2 className="mb-4 text-title-sm font-bold text-ink">あなたのスコア</h2>
+                  <div className="mb-6 rounded-xl glass-panel p-6 border border-white/20">
+                    <div className="mb-2 text-6xl font-bold text-terra-clay">
                       {myEntry.totalPoints}
                       <span className="ml-2 text-3xl font-bold">pt</span>
                     </div>
                     {myEntry.quizPoints !== undefined && myEntry.quizPoints > 0 && (
-                      <p className="text-sm text-black font-semibold">
+                      <p className="text-sm text-ink font-semibold">
                         クイズ: {myEntry.quizPoints}問正解
                       </p>
                     )}
                     {myEntry.countupTapCount !== undefined && myEntry.countupTapCount > 0 && (
-                      <p className="text-sm text-black font-semibold">
+                      <p className="text-sm text-ink font-semibold">
                         タップ: {myEntry.countupTapCount}回
                       </p>
                     )}
                   </div>
-                  <p className="text-sm text-black font-bold">
+                  <p className="text-sm text-ink/80 font-bold">
                     全体のランキングは投影画面でご確認ください
                   </p>
                 </div>
@@ -368,14 +367,14 @@ function JoinModal({ visible, tableNo, displayName, onTableNoChange, onDisplayNa
   const guidanceIcon = mode === 'quiz' ? '🎯' : mode === 'countup' ? '⚡' : '🎮';
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-white px-6 relative overflow-hidden">
-      <PatternBackground pattern="stripe" />
-      <div className="bg-white w-full max-w-md rounded-2xl px-8 py-10 shadow-brand-xl bounce-in border-3 border-black relative z-10">
+    <div className="fixed inset-0 z-50 flex items-center justify-center px-6 relative overflow-hidden">
+      <MobileGradientBackground />
+      <div className="glass-panel-strong w-full max-w-md rounded-2xl px-8 py-10 shadow-xl bounce-in border border-white/30 relative z-10">
         <div className="mb-6 text-center">
           <div className="mb-4 text-5xl">{guidanceIcon}</div>
-          <h2 className="text-title-md font-bold text-black">参加登録</h2>
-          <div className="mt-3 rounded-xl bg-pop-yellow px-4 py-3 border-2 border-black">
-            <p className="text-sm font-bold leading-relaxed text-black">{guidanceText}</p>
+          <h2 className="text-title-md font-bold text-ink">参加登録</h2>
+          <div className="mt-3 rounded-xl glass-panel px-4 py-3 border border-white/20">
+            <p className="text-sm font-bold leading-relaxed text-ink">{guidanceText}</p>
           </div>
         </div>
         <form
@@ -386,13 +385,13 @@ function JoinModal({ visible, tableNo, displayName, onTableNoChange, onDisplayNa
           }}
         >
           <div className="space-y-2">
-            <label className="flex items-center gap-2 text-sm font-bold text-black" htmlFor="table-no">
+            <label className="flex items-center gap-2 text-sm font-bold text-ink" htmlFor="table-no">
               <span>📍</span>
               <span>テーブル番号</span>
             </label>
             <input
               id="table-no"
-              className="w-full rounded-xl border-3 border-black bg-white px-5 py-4 text-lg font-bold shadow-brand-sm transition-all duration-300 placeholder:text-gray-400 hover:shadow-brand-md focus:shadow-brand focus-visible:outline-none"
+              className="input-terra w-full"
               value={tableNo}
               onChange={(event) => onTableNoChange(event.target.value)}
               placeholder="例：A-3 / 5 / C"
@@ -401,13 +400,13 @@ function JoinModal({ visible, tableNo, displayName, onTableNoChange, onDisplayNa
             />
           </div>
           <div className="space-y-2">
-            <label className="flex items-center gap-2 text-sm font-bold text-black" htmlFor="display-name">
+            <label className="flex items-center gap-2 text-sm font-bold text-ink" htmlFor="display-name">
               <span>👤</span>
               <span>お名前</span>
             </label>
             <input
               id="display-name"
-              className="w-full rounded-xl border-3 border-black bg-white px-5 py-4 text-lg font-bold shadow-brand-sm transition-all duration-300 placeholder:text-gray-400 hover:shadow-brand-md focus:shadow-brand focus-visible:outline-none"
+              className="input-terra w-full"
               value={displayName}
               onChange={(event) => onDisplayNameChange(event.target.value)}
               placeholder="例：山田花子"
@@ -417,13 +416,13 @@ function JoinModal({ visible, tableNo, displayName, onTableNoChange, onDisplayNa
             />
           </div>
           {error && (
-            <div className="rounded-xl bg-pop-red px-4 py-3 text-sm font-bold text-white shadow-brand-sm bounce-in border-2 border-black" role="alert">
+            <div className="rounded-xl glass-panel-strong px-4 py-3 text-sm font-bold text-error shadow-sm bounce-in border border-error/30" role="alert">
               ⚠️ {error}
             </div>
           )}
           <button
             type="submit"
-            className="mt-6 w-full rounded-xl bg-pop-green px-6 py-4 font-bold text-white text-lg border-3 border-black shadow-brand-md hover:scale-105 transition-transform disabled:opacity-50 disabled:cursor-not-allowed"
+            className="btn-primary mt-6 w-full text-lg disabled:opacity-50 disabled:cursor-not-allowed"
             disabled={isJoining}
           >
             {isJoining ? (
@@ -615,10 +614,10 @@ function CountupOverlay({ phase, countdownMs, leaderboard, onTap }: CountupOverl
       {/* Waiting screen for idle phase */}
       {!showPad && !isFinished && phase === 'idle' && (
         <div className="mx-auto w-full max-w-3xl mt-8 space-y-6 relative z-10">
-          <div className="rounded-2xl bg-white p-8 text-center shadow-brand-md slide-up border-3 border-black">
+          <div className="rounded-2xl glass-panel-strong p-8 text-center shadow-md slide-up border border-white/30">
             <div className="mb-4 text-3xl">🎮</div>
-            <h2 className="text-title-sm font-bold text-black">ゲーム</h2>
-            <p className="mt-4 text-base leading-relaxed text-black font-medium">
+            <h2 className="text-title-sm font-bold text-ink">ゲーム</h2>
+            <p className="mt-4 text-base leading-relaxed text-ink/80 font-medium">
               まもなくゲームが始まります。画面の指示に従ってください。
             </p>
           </div>
@@ -628,8 +627,8 @@ function CountupOverlay({ phase, countdownMs, leaderboard, onTap }: CountupOverl
       {/* Countdown Timer - Top Right - Only show when timer is actually running (not during 3-2-1 or START banner) */}
       {showPad && displaySeconds !== '' && isTimerRunning && banner !== 'start' && localCountdown === null && (
         <div className="fixed top-4 right-4 z-[70] pointer-events-none">
-          <div className="rounded-2xl bg-brand-blue-600 px-5 py-3 shadow-brand-xl">
-            <span className="text-4xl font-bold text-white drop-shadow">{displaySeconds}</span>
+          <div className="rounded-2xl glass-panel-strong px-5 py-3 shadow-xl border border-white/30">
+            <span className="text-4xl font-bold text-terra-clay drop-shadow">{displaySeconds}</span>
           </div>
         </div>
       )}
@@ -640,12 +639,12 @@ function CountupOverlay({ phase, countdownMs, leaderboard, onTap }: CountupOverl
             {banner === 'stop' && (
               <>
                 <div className="text-6xl">🎉</div>
-                <span className="text-[min(20vw,8rem)] font-bold uppercase tracking-wider text-black bg-pop-pink px-8 py-4 rounded-xl border-3 border-black">
+                <span className="text-[min(20vw,8rem)] font-bold uppercase tracking-wider text-white bg-gradient-terracotta px-8 py-4 rounded-xl shadow-xl">
                   STOP!
                 </span>
               </>
             )}
-            <p className="text-xl font-bold text-black bg-white px-6 py-3 rounded-xl border-3 border-black">投影画面で結果を確認してください</p>
+            <p className="text-xl font-bold text-ink glass-panel-strong px-6 py-3 rounded-xl border border-white/30">投影画面で結果を確認してください</p>
           </div>
         </div>
       )}
@@ -654,17 +653,17 @@ function CountupOverlay({ phase, countdownMs, leaderboard, onTap }: CountupOverl
         <div className="mx-auto w-full max-w-3xl mt-8 space-y-6 relative z-10">
           {localCountdown !== null ? (
             <div className="flex flex-col items-center gap-6 bounce-in">
-              <div className="rounded-full bg-white p-16 shadow-brand-xl border-3 border-black">
-                <span className="text-[min(40vw,18rem)] font-bold leading-none text-black">
+              <div className="rounded-full glass-panel-strong p-16 shadow-xl border border-white/30">
+                <span className="text-[min(40vw,18rem)] font-bold leading-none text-terra-clay">
                   {localCountdown}
                 </span>
               </div>
-              <p className="text-3xl font-bold text-black bg-white px-6 py-3 rounded-xl border-3 border-black">準備してください！</p>
+              <p className="text-3xl font-bold text-ink glass-panel-strong px-6 py-3 rounded-xl border border-white/30">準備してください！</p>
             </div>
           ) : banner === 'start' ? (
             <div className="flex flex-col items-center gap-6 bounce-in">
               <div className="text-6xl animate-bounce">🚀</div>
-              <span className="text-[min(20vw,8rem)] font-bold uppercase tracking-wider text-black bg-pop-yellow px-8 py-4 rounded-xl border-3 border-black">
+              <span className="text-[min(20vw,8rem)] font-bold uppercase tracking-wider text-white bg-gradient-terracotta px-8 py-4 rounded-xl shadow-xl">
                 START!
               </span>
             </div>
@@ -674,12 +673,12 @@ function CountupOverlay({ phase, countdownMs, leaderboard, onTap }: CountupOverl
                 type="button"
                 onPointerDown={handleTap}
                 disabled={disabled}
-                className="w-full rounded-3xl bg-pop-yellow px-12 py-12 text-center shadow-brand-xl border-3 border-black transition-all duration-100 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full rounded-3xl bg-gradient-sunset px-12 py-12 text-center shadow-xl transition-all duration-100 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed ripple-effect"
               >
-                <div className="text-[min(25vw,10rem)] font-bold uppercase text-black animate-pulse">
+                <div className="text-[min(25vw,10rem)] font-bold uppercase text-white animate-pulse drop-shadow-lg">
                   TAP!
                 </div>
-                <p className="mt-3 text-2xl font-bold text-black">連打してポイント獲得！</p>
+                <p className="mt-3 text-2xl font-bold text-white drop-shadow">連打してポイント獲得！</p>
               </button>
               {flash && (
                 <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
@@ -787,7 +786,7 @@ function QuizOverlay({ phase, countdownMs, roomId, playerToken }: QuizOverlayPro
         spread: isCorrect ? 1.8 : 1.2
       });
     }
-  }, [quizResult?.quizId, selectedChoice]);
+  }, [quizResult, selectedChoice]);
 
   const handleChoiceSelect = async (choiceIndex: number, event: React.MouseEvent) => {
     if (!activeQuiz || !roomId || !playerToken || selectedChoice !== null || quizResult) {
@@ -863,8 +862,8 @@ function QuizOverlay({ phase, countdownMs, roomId, playerToken }: QuizOverlayPro
       {/* Countdown Timer - Top Right */}
       {timeLeftSeconds !== null && timeLeftSeconds > 0 && !quizResult && (
         <div className="absolute top-4 right-4 z-10">
-          <div className="rounded-2xl bg-brand-blue-600 px-5 py-3 shadow-brand-xl">
-            <span className="text-4xl font-bold text-white drop-shadow">{timeLeftSeconds}</span>
+          <div className="rounded-2xl glass-panel-strong px-5 py-3 shadow-xl border border-white/30">
+            <span className="text-4xl font-bold text-terra-clay drop-shadow">{timeLeftSeconds}</span>
           </div>
         </div>
       )}
@@ -872,8 +871,8 @@ function QuizOverlay({ phase, countdownMs, roomId, playerToken }: QuizOverlayPro
       <div className="flex-1 flex flex-col items-center justify-center p-6">
         {/* Question */}
         <div className="w-full max-w-2xl mb-8">
-          <div className="glass-panel-strong rounded-3xl p-6 shadow-brand-xl">
-            <p className="text-2xl font-bold text-brand-blue-700 leading-relaxed text-center">
+          <div className="glass-panel-strong rounded-3xl p-6 shadow-xl border border-white/30">
+            <p className="text-2xl font-bold text-ink leading-relaxed text-center">
               {activeQuiz.question}
             </p>
           </div>
@@ -886,22 +885,22 @@ function QuizOverlay({ phase, countdownMs, roomId, playerToken }: QuizOverlayPro
             const isCorrect = quizResult && index === correctIndex;
             const isWrong = quizResult && isSelected && index !== correctIndex;
 
-            let buttonClass = 'glass-panel rounded-2xl p-6 shadow-brand-lg transition-all duration-200';
+            let buttonClass = 'glass-panel rounded-2xl p-6 shadow-lg transition-all duration-200';
 
             if (quizResult) {
               if (isCorrect) {
-                buttonClass = 'rounded-2xl p-6 shadow-brand-xl bg-gradient-to-r from-green-400 to-green-500 border-4 border-green-600';
+                buttonClass = 'rounded-2xl p-6 shadow-xl bg-success border-2 border-success-600';
               } else if (isWrong) {
-                buttonClass = 'rounded-2xl p-6 shadow-brand-xl bg-gradient-to-r from-red-400 to-red-500 border-4 border-red-600';
+                buttonClass = 'rounded-2xl p-6 shadow-xl bg-error border-2 border-error-600';
               } else {
-                buttonClass = 'rounded-2xl p-6 shadow-brand bg-white/50';
+                buttonClass = 'rounded-2xl p-6 shadow-md glass-panel';
               }
             } else if (isSelected) {
-              buttonClass = 'rounded-2xl p-6 shadow-brand-xl bg-gradient-to-r from-brand-blue-400 to-brand-blue-500 border-4 border-brand-blue-600 scale-105';
+              buttonClass = 'rounded-2xl p-6 shadow-xl bg-gradient-denim border-2 border-denim-deep scale-105';
             } else if (hasAnswered) {
-              buttonClass = 'rounded-2xl p-6 shadow-brand bg-white/30';
+              buttonClass = 'rounded-2xl p-6 shadow-md glass-panel opacity-70';
             } else {
-              buttonClass = 'glass-panel-strong rounded-2xl p-6 shadow-brand-lg hover:shadow-brand-xl hover:scale-105 active:scale-95';
+              buttonClass = 'glass-panel-strong rounded-2xl p-6 shadow-lg border border-white/30 hover:shadow-xl hover:scale-105 active:scale-95';
             }
 
             return (
@@ -915,13 +914,13 @@ function QuizOverlay({ phase, countdownMs, roomId, playerToken }: QuizOverlayPro
                   <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-2xl font-bold ${
                     quizResult
                       ? isCorrect
-                        ? 'bg-green-600 text-white'
+                        ? 'bg-success-600 text-white'
                         : isWrong
-                          ? 'bg-red-600 text-white'
-                          : 'bg-brand-blue-100 text-brand-blue-700'
+                          ? 'bg-error-600 text-white'
+                          : 'bg-gradient-terracotta text-white'
                       : isSelected
-                        ? 'bg-brand-blue-600 text-white'
-                        : 'bg-brand-blue-500 text-white'
+                        ? 'bg-denim-deep text-white'
+                        : 'bg-gradient-terracotta text-white'
                   }`}>
                     {CHOICE_LABELS[index]}
                   </div>
@@ -929,10 +928,10 @@ function QuizOverlay({ phase, countdownMs, roomId, playerToken }: QuizOverlayPro
                     quizResult
                       ? isCorrect || isWrong
                         ? 'text-white'
-                        : 'text-brand-blue-700'
+                        : 'text-ink'
                       : isSelected
                         ? 'text-white'
-                        : 'text-brand-blue-700'
+                        : 'text-ink'
                   }`}>
                     {choice}
                   </span>
@@ -947,8 +946,8 @@ function QuizOverlay({ phase, countdownMs, roomId, playerToken }: QuizOverlayPro
         {/* Status Message */}
         {hasAnswered && !quizResult && (
           <div className="mt-8">
-            <div className="glass-panel-strong rounded-2xl px-8 py-4 shadow-brand-xl">
-              <p className="text-xl font-bold text-brand-blue-700 text-center">
+            <div className="glass-panel-strong rounded-2xl px-8 py-4 shadow-xl border border-white/30">
+              <p className="text-xl font-bold text-ink text-center">
                 回答を送信しました。正解発表をお待ちください...
               </p>
             </div>

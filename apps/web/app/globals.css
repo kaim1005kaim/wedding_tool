@@ -1,6 +1,5 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+/* Terracotta & Denim Design System */
+@import './design-tokens.css';
 
 :root {
   /* Base */
