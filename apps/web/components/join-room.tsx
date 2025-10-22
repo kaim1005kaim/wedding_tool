@@ -8,7 +8,6 @@ import { Section, PrimaryButton } from './brand';
 import type { LeaderboardEntry, RoomView } from '../lib/store/room-store';
 import ParticleEffect from './ParticleEffect';
 import type { ParticleConfig } from './ParticleEffect';
-import { MobileGradientBackground } from './NoiseGradientBackground';
 
 type ConnectionStatus = 'good' | 'warn' | 'bad';
 
@@ -214,8 +213,7 @@ export default function JoinRoom({ code }: { code: string }) {
   };
 
   return (
-    <main className="min-h-screen px-6 py-10 relative overflow-hidden">
-      <MobileGradientBackground />
+    <main className="min-h-screen px-6 py-10 relative overflow-hidden bg-gradient-mobile">
       <div className="mx-auto w-full max-w-3xl relative z-10">
         <div className="mb-6 flex items-center justify-between rounded-xl glass-panel-strong px-5 py-3 shadow-sm slide-up border border-white/30">
           <div className="flex items-center gap-3">
@@ -367,8 +365,7 @@ function JoinModal({ visible, tableNo, displayName, onTableNoChange, onDisplayNa
   const guidanceIcon = mode === 'quiz' ? '🎯' : mode === 'countup' ? '⚡' : '🎮';
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center px-6 relative overflow-hidden">
-      <MobileGradientBackground />
+    <div className="fixed inset-0 z-50 flex items-center justify-center px-6 relative overflow-hidden bg-gradient-mobile">
       <div className="glass-panel-strong w-full max-w-md rounded-2xl px-8 py-10 shadow-xl bounce-in border border-white/30 relative z-10">
         <div className="mb-6 text-center">
           <div className="mb-4 text-5xl">{guidanceIcon}</div>
