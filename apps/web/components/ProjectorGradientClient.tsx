@@ -92,21 +92,23 @@ function ProjectorGradientMesh() {
     void main() {
       vec2 uv = vUv;
 
-      // Gradient shader setup
+      // Parameters from reference code
       float zoom = 0.5;
-      float speed = 0.02;
-      float grainAmount = 0.08;
+      float speed = 0.5;
+      float grainAmount = 0.07;
       float grainSpeed = 5.0;
 
+      // First layer - generates distortion pattern
       vec2 gradientShaderUv2 = uv * zoom;
       gradientShaderUv2.xy *= (uResolution.x / uResolution.y) * 10.0;
       gradientShaderUv2.y *= uResolution.y / uResolution.x;
-      gradientShaderUv2.xy += uTime * 0.03;
-      gradientShaderUv2 = rotateUV(gradientShaderUv2, uTime * 0.03);
+      gradientShaderUv2.xy += uTime * 0.05;
+      gradientShaderUv2 = rotateUV(gradientShaderUv2, uTime * 0.05);
 
       vec4 gradientShader2 = gradientShader(gradientShaderUv2, uTime, 0.0, 1.0);
       gradientShader2 /= 0.25;
 
+      // Apply distortion to UV coordinates
       vec2 gradientUV = uv;
       gradientUV = rotateUV(gradientUV, uTime * speed);
       gradientUV.xy -= 0.5;
@@ -117,16 +119,22 @@ function ProjectorGradientMesh() {
       gradientUV.xy += 0.5;
 
       // 時間経過で色変化: オレンジ(#f98d28) → ティールブルー(#3ba1b7)
-      float colorCycle = sin(uTime * 0.1) * 0.5 + 0.5;  // 0-1でゆっくり往復
+      float colorCycle = sin(uTime * 0.1) * 0.5 + 0.5;
       vec3 colorOrange = vec3(0.976, 0.553, 0.157);  // #f98d28
       vec3 colorTeal = vec3(0.231, 0.631, 0.718);     // #3ba1b7
-      vec3 baseColor = mix(colorOrange, colorTeal, colorCycle);
 
-      // グラデーション適用
-      vec3 color = baseColor;
-      color = mix(color * 0.6, color * 1.3, gradientUV.y);
+      // Create smooth gradient base
+      vec3 color1 = colorOrange;
+      vec3 color2 = colorTeal;
 
-      // Grain effect
+      // Mix colors based on distorted UV
+      float gradientMix = smoothstep(0.0, 1.0, gradientUV.y);
+      vec3 gradientColor = mix(color1, color2, gradientMix);
+
+      // Add temporal color cycle
+      vec3 color = mix(gradientColor, mix(color2, color1, gradientMix), colorCycle * 0.3);
+
+      // Grain effect (subtle)
       vec2 grainedUv = uv + snoise(uv * 400.0);
       float grain = snoise(grainedUv + uTime * random(grainedUv) * grainSpeed);
       vec3 bg = vec3(grain) * grainAmount;
