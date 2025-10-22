@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useMemo } from 'react';
+import { useRef, useMemo, useState, useEffect } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 
@@ -244,19 +244,50 @@ export function NoiseGradientBackground({
  * プリセット: 投影画面用（ビブラントなスペクトラル）
  */
 export function ProjectorGradientBackground({ className }: { className?: string }) {
+  const [hasError, setHasError] = useState(false);
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  // クライアントサイドでのみレンダリング
+  if (!isClient) {
+    return (
+      <div
+        className={`fixed inset-0 -z-10 ${className}`}
+        style={{
+          background: 'linear-gradient(135deg, #F7F3EA 0%, #E8DFD6 20%, #BFB2A0 40%, #8196A9 60%, #4F6C8A 80%, #313559 100%)'
+        }}
+      />
+    );
+  }
+
+  // エラーが発生した場合はフォールバック
+  if (hasError) {
+    return (
+      <div
+        className={`fixed inset-0 -z-10 ${className}`}
+        style={{
+          background: 'linear-gradient(135deg, #F7F3EA 0%, #E8DFD6 20%, #BFB2A0 40%, #8196A9 60%, #4F6C8A 80%, #313559 100%)'
+        }}
+      />
+    );
+  }
+
   return (
     <div className={`fixed inset-0 -z-10 ${className}`}>
       <Canvas
         camera={{ position: [0, 0, 1], fov: 75 }}
         gl={{ antialias: true, alpha: false }}
-        fallback={
-          <div
-            className="fixed inset-0 -z-10"
-            style={{
-              background: 'linear-gradient(135deg, #F7F3EA 0%, #E8DFD6 20%, #BFB2A0 40%, #8196A9 60%, #4F6C8A 80%, #313559 100%)'
-            }}
-          />
-        }
+        onCreated={(state) => {
+          // Three.jsの初期化成功
+          console.log('Three.js initialized successfully');
+        }}
+        onError={(error) => {
+          console.error('Three.js error:', error);
+          setHasError(true);
+        }}
       >
         <ProjectorGradientMesh />
       </Canvas>
