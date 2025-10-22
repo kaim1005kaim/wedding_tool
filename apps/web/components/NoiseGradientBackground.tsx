@@ -10,24 +10,27 @@ import * as THREE from 'three';
  */
 export function MobileGradientBackground() {
   return (
-    <div
-      className="fixed inset-0 -z-10"
-      style={{
-        background: 'linear-gradient(135deg, #F7F3EA 0%, #E8DFD6 20%, #BFB2A0 40%, #8196A9 60%, #4F6C8A 80%, #313559 100%)',
-        animation: 'gradientShift 15s ease infinite'
-      }}
-    >
-      <style jsx>{`
-        @keyframes gradientShift {
-          0%, 100% {
-            filter: hue-rotate(0deg) brightness(1);
+    <>
+      <style dangerouslySetInnerHTML={{
+        __html: `
+          @keyframes gradientShift {
+            0%, 100% {
+              filter: hue-rotate(0deg) brightness(1);
+            }
+            50% {
+              filter: hue-rotate(10deg) brightness(1.05);
+            }
           }
-          50% {
-            filter: hue-rotate(10deg) brightness(1.05);
-          }
-        }
-      `}</style>
-    </div>
+        `
+      }} />
+      <div
+        className="fixed inset-0 -z-10"
+        style={{
+          background: 'linear-gradient(135deg, #F7F3EA 0%, #E8DFD6 20%, #BFB2A0 40%, #8196A9 60%, #4F6C8A 80%, #313559 100%)',
+          animation: 'gradientShift 15s ease infinite'
+        }}
+      />
+    </>
   );
 }
 
@@ -246,6 +249,14 @@ export function ProjectorGradientBackground({ className }: { className?: string 
       <Canvas
         camera={{ position: [0, 0, 1], fov: 75 }}
         gl={{ antialias: true, alpha: false }}
+        fallback={
+          <div
+            className="fixed inset-0 -z-10"
+            style={{
+              background: 'linear-gradient(135deg, #F7F3EA 0%, #E8DFD6 20%, #BFB2A0 40%, #8196A9 60%, #4F6C8A 80%, #313559 100%)'
+            }}
+          />
+        }
       >
         <ProjectorGradientMesh />
       </Canvas>
