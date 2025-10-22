@@ -1,12 +1,17 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState, memo } from 'react';
+import dynamic from 'next/dynamic';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useRoomStore } from '../lib/store/room-store';
 import type { LeaderboardEntry, RoomStoreState } from '../lib/store/room-store';
 import ParticleEffect from './ParticleEffect';
 import type { ParticleConfig } from './ParticleEffect';
-import { ProjectorGradientBackground } from './NoiseGradientBackground';
+
+const ProjectorGradientClient = dynamic(() => import('./ProjectorGradientClient'), {
+  ssr: false,
+  loading: () => <div className="fixed inset-0 -z-10 bg-gradient-earth" />
+});
 
 const CHOICE_LABELS = ['A', 'B', 'C', 'D'];
 
@@ -132,7 +137,7 @@ export default function ProjectorView({ roomId: _roomId }: { roomId: string }) {
       role="main"
       aria-label="投影画面"
     >
-      <ProjectorGradientBackground />
+      <ProjectorGradientClient />
 
       <div className={`relative aspect-video w-full overflow-hidden shadow-xl z-10 ${isFullscreen ? 'max-w-none rounded-none h-screen' : 'max-w-[1920px] rounded-2xl'}`} role="region" aria-label="ゲーム表示エリア">
         <div className={`relative flex h-full flex-col glass-panel-strong ${isFullscreen ? 'gap-6 px-12 py-10' : 'gap-5 px-10 py-8'}`}>

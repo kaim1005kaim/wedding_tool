@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import dynamic from 'next/dynamic';
 import type { ButtonHTMLAttributes } from 'react';
 import {
   Gauge,
@@ -24,6 +25,11 @@ import { useRoomStore } from '../lib/store/room-store';
 import { appConfig } from '../lib/env';
 import { Section, PrimaryButton } from './brand';
 import type { LucideIcon } from 'lucide-react';
+
+const MobileGradientClient = dynamic(() => import('./MobileGradientClient'), {
+  ssr: false,
+  loading: () => <div className="fixed inset-0 -z-10 bg-gradient-mobile" />
+});
 
 type QuizSummary = {
   id: string;
@@ -485,17 +491,18 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
   }
 
   return (
-    <main className="min-h-screen bg-slate-50 p-6">
+    <main className="min-h-screen p-6 relative overflow-hidden">
       <div className="mx-auto w-full px-4">
+      <MobileGradientClient />
         <Section title="管理パネル" subtitle={`Room ${roomId}`}>
-          <div className="mb-6 grid grid-cols-3 gap-4 rounded-2xl bg-white p-6 shadow-lg border border-slate-200">
+          <div className="mb-6 grid grid-cols-3 gap-4 rounded-2xl glass-panel-strong p-6 shadow-lg border border-white/30">
             <StatusItem label="モード" value={labelForMode(mode)} icon={Gauge} />
             <StatusItem label="フェーズ" value={phaseLabel(phase)} icon={PauseCircle} />
             <StatusItem label="カウントダウン" value={`${Math.max(0, Math.ceil(countdownMs / 1000))} 秒`} icon={ListChecks} />
           </div>
 
           {roomCode && (
-            <div className="mb-6 rounded-2xl bg-white p-6 shadow-lg border border-slate-200">
+            <div className="mb-6 rounded-2xl glass-panel-strong p-6 shadow-lg border border-white/30">
               <div className="flex items-start gap-6">
                 <div className="flex-1">
                   <div className="mb-4 flex items-center gap-3">
@@ -503,14 +510,14 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
                       <QrCode className="h-5 w-5 text-white" />
                     </div>
                     <div>
-                      <h3 className="text-lg font-bold text-slate-800">参加用URL</h3>
-                      <p className="text-sm text-slate-500">参加者はこのURLから参加できます</p>
+                      <h3 className="text-lg font-bold text-ink">参加用URL</h3>
+                      <p className="text-sm text-ink/70">参加者はこのURLから参加できます</p>
                     </div>
                   </div>
-                  <div className="rounded-xl bg-slate-50 p-4 border border-slate-200">
-                    <p className="mb-2 text-xs font-semibold text-slate-500 uppercase">Room Code</p>
-                    <p className="mb-3 text-2xl font-bold text-slate-800">{roomCode}</p>
-                    <p className="mb-3 text-sm text-slate-600 break-all">{`${typeof window !== 'undefined' ? window.location.origin : ''}/join/${roomCode}`}</p>
+                  <div className="rounded-xl glass-panel p-4 border border-slate-200">
+                    <p className="mb-2 text-xs font-semibold text-ink/70 uppercase">Room Code</p>
+                    <p className="mb-3 text-2xl font-bold text-ink">{roomCode}</p>
+                    <p className="mb-3 text-sm text-ink/80 break-all">{`${typeof window !== 'undefined' ? window.location.origin : ''}/join/${roomCode}`}</p>
                     <button
                       onClick={handleCopyUrl}
                       className="flex w-full items-center justify-center gap-2 rounded-lg bg-blue-500 px-4 py-3 text-sm font-semibold text-white shadow-md transition-all hover:bg-blue-600 hover:shadow-lg active:scale-[0.98]"
@@ -666,7 +673,7 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
               </AdminButton>
             </div>
             {activeQuiz && (
-              <p className="mt-4 text-sm text-slate-600">表示中: {activeQuiz.question}</p>
+              <p className="mt-4 text-sm text-ink/80">表示中: {activeQuiz.question}</p>
             )}
             {quizSettings.representativeByTable && (
               <p className="mt-2 text-sm text-blue-600">各テーブル1名のみ回答が有効です</p>
@@ -887,13 +894,13 @@ type ConfirmState = {
 
 function StatusItem({ label, value, icon: Icon }: { label: string; value: string; icon: LucideIcon }) {
   return (
-    <div className="flex items-center gap-4 rounded-xl bg-slate-50 p-4 border border-slate-200">
+    <div className="flex items-center gap-4 rounded-xl glass-panel p-4 border border-slate-200">
       <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-blue-500 shadow-md">
         <Icon className="h-6 w-6 text-white" />
       </div>
       <div className="min-w-0">
-        <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">{label}</p>
-        <p className="mt-1 text-xl font-bold text-slate-800">{value}</p>
+        <p className="text-xs font-semibold uppercase tracking-wider text-ink/70">{label}</p>
+        <p className="mt-1 text-xl font-bold text-ink">{value}</p>
       </div>
     </div>
   );
@@ -908,14 +915,14 @@ type AdminCardProps = {
 
 function AdminCard({ title, description, icon: Icon, children }: AdminCardProps) {
   return (
-    <div className="rounded-2xl bg-white p-6 shadow-lg border border-slate-200">
+    <div className="rounded-2xl glass-panel-strong p-6 shadow-lg border border-white/30">
       <div className="mb-5 flex items-start gap-3">
         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-500 shadow-md">
           <Icon className="h-5 w-5 text-white" />
         </div>
         <div className="min-w-0 flex-1">
-          <h3 className="text-lg font-bold text-slate-800">{title}</h3>
-          {description && <p className="mt-1 text-sm text-slate-500">{description}</p>}
+          <h3 className="text-lg font-bold text-ink">{title}</h3>
+          {description && <p className="mt-1 text-sm text-ink/70">{description}</p>}
         </div>
       </div>
       {children}
@@ -935,7 +942,7 @@ function AdminButton({ variant = 'primary', icon: Icon, className = '', children
       ? 'bg-blue-500 text-white shadow-lg hover:bg-blue-600 hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] focus-visible:outline-blue-400'
       : variant === 'danger'
         ? 'bg-red-500 text-white shadow-lg hover:bg-red-600 hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] focus-visible:outline-red-400'
-        : 'bg-white text-slate-700 shadow-md hover:shadow-lg hover:bg-slate-50 hover:text-blue-600 border-2 border-slate-200 hover:border-blue-300 focus-visible:outline-blue-400';
+        : 'bg-white text-slate-700 shadow-md hover:shadow-lg hover:glass-panel hover:text-blue-600 border-2 border-slate-200 hover:border-blue-300 focus-visible:outline-blue-400';
 
   return (
     <button type={type} className={`${base} ${variantClass} ${className}`} {...props}>
@@ -949,7 +956,7 @@ function TabButton({ label, active, onClick }: { label: string; active: boolean;
   return (
     <button
       type="button"
-      className={`rounded-lg px-6 py-2.5 text-sm font-semibold transition-all ${active ? 'bg-white shadow-md text-slate-800' : 'text-slate-600 hover:text-slate-800'}`}
+      className={`rounded-lg px-6 py-2.5 text-sm font-semibold transition-all ${active ? 'bg-white shadow-md text-ink' : 'text-ink/80 hover:text-ink'}`}
       onClick={onClick}
     >
       {label}
