@@ -167,7 +167,7 @@ export async function showNextQuiz(
   const client = getSupabaseServiceRoleClient();
   const { data, error } = await client
     .from('quizzes')
-    .select('id')
+    .select('id, ord')
     .eq('room_id', roomId)
     .order('ord', { ascending: true })
     

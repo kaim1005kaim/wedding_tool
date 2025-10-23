@@ -17,7 +17,9 @@ import {
   Settings,
   Copy,
   QrCode,
-  Check
+  Check,
+  Edit,
+  Trash2
 } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { useRealtimeClient } from '../lib/realtime-context';
@@ -72,6 +74,7 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
     answerIndex: 0,
     ord: ''
   });
+  const [editingQuizId, setEditingQuizId] = useState<string | null>(null);
   const [candidateForm, setCandidateForm] = useState({
     displayName: '',
     groupTag: 'all' as 'all' | 'groom_friends' | 'bride_friends'
@@ -394,6 +397,99 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
     }
   };
 
+  const handleEditQuiz = (quiz: QuizSummary) => {
+    setEditingQuizId(quiz.id);
+    // Fetch full quiz details
+    fetch(`/api/admin/rooms/${roomId}/manage/quizzes/${quiz.id}`, {
+      headers: { Authorization: `Bearer ${adminToken}` }
+    })
+      .then((res) => res.json())
+      .then((data: { quiz: { question: string; choices: string[]; answer_index: number; ord: number } }) => {
+        setQuizForm({
+          question: data.quiz.question,
+          choices: data.quiz.choices,
+          answerIndex: data.quiz.answer_index,
+          ord: data.quiz.ord?.toString() ?? ''
+        });
+      })
+      .catch(() => {
+        setManageMessage('クイズの読み込みに失敗しました');
+      });
+  };
+
+  const handleUpdateQuiz = async () => {
+    if (!isCloudMode || !adminToken || !editingQuizId) return;
+    if (!quizForm.question.trim() || quizForm.choices.some((choice) => !choice.trim())) {
+      setManageMessage('全ての項目を入力してください');
+      return;
+    }
+
+    setManageLoading(true);
+    setManageMessage(null);
+    try {
+      const response = await fetch(`/api/admin/rooms/${roomId}/manage/quizzes/${editingQuizId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${adminToken}`
+        },
+        body: JSON.stringify({
+          question: quizForm.question.trim(),
+          choices: quizForm.choices.map((choice) => choice.trim()),
+          answerIndex: quizForm.answerIndex,
+          ord: quizForm.ord ? Number.parseInt(quizForm.ord, 10) : undefined
+        })
+      });
+
+      if (!response.ok) {
+        const data = (await response.json().catch(() => ({}))) as { error?: string };
+        throw new Error(data.error ?? response.statusText);
+      }
+
+      const json = (await response.json()) as { quiz: QuizSummary };
+      setQuizzes((prev) =>
+        prev.map((q) => (q.id === editingQuizId ? json.quiz : q)).sort((a, b) => (a.ord ?? 0) - (b.ord ?? 0))
+      );
+      setQuizForm({ question: '', choices: ['', '', '', ''], answerIndex: 0, ord: '' });
+      setEditingQuizId(null);
+      setManageMessage('クイズを更新しました');
+    } catch (err) {
+      setManageMessage(err instanceof Error ? err.message : 'クイズの更新に失敗しました');
+    } finally {
+      setManageLoading(false);
+    }
+  };
+
+  const handleDeleteQuiz = async (quizId: string) => {
+    if (!isCloudMode || !adminToken) return;
+
+    setManageLoading(true);
+    setManageMessage(null);
+    try {
+      const response = await fetch(`/api/admin/rooms/${roomId}/manage/quizzes/${quizId}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${adminToken}` }
+      });
+
+      if (!response.ok) {
+        const data = (await response.json().catch(() => ({}))) as { error?: string };
+        throw new Error(data.error ?? response.statusText);
+      }
+
+      setQuizzes((prev) => prev.filter((q) => q.id !== quizId));
+      setManageMessage('クイズを削除しました');
+    } catch (err) {
+      setManageMessage(err instanceof Error ? err.message : 'クイズの削除に失敗しました');
+    } finally {
+      setManageLoading(false);
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setEditingQuizId(null);
+    setQuizForm({ question: '', choices: ['', '', '', ''], answerIndex: 0, ord: '' });
+  };
+
   const handleAddCandidate = async () => {
     if (!isCloudMode || !adminToken) return;
     if (!candidateForm.displayName.trim()) {
@@ -627,7 +723,7 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
             </div>
           </AdminCard>
 
-          <AdminCard title="ゲーム制御" description="タップチャレンジは3秒カウント後に10秒で自動終了します" icon={Play}>
+          <AdminCard title="タップチャレンジ" description="3秒カウント後に10秒で自動終了します" icon={Play}>
             <div className="flex flex-wrap gap-4">
               <AdminButton icon={Play} onClick={async () => {
                 if (autoStopRef.current) {
@@ -798,10 +894,36 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
                       <ul className="space-y-2">
                         {quizzes.map((quiz) => (
                           <li key={quiz.id} className="rounded-xl bg-white/85 px-4 py-3 text-sm shadow-brand">
-                            <p className="font-semibold text-brand-blue-700">{quiz.question}</p>
-                            <p className="text-xs text-brand-blue-700/60">
-                              表示順: {quiz.ord ?? '-'} / 登録日: {new Date(quiz.created_at).toLocaleString('ja-JP')}
-                            </p>
+                            <div className="flex items-start justify-between gap-2">
+                              <div className="flex-1">
+                                <p className="font-semibold text-brand-blue-700">{quiz.question}</p>
+                                <p className="text-xs text-brand-blue-700/60">
+                                  表示順: {quiz.ord ?? '-'} / 登録日: {new Date(quiz.created_at).toLocaleString('ja-JP')}
+                                </p>
+                              </div>
+                              <div className="flex gap-1">
+                                <button
+                                  onClick={() => handleEditQuiz(quiz)}
+                                  className="rounded-lg bg-brand-blue-100 p-2 text-brand-blue-700 hover:bg-brand-blue-200 disabled:opacity-50"
+                                  disabled={manageLoading || editingQuizId === quiz.id}
+                                  title="編集"
+                                >
+                                  <Edit className="h-4 w-4" />
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    if (confirm('このクイズを削除しますか?')) {
+                                      void handleDeleteQuiz(quiz.id);
+                                    }
+                                  }}
+                                  className="rounded-lg bg-red-100 p-2 text-red-700 hover:bg-red-200 disabled:opacity-50"
+                                  disabled={manageLoading}
+                                  title="削除"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </button>
+                              </div>
+                            </div>
                           </li>
                         ))}
                       </ul>
