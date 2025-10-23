@@ -185,7 +185,7 @@ function ProjectorGradientMesh({ params }: { params: { zoom: number; speed: numb
       gradientUV.xy += .5;
 
       // テクスチャを時間経過で交互に切り替え（20秒サイクル）
-      float colorCycle = sin(uTime * 0.15) * 0.5 + 0.5;  // 0.0 - 1.0 の範囲で変化
+      float colorCycle = sin(uTime * 0.05) * 0.5 + 0.5;  // 0.0 - 1.0 の範囲で変化
 
       vec4 gradientOrange = texture(uGradientOrange, gradientUV);
       vec4 gradientBlue = texture(uGradientBlue, gradientUV);

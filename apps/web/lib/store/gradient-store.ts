@@ -15,7 +15,7 @@ type GradientStore = {
 export const useGradientStore = create<GradientStore>((set) => ({
   params: {
     zoom: 0.3,
-    speed: 0.12,
+    speed: 0.05,
     grainAmount: 0.018,
     grainSpeed: 5.0
   },
