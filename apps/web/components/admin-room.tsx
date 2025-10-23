@@ -75,6 +75,7 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
     ord: ''
   });
   const [editingQuizId, setEditingQuizId] = useState<string | null>(null);
+  const quizFormRef = useRef<HTMLFormElement>(null);
   const [candidateForm, setCandidateForm] = useState({
     displayName: '',
     groupTag: 'all' as 'all' | 'groom_friends' | 'bride_friends'
@@ -411,6 +412,10 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
           answerIndex: data.quiz.answer_index,
           ord: data.quiz.ord?.toString() ?? ''
         });
+        // Scroll to form
+        setTimeout(() => {
+          quizFormRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 100);
       })
       .catch(() => {
         setManageMessage('クイズの読み込みに失敗しました');
@@ -822,6 +827,7 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
               {manageTab === 'quiz' ? (
                 <div className="mt-6 space-y-6">
                   <form
+                    ref={quizFormRef}
                     className="space-y-4"
                     onSubmit={(event) => {
                       event.preventDefault();
@@ -895,9 +901,13 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
                           </button>
                         </>
                       ) : (
-                        <PrimaryButton type="submit" disabled={manageLoading || !isCloudMode}>
+                        <button
+                          type="submit"
+                          disabled={manageLoading || !isCloudMode}
+                          className="rounded-xl bg-white px-6 py-3 text-sm font-bold text-ink border border-brand-blue-200 hover:bg-brand-blue-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                        >
                           クイズを追加
-                        </PrimaryButton>
+                        </button>
                       )}
                     </div>
                     </div>
@@ -911,15 +921,22 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
                         {quizzes.map((quiz) => (
                           <li key={quiz.id} className="rounded-xl bg-white/85 px-4 py-3 text-sm shadow-brand">
                             <div className="flex items-start justify-between gap-2">
-                              <div className="flex-1">
+                              <button
+                                onClick={() => handleEditQuiz(quiz)}
+                                className="flex-1 text-left hover:opacity-80 transition-opacity"
+                                disabled={manageLoading}
+                              >
                                 <p className="font-semibold text-brand-blue-700">{quiz.question}</p>
                                 <p className="text-xs text-brand-blue-700/60">
                                   表示順: {quiz.ord ?? '-'} / 登録日: {new Date(quiz.created_at).toLocaleString('ja-JP')}
                                 </p>
-                              </div>
+                              </button>
                               <div className="flex gap-1">
                                 <button
-                                  onClick={() => handleEditQuiz(quiz)}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleEditQuiz(quiz);
+                                  }}
                                   className="rounded-lg bg-brand-blue-100 p-2 text-brand-blue-700 hover:bg-brand-blue-200 disabled:opacity-50"
                                   disabled={manageLoading || editingQuizId === quiz.id}
                                   title="編集"
@@ -927,7 +944,8 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
                                   <Edit className="h-4 w-4" />
                                 </button>
                                 <button
-                                  onClick={() => {
+                                  onClick={(e) => {
+                                    e.stopPropagation();
                                     if (confirm('このクイズを削除しますか?')) {
                                       void handleDeleteQuiz(quiz.id);
                                     }
