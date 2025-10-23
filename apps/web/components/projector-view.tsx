@@ -396,13 +396,7 @@ type QuizPanelProps = {
 
 const QuizBoard = memo(function QuizBoard({ activeQuiz, quizResult }: QuizPanelProps) {
   const counts = quizResult?.perChoiceCounts ?? [0, 0, 0, 0];
-  const total = counts.reduce((acc, value) => acc + value, 0) || 1;
   const correctIndex = quizResult?.correctIndex ?? -1;
-
-  // Get background image based on question number (ord)
-  // Q1-Q5 use respective colors, Q6+ use Q1 color
-  const backgroundOrd = activeQuiz?.ord ? Math.min(activeQuiz.ord, 5) : 1;
-  const backgroundImage = `/quiz-backgrounds/${backgroundOrd}-view.png`;
 
   return (
     <motion.section
@@ -410,66 +404,109 @@ const QuizBoard = memo(function QuizBoard({ activeQuiz, quizResult }: QuizPanelP
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -30 }}
       transition={{ duration: 0.5, ease: 'easeOut' }}
-      className="grid h-full gap-6 rounded-2xl p-8 shadow-lg lg:grid-cols-2 glass-panel-strong border border-white/30"
-      style={{
-        backgroundImage: `url(${backgroundImage})`,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        backgroundRepeat: 'no-repeat'
-      }}
+      className="flex h-full flex-col gap-8 rounded-2xl p-12"
       role="region"
       aria-label="クイズ表示"
     >
-      <div className="space-y-5">
-        <h2 className="text-4xl font-bold text-white bg-gradient-terracotta px-4 py-2 rounded-xl inline-block shadow-md">クイズ</h2>
-        {activeQuiz ? (
-          <>
-            <p className="text-2xl font-bold leading-relaxed text-ink glass-panel-strong px-5 py-4 rounded-xl border border-white/30">{activeQuiz.question}</p>
-            <ul className="grid gap-3 md:grid-cols-2">
-              {activeQuiz.choices.map((choice, index) => (
-                <li
+      {/* Quiz Title */}
+      {quizResult && (
+        <motion.div
+          initial={{ scale: 0.9, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          className="text-center"
+        >
+          <h2 className="text-5xl font-bold text-ink glass-panel-strong px-8 py-4 rounded-2xl inline-block shadow-lg border border-white/30">
+            正解発表
+          </h2>
+        </motion.div>
+      )}
+
+      {!quizResult && activeQuiz?.ord && (
+        <div className="text-center">
+          <h2 className="text-5xl font-bold text-ink glass-panel-strong px-8 py-4 rounded-2xl inline-block shadow-lg border border-white/30">
+            第{activeQuiz.ord}問
+          </h2>
+        </div>
+      )}
+
+      {/* Question */}
+      {activeQuiz ? (
+        <>
+          <div className="text-center">
+            <p className="text-3xl font-bold leading-relaxed text-ink glass-panel-strong px-8 py-6 rounded-2xl border border-white/30 shadow-lg inline-block">
+              {activeQuiz.question}
+            </p>
+          </div>
+
+          {/* 2x2 Grid Layout for Choices */}
+          <div className="flex-1 grid grid-cols-2 gap-6">
+            {activeQuiz.choices.map((choice, index) => {
+              const isCorrect = quizResult && index === correctIndex;
+              const count = counts[index];
+
+              return (
+                <motion.div
                   key={choice}
-                  className={`rounded-xl px-6 py-5 text-xl shadow-md border border-white/20 ${quizResult && index === correctIndex ? 'bg-success glass-panel-strong text-ink ring-2 ring-success-600' : 'glass-panel text-ink'}`}
+                  initial={{ scale: 0.95, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ delay: index * 0.1 }}
+                  className="relative"
                 >
-                  <div className="flex items-center gap-3">
-                    <span className="text-2xl font-bold">{CHOICE_LABELS[index]}</span>
-                    <span className="flex-1 truncate text-left font-bold">{choice}</span>
+                  <div
+                    className={`h-full rounded-2xl px-8 py-6 shadow-lg border-2 transition-all ${
+                      isCorrect
+                        ? 'bg-gradient-to-br from-red-500 to-red-600 border-red-700 ring-4 ring-red-300'
+                        : 'glass-panel-strong border-white/30'
+                    }`}
+                  >
+                    {/* Correct Answer Circle */}
+                    {isCorrect && (
+                      <motion.div
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        transition={{ type: 'spring', bounce: 0.5 }}
+                        className="absolute -top-4 -left-4 w-20 h-20 rounded-full bg-red-500 border-4 border-white shadow-xl flex items-center justify-center z-10"
+                      >
+                        <span className="text-4xl font-black text-white">{CHOICE_LABELS[index]}</span>
+                      </motion.div>
+                    )}
+
+                    <div className="flex items-center justify-between gap-4 h-full">
+                      {/* Choice Label and Text */}
+                      <div className="flex items-center gap-4 flex-1">
+                        <span className={`text-4xl font-black ${isCorrect ? 'text-white' : 'text-ink'}`}>
+                          {CHOICE_LABELS[index]}.
+                        </span>
+                        <span className={`text-2xl font-bold ${isCorrect ? 'text-white' : 'text-ink'}`}>
+                          {choice}
+                        </span>
+                      </div>
+
+                      {/* Answer Count Badge */}
+                      {quizResult && (
+                        <motion.div
+                          initial={{ scale: 0, rotate: -180 }}
+                          animate={{ scale: 1, rotate: 0 }}
+                          transition={{ delay: 0.3 + index * 0.1, type: 'spring' }}
+                          className="bg-yellow-400 rounded-full px-5 py-2 shadow-lg border-2 border-yellow-500"
+                        >
+                          <span className="text-xl font-black text-ink">回答数{count}</span>
+                        </motion.div>
+                      )}
+                    </div>
                   </div>
-                </li>
-              ))}
-            </ul>
-          </>
-        ) : (
-          <p className="text-xl text-ink/70 font-bold glass-panel-strong px-5 py-4 rounded-xl border border-white/30">次のクイズを準備中です。</p>
-        )}
-      </div>
-      <div className="space-y-3 glass-panel-strong p-5 rounded-xl border border-white/30">
-        <h3 className="text-xl font-bold text-ink mb-3">回答状況</h3>
-        {quizResult ? (
-          counts.map((count, index) => {
-            const ratio = Math.round((count / total) * 100);
-            return (
-              <div key={index} className="space-y-2">
-                <div className="flex items-center justify-between text-base text-ink font-bold">
-                  <span>{CHOICE_LABELS[index]}</span>
-                  <span>{count}票</span>
-                </div>
-                <div className="h-7 overflow-hidden rounded-full glass-panel border border-white/20">
-                  <motion.div
-                    key={`${index}-${count}`}
-                    initial={{ width: 0 }}
-                    animate={{ width: `${ratio}%` }}
-                    transition={{ duration: 0.6, ease: 'easeOut' }}
-                    className={`h-full ${index === correctIndex ? 'bg-success' : 'bg-gradient-terracotta'}`}
-                  />
-                </div>
-              </div>
-            );
-          })
-        ) : (
-          <p className="text-lg text-ink/70 font-bold">回答結果は正解公開後に表示されます。</p>
-        )}
-      </div>
+                </motion.div>
+              );
+            })}
+          </div>
+        </>
+      ) : (
+        <div className="flex-1 flex items-center justify-center">
+          <p className="text-3xl text-ink/70 font-bold glass-panel-strong px-8 py-6 rounded-2xl border border-white/30">
+            次のクイズを準備中です
+          </p>
+        </div>
+      )}
     </motion.section>
   );
 });
@@ -590,13 +627,8 @@ const LotteryBoard = memo(function LotteryBoard({ lotteryResult, isSpinning, lea
     >
       <span className="text-xl uppercase tracking-[0.4em] text-white/90 font-bold glass-panel-strong px-6 py-3 rounded-xl border border-white/30">Lottery</span>
       {waiting ? (
-        <div className="space-y-6 glass-panel-strong p-10 rounded-2xl border border-white/30">
-          <p className="text-3xl font-bold text-ink">抽選カテゴリを選んでください</p>
-          <div className="flex flex-col items-center gap-3 text-xl font-bold text-ink">
-            <span className="glass-panel px-6 py-3 rounded-xl border border-white/20 w-full hover:bg-gradient-terracotta hover:text-white transition-all">・全員対象</span>
-            <span className="glass-panel px-6 py-3 rounded-xl border border-white/20 w-full hover:bg-gradient-denim hover:text-white transition-all">・新郎友人</span>
-            <span className="glass-panel px-6 py-3 rounded-xl border border-white/20 w-full hover:bg-gradient-terracotta hover:text-white transition-all">・新婦友人</span>
-          </div>
+        <div className="glass-panel-strong p-10 rounded-2xl border border-white/30">
+          <p className="text-3xl font-bold text-ink">抽選を開始してください</p>
         </div>
       ) : (
         <motion.div

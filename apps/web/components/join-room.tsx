@@ -883,67 +883,94 @@ function QuizOverlay({ phase, countdownMs, roomId, playerToken }: QuizOverlayPro
           </div>
         </div>
 
-        {/* Choices */}
-        <div className="w-full max-w-2xl grid grid-cols-1 gap-4">
+        {/* Choices - 2x2 Grid */}
+        <div className="w-full max-w-2xl grid grid-cols-2 gap-4">
           {activeQuiz.choices.map((choice, index) => {
             const isSelected = selectedChoice === index;
             const isCorrect = quizResult && index === correctIndex;
             const isWrong = quizResult && isSelected && index !== correctIndex;
+            const count = quizResult?.perChoiceCounts?.[index] ?? 0;
 
-            let buttonClass = 'glass-panel rounded-2xl p-6 shadow-lg transition-all duration-200';
+            let buttonClass = 'glass-panel rounded-2xl p-4 shadow-lg transition-all duration-200';
 
             if (quizResult) {
               if (isCorrect) {
-                buttonClass = 'rounded-2xl p-6 shadow-xl bg-success border-2 border-success-600';
+                buttonClass = 'rounded-2xl p-4 shadow-xl bg-gradient-to-br from-red-500 to-red-600 border-2 border-red-700';
               } else if (isWrong) {
-                buttonClass = 'rounded-2xl p-6 shadow-xl bg-error border-2 border-error-600';
+                buttonClass = 'rounded-2xl p-4 shadow-xl bg-error border-2 border-error-600';
               } else {
-                buttonClass = 'rounded-2xl p-6 shadow-md glass-panel';
+                buttonClass = 'rounded-2xl p-4 shadow-md glass-panel';
               }
             } else if (isSelected) {
-              buttonClass = 'rounded-2xl p-6 shadow-xl bg-gradient-denim border-2 border-denim-deep scale-105';
+              buttonClass = 'rounded-2xl p-4 shadow-xl bg-gradient-denim border-2 border-denim-deep scale-105';
             } else if (hasAnswered) {
-              buttonClass = 'rounded-2xl p-6 shadow-md glass-panel opacity-70';
+              buttonClass = 'rounded-2xl p-4 shadow-md glass-panel opacity-70';
             } else {
-              buttonClass = 'glass-panel-strong rounded-2xl p-6 shadow-lg border border-white/30 hover:shadow-xl hover:scale-105 active:scale-95';
+              buttonClass = 'glass-panel-strong rounded-2xl p-4 shadow-lg border border-white/30 hover:shadow-xl hover:scale-105 active:scale-95';
             }
 
             return (
-              <button
+              <motion.button
                 key={index}
                 onClick={(e) => handleChoiceSelect(index, e)}
                 disabled={hasAnswered || isSubmitting || !!quizResult}
-                className={buttonClass}
+                className={`${buttonClass} relative`}
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ delay: index * 0.1 }}
               >
-                <div className="flex items-center gap-4">
-                  <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-2xl font-bold ${
-                    quizResult
-                      ? isCorrect
-                        ? 'bg-success-600 text-white'
-                        : isWrong
-                          ? 'bg-error-600 text-white'
-                          : 'bg-gradient-terracotta text-white'
-                      : isSelected
-                        ? 'bg-denim-deep text-white'
-                        : 'bg-gradient-terracotta text-white'
-                  }`}>
-                    {CHOICE_LABELS[index]}
+                {/* Correct Answer Circle */}
+                {isCorrect && (
+                  <motion.div
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    transition={{ type: 'spring', bounce: 0.5 }}
+                    className="absolute -top-3 -left-3 w-14 h-14 rounded-full bg-red-500 border-4 border-white shadow-xl flex items-center justify-center z-10"
+                  >
+                    <span className="text-2xl font-black text-white">{CHOICE_LABELS[index]}</span>
+                  </motion.div>
+                )}
+
+                <div className="flex flex-col gap-3">
+                  {/* Choice Label and Text */}
+                  <div className="flex items-center gap-2">
+                    <span className={`text-2xl font-black ${
+                      quizResult
+                        ? isCorrect || isWrong
+                          ? 'text-white'
+                          : 'text-ink'
+                        : isSelected
+                          ? 'text-white'
+                          : 'text-ink'
+                    }`}>
+                      {CHOICE_LABELS[index]}.
+                    </span>
+                    <span className={`flex-1 text-left text-base font-bold ${
+                      quizResult
+                        ? isCorrect || isWrong
+                          ? 'text-white'
+                          : 'text-ink'
+                        : isSelected
+                          ? 'text-white'
+                          : 'text-ink'
+                    }`}>
+                      {choice}
+                    </span>
                   </div>
-                  <span className={`flex-1 text-left text-xl font-semibold ${
-                    quizResult
-                      ? isCorrect || isWrong
-                        ? 'text-white'
-                        : 'text-ink'
-                      : isSelected
-                        ? 'text-white'
-                        : 'text-ink'
-                  }`}>
-                    {choice}
-                  </span>
-                  {isCorrect && <span className="text-3xl">✓</span>}
-                  {isWrong && <span className="text-3xl">✗</span>}
+
+                  {/* Answer Count Badge */}
+                  {quizResult && (
+                    <motion.div
+                      initial={{ scale: 0, rotate: -180 }}
+                      animate={{ scale: 1, rotate: 0 }}
+                      transition={{ delay: 0.2 + index * 0.1, type: 'spring' }}
+                      className="self-end bg-yellow-400 rounded-full px-3 py-1 shadow-md border-2 border-yellow-500"
+                    >
+                      <span className="text-sm font-black text-ink">回答数{count}</span>
+                    </motion.div>
+                  )}
                 </div>
-              </button>
+              </motion.button>
             );
           })}
         </div>
