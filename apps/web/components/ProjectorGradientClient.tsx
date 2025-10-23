@@ -3,6 +3,7 @@
 import { useRef, useEffect, useState } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
+import { useGradientStore } from '@/lib/store/gradient-store';
 
 function ProjectorGradientMesh({ params }: { params: { zoom: number; speed: number; grainAmount: number; grainSpeed: number } }) {
   const materialRef = useRef<THREE.ShaderMaterial>(null);
@@ -228,12 +229,7 @@ function ProjectorGradientMesh({ params }: { params: { zoom: number; speed: numb
 export default function ProjectorGradientClient({ className }: { className?: string }) {
   const [hasError, setHasError] = useState(false);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const params = {
-    zoom: 0.3,
-    speed: 0.12,
-    grainAmount: 0.018,
-    grainSpeed: 5.0
-  };
+  const params = useGradientStore((state) => state.params);
 
   useEffect(() => {
     const handleContextLost = (event: Event) => {

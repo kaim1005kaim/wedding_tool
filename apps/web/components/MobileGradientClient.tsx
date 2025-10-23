@@ -3,8 +3,10 @@
 import { useRef, useEffect, useState } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
+import { useGradientStore } from '@/lib/store/gradient-store';
 
 function MobileGradientMesh() {
+  const params = useGradientStore((state) => state.params);
   const materialRef = useRef<THREE.ShaderMaterial>(null);
   const [textures, setTextures] = useState<{ gradientOrange: THREE.Texture | null; gradientBlue: THREE.Texture | null; noise: THREE.Texture | null }>({
     gradientOrange: null,
@@ -39,10 +41,10 @@ function MobileGradientMesh() {
   }>({
     uTime: { value: 0 },
     uResolution: { value: new THREE.Vector2(typeof window !== 'undefined' ? window.innerWidth : 375, typeof window !== 'undefined' ? window.innerHeight : 667) },
-    uZoom: { value: 0.3 },
-    uSpeed: { value: 0.12 },
-    uGrainAmount: { value: 0.018 },
-    uGrainSpeed: { value: 5.0 },
+    uZoom: { value: params.zoom },
+    uSpeed: { value: params.speed },
+    uGrainAmount: { value: params.grainAmount },
+    uGrainSpeed: { value: params.grainSpeed },
     uNoise: { value: null },
     uGradientOrange: { value: null },
     uGradientBlue: { value: null },
@@ -205,10 +207,10 @@ function MobileGradientMesh() {
   useFrame((state) => {
     if (uniformsRef.current) {
       uniformsRef.current.uTime.value = state.clock.elapsedTime;
-      uniformsRef.current.uZoom.value = 0.3;
-      uniformsRef.current.uSpeed.value = 0.12;
-      uniformsRef.current.uGrainAmount.value = 0.018;
-      uniformsRef.current.uGrainSpeed.value = 5.0;
+      uniformsRef.current.uZoom.value = params.zoom;
+      uniformsRef.current.uSpeed.value = params.speed;
+      uniformsRef.current.uGrainAmount.value = params.grainAmount;
+      uniformsRef.current.uGrainSpeed.value = params.grainSpeed;
     }
   });
 

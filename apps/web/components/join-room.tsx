@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import dynamic from 'next/dynamic';
+import { motion } from 'framer-motion';
 import { useRealtimeClient } from '../lib/realtime-context';
 import { useRoomStore } from '../lib/store/room-store';
 import { appConfig } from '../lib/env';
