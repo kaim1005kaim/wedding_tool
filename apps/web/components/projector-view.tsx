@@ -638,10 +638,7 @@ const LotteryBoard = memo(function LotteryBoard({ lotteryResult, isSpinning, lea
           transition={{ duration: isSpinning ? 3 : 0.6, ease: 'easeOut' }}
           className="rounded-3xl glass-panel-strong px-16 py-14 shadow-lg border border-white/30"
         >
-          {displayKind ? (
-            <p className="text-lg uppercase tracking-[0.4em] text-white font-bold bg-gradient-terracotta px-4 py-2 rounded-lg inline-block shadow-md">{displayKind}</p>
-          ) : null}
-          <p className="mt-6 text-[min(10vw,9rem)] font-bold text-ink">{displayName}</p>
+          <p className="text-[min(10vw,9rem)] font-bold text-ink">{displayName}</p>
         </motion.div>
       )}
     </motion.section>
