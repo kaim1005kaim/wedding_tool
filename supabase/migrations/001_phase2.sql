@@ -153,6 +153,7 @@ begin
     where p.room_id = p_room_id
       and coalesce(p.is_present, true)
       and not exists (select 1 from lottery_picks lp where lp.room_id = p_room_id and lp.player_id = p.id)
+      and (p_kind = 'all' or p.group_tag = p_kind)
   )
   select id, display_name, table_no, seat_no into winner
   from candidates

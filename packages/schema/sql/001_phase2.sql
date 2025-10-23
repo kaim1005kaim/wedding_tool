@@ -43,8 +43,6 @@ create table if not exists awarded_quizzes (
   awarded_at timestamptz default now()
 );
 
-alter table if exists players add column if not exists group_tag text;
-
 alter table if exists room_snapshots enable row level security;
 drop policy if exists rs_public_read on room_snapshots;
 create policy rs_public_read on room_snapshots
@@ -145,10 +143,6 @@ declare
   winner record;
   result jsonb;
 begin
-  if p_kind not in ('all', 'groom_friends', 'bride_friends') then
-    raise exception 'Unsupported lottery kind %', p_kind;
-  end if;
-
   if exists (select 1 from lottery_picks where room_id = p_room_id and kind = p_kind) then
     raise exception 'Lottery % already drawn', p_kind;
   end if;
@@ -158,8 +152,8 @@ begin
     from players p
     where p.room_id = p_room_id
       and coalesce(p.is_present, true)
-      and (p_kind = 'all' or p.group_tag = p_kind)
       and not exists (select 1 from lottery_picks lp where lp.room_id = p_room_id and lp.player_id = p.id)
+      and (p_kind = 'all' or p.group_tag = p_kind)
   )
   select id, display_name, table_no, seat_no into winner
   from candidates
