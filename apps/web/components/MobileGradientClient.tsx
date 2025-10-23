@@ -186,7 +186,7 @@ function MobileGradientMesh() {
       gradientUV.xy += .5;
 
       // テクスチャを時間経過で交互に切り替え
-      float colorCycle = sin(uTime * 0.15) * 0.5 + 0.5;
+      float colorCycle = sin(uTime * 0.05) * 0.5 + 0.5;
 
       vec4 gradientOrange = texture(uGradientOrange, gradientUV);
       vec4 gradientBlue = texture(uGradientBlue, gradientUV);
