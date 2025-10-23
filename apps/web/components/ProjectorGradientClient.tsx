@@ -92,16 +92,19 @@ function ProjectorGradientMesh() {
     void main() {
       vec2 uv = vUv;
 
-      // Parameters from reference code
-      float zoom = 0.5;
+      // 16:9 projector optimized parameters
+      float zoom = 0.8;  // Increased from 0.5 for tighter gradient
       float speed = 0.5;
       float grainAmount = 0.07;
       float grainSpeed = 5.0;
 
-      // First layer - generates distortion pattern
-      vec2 gradientShaderUv2 = uv * zoom;
-      gradientShaderUv2.xy *= (uResolution.x / uResolution.y) * 10.0;
-      gradientShaderUv2.y *= uResolution.y / uResolution.x;
+      // Adjust UV for 16:9 aspect ratio
+      vec2 aspectUv = uv;
+      aspectUv.x *= 16.0 / 9.0;
+
+      // First layer - generates distortion pattern (scaled down for visibility)
+      vec2 gradientShaderUv2 = aspectUv * zoom;
+      gradientShaderUv2.xy *= 6.0;  // Reduced from 10.0 for smaller noise pattern
       gradientShaderUv2.xy += uTime * 0.05;
       gradientShaderUv2 = rotateUV(gradientShaderUv2, uTime * 0.05);
 
@@ -112,10 +115,9 @@ function ProjectorGradientMesh() {
       vec2 gradientUV = uv;
       gradientUV = rotateUV(gradientUV, uTime * speed);
       gradientUV.xy -= 0.5;
-      gradientUV.y *= uResolution.y / uResolution.x;
       gradientUV.xy += 0.5;
       gradientUV.xy -= 0.5;
-      gradientUV.y *= gradientShader2.r * 4.0;
+      gradientUV.y *= gradientShader2.r * 3.0;  // Reduced from 4.0 for gentler distortion
       gradientUV.xy += 0.5;
 
       // 時間経過で色変化: オレンジ(#f98d28) → ティールブルー(#3ba1b7)
