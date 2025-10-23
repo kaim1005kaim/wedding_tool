@@ -992,7 +992,7 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
                         onChange={(event) =>
                           setCandidateForm((prev) => ({
                             ...prev,
-                            groupTag: event.target.value as 'all' | 'groom_friends' | 'bride_friends'
+                            groupTag: event.target.value as 'all' | 'groom' | 'bride'
                           }))
                         }
                       >
