@@ -14,7 +14,8 @@ export async function switchRoomMode(roomId: string, to: 'countup' | 'quiz' | 'l
     phase: 'idle',
     countdown_ms: 0,
     current_quiz: null,
-    quiz_result: null
+    quiz_result: null,
+    lottery_result: null
   });
   await appendAuditLog(roomId, 'mode:switch', { to });
 }

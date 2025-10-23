@@ -628,7 +628,7 @@ const LotteryBoard = memo(function LotteryBoard({ lotteryResult, isSpinning, lea
       <span className="text-xl uppercase tracking-[0.4em] text-white/90 font-bold glass-panel-strong px-6 py-3 rounded-xl border border-white/30">Lottery</span>
       {waiting ? (
         <div className="glass-panel-strong p-10 rounded-2xl border border-white/30">
-          <p className="text-3xl font-bold text-ink">抽選を開始してください</p>
+          <p className="text-3xl font-bold text-ink">少々お待ちください</p>
         </div>
       ) : (
         <motion.div
