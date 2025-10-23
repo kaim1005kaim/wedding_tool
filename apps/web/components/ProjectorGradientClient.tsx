@@ -6,6 +6,45 @@ import * as THREE from 'three';
 
 function ProjectorGradientMesh({ params }: { params: { zoom: number; speed: number; grainAmount: number; grainSpeed: number } }) {
   const materialRef = useRef<THREE.ShaderMaterial>(null);
+  const [textures, setTextures] = useState<{ gradientOrange: THREE.Texture | null; gradientBlue: THREE.Texture | null; noise: THREE.Texture | null }>({
+    gradientOrange: null,
+    gradientBlue: null,
+    noise: null
+  });
+
+  useEffect(() => {
+    const textureLoader = new THREE.TextureLoader();
+    const gradientOrangeTexture = textureLoader.load('/textures/gradient.jpg');
+    const gradientBlueTexture = textureLoader.load('/textures/gradient_blue.png');
+    const noiseTexture = textureLoader.load('/textures/perlin.png');
+
+    gradientOrangeTexture.wrapS = gradientOrangeTexture.wrapT = THREE.RepeatWrapping;
+    gradientBlueTexture.wrapS = gradientBlueTexture.wrapT = THREE.RepeatWrapping;
+    noiseTexture.wrapS = noiseTexture.wrapT = THREE.RepeatWrapping;
+
+    setTextures({ gradientOrange: gradientOrangeTexture, gradientBlue: gradientBlueTexture, noise: noiseTexture });
+  }, []);
+
+  const uniformsRef = useRef({
+    uTime: { value: 0 },
+    uResolution: { value: new THREE.Vector2(typeof window !== 'undefined' ? window.innerWidth : 1920, typeof window !== 'undefined' ? window.innerHeight : 1080) },
+    uZoom: { value: params.zoom },
+    uSpeed: { value: params.speed },
+    uGrainAmount: { value: params.grainAmount },
+    uGrainSpeed: { value: params.grainSpeed },
+    uNoise: { value: null },
+    uGradientOrange: { value: null },
+    uGradientBlue: { value: null },
+    uCursorTexture: { value: null }
+  });
+
+  useEffect(() => {
+    if (textures.gradientOrange && textures.gradientBlue && textures.noise && uniformsRef.current) {
+      uniformsRef.current.uGradientOrange.value = textures.gradientOrange;
+      uniformsRef.current.uGradientBlue.value = textures.gradientBlue;
+      uniformsRef.current.uNoise.value = textures.noise;
+    }
+  }, [textures]);
 
   const vertexShader = `
     varying vec2 vUv;
@@ -17,11 +56,15 @@ function ProjectorGradientMesh({ params }: { params: { zoom: number; speed: numb
 
   const fragmentShader = `
     uniform float uTime;
-    uniform vec2 uResolution;
-    uniform float uZoom;
     uniform float uSpeed;
+    uniform float uZoom;
     uniform float uGrainAmount;
     uniform float uGrainSpeed;
+    uniform vec2 uResolution;
+    uniform sampler2D uNoise;
+    uniform sampler2D uGradientOrange;
+    uniform sampler2D uGradientBlue;
+    uniform sampler2D uCursorTexture;
     varying vec2 vUv;
 
     // Simplex Noise
@@ -74,8 +117,9 @@ function ProjectorGradientMesh({ params }: { params: { zoom: number; speed: numb
     float gradientShaderFbm(vec2 pos, float time, float speed) {
       float a = sin(time * speed);
       float b = cos(time * speed);
-      float total = 0.0;
-      total += 0.25 * snoise(pos) * b;
+      mat2 m = mat2(-0.80, 0.36, -0.60, -0.48);
+      float total;
+      total = 0.2500 * snoise(pos) * b;
       return total;
     }
 
@@ -95,85 +139,76 @@ function ProjectorGradientMesh({ params }: { params: { zoom: number; speed: numb
 
     void main() {
       vec2 uv = vUv;
+      vec3 color = vec3(0.2);
 
-      // Parameters from uniforms
-      float zoom = uZoom;
-      float speed = uSpeed;
-      float grainAmount = uGrainAmount;
-      float grainSpeed = uGrainSpeed;
+      vec4 noiseTex = texture2D(uNoise, uv);
+      vec4 mouseTex = texture2D(uCursorTexture, uv);
+      float amplitude = 0.3;
 
-      // Adjust UV for 16:9 aspect ratio
-      vec2 aspectUv = uv;
-      aspectUv.x *= 16.0 / 9.0;
+      // Convert normalized values into regular unit vector
+      float vx = -(mouseTex.r * 2. - 1.);
+      float vy = (mouseTex.g * 2. - 1.);
 
-      // First layer - generates distortion pattern (scaled down for visibility)
-      vec2 gradientShaderUv2 = aspectUv * zoom;
-      gradientShaderUv2.xy *= 6.0;  // Reduced from 10.0 for smaller noise pattern
-      gradientShaderUv2.xy += uTime * 0.05;
-      gradientShaderUv2 = rotateUV(gradientShaderUv2, uTime * 0.05);
+      uv.x += noiseTex.r * vx * amplitude * mouseTex.b;
+      uv.y += noiseTex.r * vy * amplitude * mouseTex.b;
 
-      vec4 gradientShader2 = gradientShader(gradientShaderUv2, uTime, 0.0, 1.0);
-      gradientShader2 /= 0.25;
-
-      // Apply distortion to UV coordinates
       vec2 gradientUV = uv;
-      gradientUV = rotateUV(gradientUV, uTime * speed);
-      gradientUV.xy -= 0.5;
-      gradientUV.xy += 0.5;
-      gradientUV.xy -= 0.5;
-      gradientUV.y *= gradientShader2.r * 3.0;  // Reduced from 4.0 for gentler distortion
-      gradientUV.xy += 0.5;
 
-      // 時間経過で色変化: オレンジ(#f98d28) → ティールブルー(#3ba1b7)
-      float colorCycle = sin(uTime * 0.1) * 0.5 + 0.5;
-      vec3 colorOrange = vec3(0.976, 0.553, 0.157);  // #f98d28
-      vec3 colorTeal = vec3(0.231, 0.631, 0.718);     // #3ba1b7
+      vec2 gradientShaderUv2 = uv * uZoom;
 
-      // Create smooth gradient base
-      vec3 color1 = colorOrange;
-      vec3 color2 = colorTeal;
+      gradientShaderUv2.xy *= (uResolution.x / uResolution.y) * 10.;
+      gradientShaderUv2.y *= uResolution.y / uResolution.x;
+      gradientShaderUv2.xy += uTime * .05;
+      gradientShaderUv2 = rotateUV(gradientShaderUv2, uTime * .05);
 
-      // Mix colors based on distorted UV
-      float gradientMix = smoothstep(0.0, 1.0, gradientUV.y);
-      vec3 gradientColor = mix(color1, color2, gradientMix);
+      vec4 gradientShader2 = gradientShader(gradientShaderUv2, uTime, 0.0, 1.);
+      gradientShader2 /= .25;
 
-      // Add temporal color cycle
-      vec3 color = mix(gradientColor, mix(color2, color1, gradientMix), colorCycle * 0.3);
+      gradientUV = rotateUV(gradientUV, uTime * uSpeed);
+      gradientUV.xy -= .5;
+      gradientUV.y *= uResolution.y / uResolution.x;
+      gradientUV.xy += .5;
+      gradientUV.xy -= .5;
+      gradientUV.y *= gradientShader2.r * 4.;
+      gradientUV.xy += .5;
 
-      // Grain effect (subtle)
+      // テクスチャを時間経過で交互に切り替え（20秒サイクル）
+      float colorCycle = sin(uTime * 0.15) * 0.5 + 0.5;  // 0.0 - 1.0 の範囲で変化
+
+      vec4 gradientOrange = texture(uGradientOrange, gradientUV);
+      vec4 gradientBlue = texture(uGradientBlue, gradientUV);
+
+      // smoothstep で美しく補間
+      float mixFactor = smoothstep(0.3, 0.7, colorCycle);
+      vec4 gradientTexture = mix(gradientOrange, gradientBlue, mixFactor);
+
       vec2 grainedUv = uv + snoise(uv * 400.0);
+      float grainSpeed = uGrainSpeed;
       float grain = snoise(grainedUv + uTime * random(grainedUv) * grainSpeed);
-      vec3 bg = vec3(grain) * grainAmount;
+      vec3 bg = vec3(grain) * uGrainAmount;
 
-      gl_FragColor = vec4(color + bg, 1.0);
+      gl_FragColor = vec4(gradientTexture.rgb + bg, 1.);
     }
   `;
 
   useFrame((state) => {
-    if (materialRef.current) {
-      materialRef.current.uniforms.uTime.value = state.clock.elapsedTime;
-      materialRef.current.uniforms.uZoom.value = params.zoom;
-      materialRef.current.uniforms.uSpeed.value = params.speed;
-      materialRef.current.uniforms.uGrainAmount.value = params.grainAmount;
-      materialRef.current.uniforms.uGrainSpeed.value = params.grainSpeed;
+    if (uniformsRef.current) {
+      uniformsRef.current.uTime.value = state.clock.elapsedTime;
+      uniformsRef.current.uZoom.value = params.zoom;
+      uniformsRef.current.uSpeed.value = params.speed;
+      uniformsRef.current.uGrainAmount.value = params.grainAmount;
+      uniformsRef.current.uGrainSpeed.value = params.grainSpeed;
     }
   });
 
   return (
-    <mesh>
-      <planeGeometry args={[2, 2]} />
+    <mesh scale={[2, 2, 1]}>
+      <planeGeometry args={[2, 2, 1, 1]} />
       <shaderMaterial
         ref={materialRef}
         vertexShader={vertexShader}
         fragmentShader={fragmentShader}
-        uniforms={{
-          uTime: { value: 0 },
-          uResolution: { value: new THREE.Vector2(window.innerWidth, window.innerHeight) },
-          uZoom: { value: params.zoom },
-          uSpeed: { value: params.speed },
-          uGrainAmount: { value: params.grainAmount },
-          uGrainSpeed: { value: params.grainSpeed }
-        }}
+        uniforms={uniformsRef.current}
       />
     </mesh>
   );
@@ -182,13 +217,12 @@ function ProjectorGradientMesh({ params }: { params: { zoom: number; speed: numb
 export default function ProjectorGradientClient({ className }: { className?: string }) {
   const [hasError, setHasError] = useState(false);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [showControls, setShowControls] = useState(true);
-  const [params, setParams] = useState({
-    zoom: 0.8,
-    speed: 0.5,
-    grainAmount: 0.07,
+  const params = {
+    zoom: 0.3,
+    speed: 0.12,
+    grainAmount: 0.018,
     grainSpeed: 5.0
-  });
+  };
 
   useEffect(() => {
     const handleContextLost = (event: Event) => {
@@ -224,13 +258,14 @@ export default function ProjectorGradientClient({ className }: { className?: str
       <div className={`fixed inset-0 -z-10 w-screen h-screen ${className}`} style={{ margin: 0, padding: 0 }}>
         <Canvas
           ref={canvasRef}
-          camera={{ position: [0, 0, 1], fov: 75 }}
+          orthographic
+          camera={{ position: [0, 0, 1], zoom: 1, left: -1, right: 1, top: 1, bottom: -1, near: 0.1, far: 1000 }}
           gl={{
             antialias: false,
             alpha: false,
             powerPreference: 'high-performance'
           }}
-          dpr={[1, 1]}
+          dpr={[1, 2]}
           style={{ display: 'block', width: '100vw', height: '100vh' }}
           onCreated={(state) => {
             console.log('Three.js Canvas created successfully');
@@ -243,100 +278,6 @@ export default function ProjectorGradientClient({ className }: { className?: str
           <ProjectorGradientMesh params={params} />
         </Canvas>
       </div>
-
-      {/* Parameter Controls */}
-      {showControls && (
-        <div className="fixed top-4 right-4 z-[100] glass-panel-strong rounded-2xl p-6 shadow-xl border border-white/30 w-80">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-bold text-white">Gradient Controls</h3>
-            <button
-              onClick={() => setShowControls(false)}
-              className="text-white hover:text-red-400 text-xl font-bold"
-            >
-              ✕
-            </button>
-          </div>
-
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-bold text-white mb-2">
-                uZoom: {params.zoom.toFixed(2)}
-              </label>
-              <input
-                type="range"
-                min="0"
-                max="2"
-                step="0.01"
-                value={params.zoom}
-                onChange={(e) => setParams({ ...params, zoom: parseFloat(e.target.value) })}
-                className="w-full"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-bold text-white mb-2">
-                uSpeed: {params.speed.toFixed(2)}
-              </label>
-              <input
-                type="range"
-                min="0"
-                max="2"
-                step="0.01"
-                value={params.speed}
-                onChange={(e) => setParams({ ...params, speed: parseFloat(e.target.value) })}
-                className="w-full"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-bold text-white mb-2">
-                uGrainAmount: {params.grainAmount.toFixed(3)}
-              </label>
-              <input
-                type="range"
-                min="0"
-                max="0.5"
-                step="0.001"
-                value={params.grainAmount}
-                onChange={(e) => setParams({ ...params, grainAmount: parseFloat(e.target.value) })}
-                className="w-full"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-bold text-white mb-2">
-                uGrainSpeed: {params.grainSpeed.toFixed(1)}
-              </label>
-              <input
-                type="range"
-                min="0"
-                max="20"
-                step="0.1"
-                value={params.grainSpeed}
-                onChange={(e) => setParams({ ...params, grainSpeed: parseFloat(e.target.value) })}
-                className="w-full"
-              />
-            </div>
-
-            <div className="pt-4 border-t border-white/20">
-              <p className="text-xs text-white/70 mb-2">Current values:</p>
-              <pre className="text-xs text-white/90 bg-black/20 p-2 rounded">
-                {JSON.stringify(params, null, 2)}
-              </pre>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Toggle button when hidden */}
-      {!showControls && (
-        <button
-          onClick={() => setShowControls(true)}
-          className="fixed top-4 right-4 z-[100] glass-panel-strong rounded-xl px-4 py-2 shadow-lg border border-white/30 text-white font-bold hover:bg-white/20"
-        >
-          ⚙️ Controls
-        </button>
-      )}
     </>
   );
 }
