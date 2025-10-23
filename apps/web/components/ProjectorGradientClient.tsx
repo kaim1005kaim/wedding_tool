@@ -25,7 +25,18 @@ function ProjectorGradientMesh({ params }: { params: { zoom: number; speed: numb
     setTextures({ gradientOrange: gradientOrangeTexture, gradientBlue: gradientBlueTexture, noise: noiseTexture });
   }, []);
 
-  const uniformsRef = useRef({
+  const uniformsRef = useRef<{
+    uTime: { value: number };
+    uResolution: { value: THREE.Vector2 };
+    uZoom: { value: number };
+    uSpeed: { value: number };
+    uGrainAmount: { value: number };
+    uGrainSpeed: { value: number };
+    uNoise: { value: THREE.Texture | null };
+    uGradientOrange: { value: THREE.Texture | null };
+    uGradientBlue: { value: THREE.Texture | null };
+    uCursorTexture: { value: THREE.Texture | null };
+  }>({
     uTime: { value: 0 },
     uResolution: { value: new THREE.Vector2(typeof window !== 'undefined' ? window.innerWidth : 1920, typeof window !== 'undefined' ? window.innerHeight : 1080) },
     uZoom: { value: params.zoom },
