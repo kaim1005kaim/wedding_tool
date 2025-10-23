@@ -405,12 +405,13 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
       headers: { Authorization: `Bearer ${adminToken}` }
     })
       .then((res) => res.json())
-      .then((data: { quiz: { question: string; choices: string[]; answer_index: number; ord: number } }) => {
+      .then((data) => {
+        const quizData = data as { quiz: { question: string; choices: string[]; answer_index: number; ord: number } };
         setQuizForm({
-          question: data.quiz.question,
-          choices: data.quiz.choices,
-          answerIndex: data.quiz.answer_index,
-          ord: data.quiz.ord?.toString() ?? ''
+          question: quizData.quiz.question,
+          choices: quizData.quiz.choices,
+          answerIndex: quizData.quiz.answer_index,
+          ord: quizData.quiz.ord?.toString() ?? ''
         });
         // Scroll to form
         setTimeout(() => {
