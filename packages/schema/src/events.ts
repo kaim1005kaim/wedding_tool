@@ -26,8 +26,8 @@ export const modeSwitchEventSchema = z.object({
   to: z.enum(['idle', 'countup', 'quiz', 'lottery'])
 });
 
-const legacyLotteryKinds = ['escort', 'cake_groom', 'cake_bride'] as const;
-const currentLotteryKinds = ['all', 'groom_friends', 'bride_friends'] as const;
+const legacyLotteryKinds = ['escort', 'cake_groom', 'cake_bride', 'groom_friends', 'bride_friends'] as const;
+const currentLotteryKinds = ['all', 'groom', 'bride'] as const;
 
 export const lotteryDrawEventSchema = z.object({
   kind: z.enum(currentLotteryKinds)

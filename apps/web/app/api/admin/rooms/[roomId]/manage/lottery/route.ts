@@ -6,7 +6,7 @@ import { getSupabaseServiceRoleClient } from '@/lib/supabase/server';
 
 const createCandidateSchema = z.object({
   displayName: z.string().min(1).max(120),
-  groupTag: z.enum(['all', 'groom_friends', 'bride_friends'])
+  groupTag: z.enum(['all', 'groom', 'bride'])
 });
 
 export async function GET(request: Request, { params }: { params: { roomId: string } }) {

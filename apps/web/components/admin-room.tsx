@@ -78,7 +78,7 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
   const quizFormRef = useRef<HTMLFormElement>(null);
   const [candidateForm, setCandidateForm] = useState({
     displayName: '',
-    groupTag: 'all' as 'all' | 'groom_friends' | 'bride_friends'
+    groupTag: 'all' as 'all' | 'groom' | 'bride'
   });
   const [quizSettings, setQuizSettings] = useState({
     representativeByTable: true
@@ -550,7 +550,7 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
     });
   };
 
-  const handleLottery = (kind: 'all' | 'groom_friends' | 'bride_friends') => {
+  const handleLottery = (kind: 'all' | 'groom' | 'bride') => {
     openConfirm({
       title: '抽選を実行しますか？',
       description: '抽選はやり直しできません。',
@@ -792,11 +792,11 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
               <AdminButton variant="secondary" icon={Dice1} onClick={() => handleLottery('all')}>
                 全員対象
               </AdminButton>
-              <AdminButton variant="secondary" icon={Dice2} onClick={() => handleLottery('groom_friends')}>
-                新郎友人
+              <AdminButton variant="secondary" icon={Dice2} onClick={() => handleLottery('groom')}>
+                新郎
               </AdminButton>
-              <AdminButton variant="secondary" icon={Dice3} onClick={() => handleLottery('bride_friends')}>
-                新婦友人
+              <AdminButton variant="secondary" icon={Dice3} onClick={() => handleLottery('bride')}>
+                新婦
               </AdminButton>
             </div>
           </AdminCard>
@@ -997,8 +997,8 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
                         }
                       >
                         <option value="all">全員対象</option>
-                        <option value="groom_friends">新郎友人</option>
-                        <option value="bride_friends">新婦友人</option>
+                        <option value="groom">新郎</option>
+                        <option value="bride">新婦</option>
                       </select>
                     </div>
                     <PrimaryButton type="submit" disabled={manageLoading || !isCloudMode}>
@@ -1176,10 +1176,34 @@ function lotteryKindLabel(kind: string) {
   switch (kind) {
     case 'all':
       return '全員対象';
+    case 'groom':
+      return (
+        <span className="flex items-center gap-2">
+          新郎
+          <span className="inline-block w-4 h-4 bg-cyan-400 rounded"></span>
+        </span>
+      );
+    case 'bride':
+      return (
+        <span className="flex items-center gap-2">
+          新婦
+          <span className="inline-block w-4 h-4 bg-orange-400 rounded"></span>
+        </span>
+      );
     case 'groom_friends':
-      return '新郎友人';
+      return (
+        <span className="flex items-center gap-2">
+          新郎
+          <span className="inline-block w-4 h-4 bg-cyan-400 rounded"></span>
+        </span>
+      );
     case 'bride_friends':
-      return '新婦友人';
+      return (
+        <span className="flex items-center gap-2">
+          新婦
+          <span className="inline-block w-4 h-4 bg-orange-400 rounded"></span>
+        </span>
+      );
     case 'escort':
       return 'エスコート';
     case 'cake_groom':
