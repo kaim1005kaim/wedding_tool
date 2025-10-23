@@ -947,7 +947,7 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
                                 <button
                                   onClick={(e) => {
                                     e.stopPropagation();
-                                    if (confirm('このクイズを削除しますか?')) {
+                                    if (window.confirm('このクイズを削除しますか?')) {
                                       void handleDeleteQuiz(quiz.id);
                                     }
                                   }}
