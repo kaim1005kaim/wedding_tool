@@ -40,7 +40,7 @@ export const quizShowBroadcastSchema = z.object({
   question: z.string(),
   choices: z.array(z.string()).length(4),
   deadlineTs: z.number(),
-  ord: z.number().int().min(1)
+  ord: z.number().int().min(1).optional().nullable()
 });
 
 export const quizResultBroadcastSchema = z.object({
