@@ -138,6 +138,7 @@ export async function showQuiz(
 
   const startTs = Date.now();
 
+  // Clear previous quiz result when starting new quiz
   await upsertRoomSnapshot(roomId, {
     mode: 'quiz',
     phase: 'running',
@@ -205,7 +206,8 @@ export async function revealQuiz(roomId: string, quizId: string, awardedPoints =
     throw error;
   }
 
-  await upsertRoomSnapshot(roomId, { current_quiz: null });
+  // Keep current_quiz visible - it will be cleared when next quiz starts
+  // await upsertRoomSnapshot(roomId, { current_quiz: null });
 }
 
 export async function drawLottery(roomId: string, kind: 'all' | 'groom_friends' | 'bride_friends') {
