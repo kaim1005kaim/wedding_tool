@@ -170,7 +170,7 @@ export async function showNextQuiz(
     .select('id')
     .eq('room_id', roomId)
     .order('ord', { ascending: true })
-    .limit(10);
+    
 
   if (error || !data || data.length === 0) {
     throw new Error('No quizzes available');
