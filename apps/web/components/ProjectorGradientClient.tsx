@@ -4,7 +4,7 @@ import { useRef, useEffect, useState } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 
-function ProjectorGradientMesh() {
+function ProjectorGradientMesh({ params }: { params: { zoom: number; speed: number; grainAmount: number; grainSpeed: number } }) {
   const materialRef = useRef<THREE.ShaderMaterial>(null);
 
   const vertexShader = `
@@ -18,6 +18,10 @@ function ProjectorGradientMesh() {
   const fragmentShader = `
     uniform float uTime;
     uniform vec2 uResolution;
+    uniform float uZoom;
+    uniform float uSpeed;
+    uniform float uGrainAmount;
+    uniform float uGrainSpeed;
     varying vec2 vUv;
 
     // Simplex Noise
@@ -92,11 +96,11 @@ function ProjectorGradientMesh() {
     void main() {
       vec2 uv = vUv;
 
-      // 16:9 projector optimized parameters
-      float zoom = 0.8;  // Increased from 0.5 for tighter gradient
-      float speed = 0.5;
-      float grainAmount = 0.07;
-      float grainSpeed = 5.0;
+      // Parameters from uniforms
+      float zoom = uZoom;
+      float speed = uSpeed;
+      float grainAmount = uGrainAmount;
+      float grainSpeed = uGrainSpeed;
 
       // Adjust UV for 16:9 aspect ratio
       vec2 aspectUv = uv;
@@ -148,6 +152,10 @@ function ProjectorGradientMesh() {
   useFrame((state) => {
     if (materialRef.current) {
       materialRef.current.uniforms.uTime.value = state.clock.elapsedTime;
+      materialRef.current.uniforms.uZoom.value = params.zoom;
+      materialRef.current.uniforms.uSpeed.value = params.speed;
+      materialRef.current.uniforms.uGrainAmount.value = params.grainAmount;
+      materialRef.current.uniforms.uGrainSpeed.value = params.grainSpeed;
     }
   });
 
@@ -160,7 +168,11 @@ function ProjectorGradientMesh() {
         fragmentShader={fragmentShader}
         uniforms={{
           uTime: { value: 0 },
-          uResolution: { value: new THREE.Vector2(window.innerWidth, window.innerHeight) }
+          uResolution: { value: new THREE.Vector2(window.innerWidth, window.innerHeight) },
+          uZoom: { value: params.zoom },
+          uSpeed: { value: params.speed },
+          uGrainAmount: { value: params.grainAmount },
+          uGrainSpeed: { value: params.grainSpeed }
         }}
       />
     </mesh>
@@ -170,6 +182,13 @@ function ProjectorGradientMesh() {
 export default function ProjectorGradientClient({ className }: { className?: string }) {
   const [hasError, setHasError] = useState(false);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [showControls, setShowControls] = useState(true);
+  const [params, setParams] = useState({
+    zoom: 0.8,
+    speed: 0.5,
+    grainAmount: 0.07,
+    grainSpeed: 5.0
+  });
 
   useEffect(() => {
     const handleContextLost = (event: Event) => {
@@ -201,26 +220,123 @@ export default function ProjectorGradientClient({ className }: { className?: str
   }
 
   return (
-    <div className={`fixed inset-0 -z-10 ${className}`}>
-      <Canvas
-        ref={canvasRef}
-        camera={{ position: [0, 0, 1], fov: 75 }}
-        gl={{
-          antialias: false,
-          alpha: false,
-          powerPreference: 'high-performance'
-        }}
-        dpr={[1, 1]}
-        onCreated={(state) => {
-          console.log('Three.js Canvas created successfully');
-        }}
-        onError={(error) => {
-          console.error('Three.js Canvas error:', error);
-          setHasError(true);
-        }}
-      >
-        <ProjectorGradientMesh />
-      </Canvas>
-    </div>
+    <>
+      <div className={`fixed inset-0 -z-10 w-screen h-screen ${className}`} style={{ margin: 0, padding: 0 }}>
+        <Canvas
+          ref={canvasRef}
+          camera={{ position: [0, 0, 1], fov: 75 }}
+          gl={{
+            antialias: false,
+            alpha: false,
+            powerPreference: 'high-performance'
+          }}
+          dpr={[1, 1]}
+          style={{ display: 'block', width: '100vw', height: '100vh' }}
+          onCreated={(state) => {
+            console.log('Three.js Canvas created successfully');
+          }}
+          onError={(error) => {
+            console.error('Three.js Canvas error:', error);
+            setHasError(true);
+          }}
+        >
+          <ProjectorGradientMesh params={params} />
+        </Canvas>
+      </div>
+
+      {/* Parameter Controls */}
+      {showControls && (
+        <div className="fixed top-4 right-4 z-[100] glass-panel-strong rounded-2xl p-6 shadow-xl border border-white/30 w-80">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-bold text-white">Gradient Controls</h3>
+            <button
+              onClick={() => setShowControls(false)}
+              className="text-white hover:text-red-400 text-xl font-bold"
+            >
+              ✕
+            </button>
+          </div>
+
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-bold text-white mb-2">
+                uZoom: {params.zoom.toFixed(2)}
+              </label>
+              <input
+                type="range"
+                min="0"
+                max="2"
+                step="0.01"
+                value={params.zoom}
+                onChange={(e) => setParams({ ...params, zoom: parseFloat(e.target.value) })}
+                className="w-full"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-bold text-white mb-2">
+                uSpeed: {params.speed.toFixed(2)}
+              </label>
+              <input
+                type="range"
+                min="0"
+                max="2"
+                step="0.01"
+                value={params.speed}
+                onChange={(e) => setParams({ ...params, speed: parseFloat(e.target.value) })}
+                className="w-full"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-bold text-white mb-2">
+                uGrainAmount: {params.grainAmount.toFixed(3)}
+              </label>
+              <input
+                type="range"
+                min="0"
+                max="0.5"
+                step="0.001"
+                value={params.grainAmount}
+                onChange={(e) => setParams({ ...params, grainAmount: parseFloat(e.target.value) })}
+                className="w-full"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-bold text-white mb-2">
+                uGrainSpeed: {params.grainSpeed.toFixed(1)}
+              </label>
+              <input
+                type="range"
+                min="0"
+                max="20"
+                step="0.1"
+                value={params.grainSpeed}
+                onChange={(e) => setParams({ ...params, grainSpeed: parseFloat(e.target.value) })}
+                className="w-full"
+              />
+            </div>
+
+            <div className="pt-4 border-t border-white/20">
+              <p className="text-xs text-white/70 mb-2">Current values:</p>
+              <pre className="text-xs text-white/90 bg-black/20 p-2 rounded">
+                {JSON.stringify(params, null, 2)}
+              </pre>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Toggle button when hidden */}
+      {!showControls && (
+        <button
+          onClick={() => setShowControls(true)}
+          className="fixed top-4 right-4 z-[100] glass-panel-strong rounded-xl px-4 py-2 shadow-lg border border-white/30 text-white font-bold hover:bg-white/20"
+        >
+          ⚙️ Controls
+        </button>
+      )}
+    </>
   );
 }
