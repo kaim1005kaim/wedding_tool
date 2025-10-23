@@ -147,7 +147,7 @@ export async function showQuiz(
       question: data.question,
       choices: data.choices ?? [],
       deadlineTs,
-      ord: data.ord,
+      ord: data.ord ?? null,
       startTs,
       representativeByTable,
       ...(suddenDeath && { suddenDeath })
