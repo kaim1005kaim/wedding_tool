@@ -879,10 +879,26 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
                           placeholder="自動採番"
                         />
                       </div>
-                    <div className="flex items-end">
-                      <PrimaryButton type="submit" disabled={manageLoading || !isCloudMode}>
-                        クイズを追加
-                      </PrimaryButton>
+                    <div className="flex items-end gap-2">
+                      {editingQuizId ? (
+                        <>
+                          <PrimaryButton type="button" onClick={handleUpdateQuiz} disabled={manageLoading || !isCloudMode}>
+                            更新する
+                          </PrimaryButton>
+                          <button
+                            type="button"
+                            onClick={handleCancelEdit}
+                            className="rounded-xl border border-brand-blue-300 bg-white px-6 py-3 text-sm font-semibold text-brand-blue-700 hover:bg-brand-blue-50 disabled:opacity-50"
+                            disabled={manageLoading}
+                          >
+                            キャンセル
+                          </button>
+                        </>
+                      ) : (
+                        <PrimaryButton type="submit" disabled={manageLoading || !isCloudMode}>
+                          クイズを追加
+                        </PrimaryButton>
+                      )}
                     </div>
                     </div>
                   </form>
