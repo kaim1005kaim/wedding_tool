@@ -133,18 +133,15 @@ export default function ProjectorView({ roomId: _roomId }: { roomId: string }) {
     <main
       ref={containerRef}
       className="flex min-h-screen items-center justify-center relative overflow-hidden"
-      style={{ padding: isFullscreen ? '0' : '1.5rem' }}
       role="main"
       aria-label="投影画面"
     >
       <ProjectorGradientClient />
 
-      <div className={`relative aspect-video w-full overflow-hidden shadow-xl z-10 ${isFullscreen ? 'max-w-none rounded-none h-screen' : 'max-w-[1920px] rounded-2xl'}`} role="region" aria-label="ゲーム表示エリア">
-        <div className={`relative flex h-full flex-col glass-panel-strong ${isFullscreen ? 'gap-6 px-12 py-10' : 'gap-5 px-10 py-8'}`}>
-          <Header mode={mode} countdownMs={countdownMs} isFullscreen={isFullscreen} onToggleFullscreen={toggleFullscreen} />
-          <div className="flex-1 overflow-hidden">
-            <AnimatePresence mode="wait">{renderSection(mode, topTen, activeQuiz, quizResult, lotteryResult, isSpinning, lotteryKey)}</AnimatePresence>
-          </div>
+      <div className="relative w-full h-screen flex flex-col z-10 px-12 py-10 gap-6" role="region" aria-label="ゲーム表示エリア">
+        <Header mode={mode} countdownMs={countdownMs} isFullscreen={isFullscreen} onToggleFullscreen={toggleFullscreen} />
+        <div className="flex-1 overflow-hidden">
+          <AnimatePresence mode="wait">{renderSection(mode, topTen, activeQuiz, quizResult, lotteryResult, isSpinning, lotteryKey)}</AnimatePresence>
         </div>
       </div>
 
