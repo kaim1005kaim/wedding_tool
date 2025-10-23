@@ -81,11 +81,14 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
     groupTag: 'all' as 'all' | 'groom' | 'bride'
   });
   const [quizSettings, setQuizSettings] = useState({
-    representativeByTable: true
+    representativeByTable: true,
+    quizDurationSeconds: 30
+  });
+  const [tapSettings, setTapSettings] = useState({
+    countdownSeconds: 3,
+    durationSeconds: 10
   });
   const autoStopRef = useRef<NodeJS.Timeout | null>(null);
-  const COUNTUP_DURATION_MS = 10_000;
-  const COUNTDOWN_LEAD_MS = 3_000;
 
   useEffect(() => {
     return () => {
@@ -729,19 +732,47 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
             </div>
           </AdminCard>
 
-          <AdminCard title="タップチャレンジ" description="3秒カウント後に10秒で自動終了します" icon={Play}>
+          <AdminCard title="タップチャレンジ" description={`${tapSettings.countdownSeconds}秒カウント後に${tapSettings.durationSeconds}秒で自動終了します`} icon={Play}>
+            <div className="mb-4 space-y-3">
+              <div className="flex items-center gap-4">
+                <label className="text-sm font-medium text-brand-blue-700 w-32">カウントダウン</label>
+                <input
+                  type="number"
+                  min="1"
+                  max="10"
+                  value={tapSettings.countdownSeconds}
+                  onChange={(e) => setTapSettings((prev) => ({ ...prev, countdownSeconds: parseInt(e.target.value) || 3 }))}
+                  className="w-20 rounded-lg border border-brand-blue-200 bg-white px-3 py-2 text-sm text-center"
+                />
+                <span className="text-sm text-brand-blue-700">秒</span>
+              </div>
+              <div className="flex items-center gap-4">
+                <label className="text-sm font-medium text-brand-blue-700 w-32">タップ時間</label>
+                <input
+                  type="number"
+                  min="5"
+                  max="60"
+                  value={tapSettings.durationSeconds}
+                  onChange={(e) => setTapSettings((prev) => ({ ...prev, durationSeconds: parseInt(e.target.value) || 10 }))}
+                  className="w-20 rounded-lg border border-brand-blue-200 bg-white px-3 py-2 text-sm text-center"
+                />
+                <span className="text-sm text-brand-blue-700">秒</span>
+              </div>
+            </div>
             <div className="flex flex-wrap gap-4">
               <AdminButton icon={Play} onClick={async () => {
                 if (autoStopRef.current) {
                   clearTimeout(autoStopRef.current);
                 }
-                await send({ type: 'game:start', payload: undefined });
+                const countdownMs = tapSettings.countdownSeconds * 1000;
+                const durationMs = tapSettings.durationSeconds * 1000;
+                await send({ type: 'game:start', payload: undefined }, { countdownMs });
                 autoStopRef.current = setTimeout(() => {
                   void send({ type: 'game:stop', payload: undefined });
                   autoStopRef.current = null;
-                }, COUNTDOWN_LEAD_MS + COUNTUP_DURATION_MS + 500);
+                }, countdownMs + durationMs + 500);
               }}>
-                スタート (10秒)
+                スタート
               </AdminButton>
               <AdminButton
                 variant="secondary"
@@ -772,7 +803,13 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
               </label>
             </div>
             <div className="flex flex-wrap gap-4">
-              <AdminButton icon={ListChecks} onClick={() => send({ type: 'quiz:next', payload: undefined })}>
+              <AdminButton icon={ListChecks} onClick={() => {
+                const deadlineMs = quizSettings.quizDurationSeconds * 1000;
+                void send({ type: 'quiz:next', payload: undefined }, {
+                  deadlineMs,
+                  representativeByTable: quizSettings.representativeByTable
+                });
+              }}>
                 次のクイズ
               </AdminButton>
               <AdminButton variant="danger" icon={Eye} onClick={handleReveal}>
