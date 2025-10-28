@@ -26,7 +26,6 @@ import { useRoomStore } from '../lib/store/room-store';
 import { appConfig } from '../lib/env';
 import { Section, PrimaryButton } from './brand';
 import type { LucideIcon } from 'lucide-react';
-import GradientControls from './GradientControls';
 
 type QuizSummary = {
   id: string;
@@ -598,10 +597,6 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
             <StatusItem label="モード" value={labelForMode(mode)} icon={Gauge} />
             <StatusItem label="フェーズ" value={phaseLabel(phase)} icon={PauseCircle} />
             <StatusItem label="カウントダウン" value={`${Math.max(0, Math.ceil(countdownMs / 1000))} 秒`} icon={ListChecks} />
-          </div>
-
-          <div className="mb-6">
-            <GradientControls />
           </div>
 
           {roomCode && (
