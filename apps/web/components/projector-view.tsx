@@ -278,54 +278,105 @@ const CountupBoard = memo(function CountupBoard({
       )}
 
       {phase === 'running' && (
-        <div className="text-center py-4">
-          <div className="glass-panel-strong rounded-2xl px-8 py-4 inline-block shadow-lg border border-white/30">
-            <p className="text-3xl font-bold text-terra-clay">
+        <div className="text-center py-6 space-y-4">
+          <motion.div
+            initial={{ scale: 0.9 }}
+            animate={{ scale: [1, 1.05, 1] }}
+            transition={{ duration: 1, repeat: Infinity }}
+          >
+            <div className="text-8xl mb-2">⚡</div>
+          </motion.div>
+          <motion.div
+            className="glass-panel-strong rounded-2xl px-12 py-6 inline-block shadow-xl border-2 border-accent-400"
+            animate={{ boxShadow: ['0 0 20px rgba(251, 146, 60, 0.3)', '0 0 40px rgba(251, 146, 60, 0.6)', '0 0 20px rgba(251, 146, 60, 0.3)'] }}
+            transition={{ duration: 1.5, repeat: Infinity }}
+          >
+            <p className="text-2xl font-bold text-ink/70 mb-2">タップチャレンジ実行中！</p>
+            <p className="text-6xl font-black text-gradient-sunset">
               残り {timeLeftSeconds} 秒
             </p>
-          </div>
+          </motion.div>
+          <motion.p
+            className="text-3xl font-bold text-ink"
+            animate={{ opacity: [0.6, 1, 0.6] }}
+            transition={{ duration: 1.5, repeat: Infinity }}
+          >
+            全力でタップしよう！🔥
+          </motion.p>
         </div>
       )}
 
       {phase === 'ended' && (
-        <div className="text-center py-4">
-          <div className="glass-panel-strong rounded-2xl px-8 py-4 inline-block shadow-lg border border-white/30 ring-2 ring-accent-400">
-            <p className="text-3xl font-bold text-ink">
-              🎉 タップチャレンジ終了！
+        <motion.div
+          className="text-center py-6"
+          initial={{ scale: 0.8, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ type: 'spring', bounce: 0.5 }}
+        >
+          <motion.div
+            className="text-8xl mb-4"
+            animate={{ rotate: [0, 10, -10, 10, 0] }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+          >
+            🎉
+          </motion.div>
+          <div className="glass-panel-strong rounded-2xl px-12 py-8 inline-block shadow-xl border-2 border-accent-400 bg-gradient-to-br from-orange-50/50 to-yellow-50/50">
+            <p className="text-5xl font-black text-ink mb-4">
+              タップチャレンジ終了！
+            </p>
+            <p className="text-2xl font-bold text-terra-clay">
+              結果発表 ✨
             </p>
           </div>
-        </div>
+        </motion.div>
       )}
 
       {/* Leaderboard - Show when running or ended */}
-      {(phase === 'running' || phase === 'ended') && (
+      {(phase === 'running' || phase === 'ended') && entries.length > 0 && (
         <>
       {/* Top 3 - Large Display */}
-      <div className="grid grid-cols-3 gap-4">
-        {top3.map((entry) => (
+      <div className="grid grid-cols-3 gap-6">
+        {top3.map((entry, index) => (
           <motion.div
             key={entry.playerId}
             layout
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.4 }}
-            className={`flex flex-col items-center rounded-2xl p-6 shadow-lg glass-panel-strong border border-white/30 ${
+            initial={{ opacity: 0, y: 50, scale: 0.8 }}
+            animate={{
+              opacity: 1,
+              y: 0,
+              scale: phase === 'ended' ? [0.8, 1.1, 1] : 1
+            }}
+            transition={{
+              duration: 0.6,
+              delay: phase === 'ended' ? index * 0.2 : 0,
+              type: 'spring',
+              bounce: 0.4
+            }}
+            className={`flex flex-col items-center rounded-2xl p-6 shadow-2xl glass-panel-strong border-2 ${
               entry.rank === 1
-                ? 'ring-2 ring-accent-400'
+                ? 'border-yellow-400 ring-4 ring-yellow-300/50 bg-gradient-to-br from-yellow-50/30 to-orange-50/30'
                 : entry.rank === 2
-                  ? 'ring-2 ring-denim-sky'
-                  : 'ring-2 ring-terra-clay'
+                  ? 'border-gray-400 ring-4 ring-gray-300/50 bg-gradient-to-br from-gray-50/30 to-slate-50/30'
+                  : 'border-amber-600 ring-4 ring-amber-400/50 bg-gradient-to-br from-amber-50/30 to-orange-50/30'
             }`}
           >
-            <div className="mb-3 flex h-16 w-16 items-center justify-center rounded-full text-5xl glass-panel shadow-md">
+            <motion.div
+              className="mb-3 flex h-20 w-20 items-center justify-center rounded-full text-6xl glass-panel shadow-lg"
+              animate={phase === 'ended' ? { rotate: [0, -10, 10, -10, 0] } : {}}
+              transition={{ duration: 0.5, delay: phase === 'ended' ? 0.5 + index * 0.2 : 0 }}
+            >
               {['🥇', '🥈', '🥉'][entry.rank - 1]}
-            </div>
-            <p className="mb-1 text-center text-2xl font-bold text-ink">{entry.displayName}</p>
-            {entry.tableNo && <p className="mb-2 text-base text-ink/70 font-bold">テーブル {entry.tableNo}</p>}
-            <div className="rounded-full glass-panel px-6 py-3 shadow-md">
-              <span className="text-3xl font-bold text-terra-clay">{entry.totalPoints}</span>
-              <span className="ml-2 text-lg text-ink/80 font-bold">pt</span>
-            </div>
+            </motion.div>
+            <p className="mb-1 text-center text-3xl font-black text-ink">{entry.displayName}</p>
+            {entry.tableNo && <p className="mb-3 text-lg text-ink/70 font-bold">テーブル {entry.tableNo}</p>}
+            <motion.div
+              className="rounded-full glass-panel px-8 py-4 shadow-lg border-2 border-white/40"
+              animate={phase === 'ended' ? { scale: [1, 1.2, 1] } : {}}
+              transition={{ duration: 0.4, delay: phase === 'ended' ? 0.8 + index * 0.2 : 0 }}
+            >
+              <span className="text-4xl font-black text-terra-clay">{entry.totalPoints}</span>
+              <span className="ml-2 text-xl text-ink/80 font-bold">タップ</span>
+            </motion.div>
           </motion.div>
         ))}
       </div>
