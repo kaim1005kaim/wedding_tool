@@ -748,7 +748,7 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
           </AdminCard>
 
           {/* 2段目: タップチャレンジとクイズ操作（2カラム） */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
           <AdminCard title="タップチャレンジ" description={`${tapSettings.countdownSeconds}秒カウント後に${tapSettings.durationSeconds}秒で自動終了します`} icon={Play}>
             {mode !== 'countup' && (
               <div className="mb-4 rounded-lg bg-yellow-50 border border-yellow-200 p-3">
@@ -893,6 +893,7 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
 
           {/* 3段目: ログ（全幅） */}
           {isCloudMode && (
+            <div className="mt-6">
             <AdminCard title="操作ログ" description="進行状況の確認" icon={ListChecks}>
               {/* 抽選履歴タブを非表示
               <div className="mb-4 inline-flex rounded-xl bg-slate-100 p-1">
@@ -903,6 +904,7 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
               */}
               <LogsList logs={logs} />
             </AdminCard>
+            </div>
           )}
 
         {manageOpen && (
