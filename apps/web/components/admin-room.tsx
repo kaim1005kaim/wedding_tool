@@ -1,7 +1,6 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import dynamic from 'next/dynamic';
 import type { ButtonHTMLAttributes } from 'react';
 import {
   Gauge,
@@ -28,11 +27,6 @@ import { appConfig } from '../lib/env';
 import { Section, PrimaryButton } from './brand';
 import type { LucideIcon } from 'lucide-react';
 import GradientControls from './GradientControls';
-
-const MobileGradientClient = dynamic(() => import('./MobileGradientClient'), {
-  ssr: false,
-  loading: () => <div className="fixed inset-0 -z-10 bg-gradient-mobile" />
-});
 
 type QuizSummary = {
   id: string;
@@ -597,9 +591,8 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
   }
 
   return (
-    <main className="min-h-screen p-6 relative overflow-hidden">
-      <div className="mx-auto w-full px-4">
-      <MobileGradientClient />
+    <main className="min-h-screen p-6 relative overflow-hidden bg-gradient-mobile">
+      <div className="mx-auto w-full px-4 relative z-10">
         <Section title="管理パネル" subtitle={`Room ${roomId}`}>
           <div className="mb-6 grid grid-cols-3 gap-4 rounded-2xl glass-panel-strong p-6 shadow-lg border border-white/30">
             <StatusItem label="モード" value={labelForMode(mode)} icon={Gauge} />

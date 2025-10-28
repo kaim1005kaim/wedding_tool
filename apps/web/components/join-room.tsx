@@ -1,7 +1,6 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import dynamic from 'next/dynamic';
 import { motion } from 'framer-motion';
 import { useRealtimeClient } from '../lib/realtime-context';
 import { useRoomStore } from '../lib/store/room-store';
@@ -10,11 +9,6 @@ import { Section, PrimaryButton } from './brand';
 import type { LeaderboardEntry, RoomView } from '../lib/store/room-store';
 import ParticleEffect from './ParticleEffect';
 import type { ParticleConfig } from './ParticleEffect';
-
-const MobileGradientClient = dynamic(() => import('./MobileGradientClient'), {
-  ssr: false,
-  loading: () => <div className="fixed inset-0 -z-10 bg-gradient-mobile" />
-});
 
 type ConnectionStatus = 'good' | 'warn' | 'bad';
 
@@ -220,8 +214,7 @@ export default function JoinRoom({ code }: { code: string }) {
   };
 
   return (
-    <main className="min-h-screen px-6 py-10 relative overflow-hidden">
-      <MobileGradientClient />
+    <main className="min-h-screen px-6 py-10 relative overflow-hidden bg-gradient-mobile">
       <div className="mx-auto w-full max-w-3xl relative z-10">
         <div className="mb-6 flex items-center justify-between rounded-xl glass-panel-strong px-5 py-3 shadow-sm slide-up border border-white/30">
           <div className="flex items-center gap-3">
@@ -374,7 +367,6 @@ function JoinModal({ visible, tableNo, displayName, onTableNoChange, onDisplayNa
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center px-6 relative overflow-hidden">
-      <MobileGradientClient />
       <div className="glass-panel-strong w-full max-w-md rounded-2xl px-8 py-10 shadow-xl bounce-in border border-white/30 relative z-10">
         <div className="mb-6 text-center">
           <div className="mb-4 text-5xl">{guidanceIcon}</div>
@@ -428,7 +420,7 @@ function JoinModal({ visible, tableNo, displayName, onTableNoChange, onDisplayNa
           )}
           <button
             type="submit"
-            className="btn-primary mt-6 w-full text-lg disabled:opacity-50 disabled:cursor-not-allowed"
+            className="btn-primary mt-6 w-full text-xl py-5 disabled:opacity-50 disabled:cursor-not-allowed"
             disabled={isJoining}
           >
             {isJoining ? (
@@ -679,7 +671,7 @@ function CountupOverlay({ phase, countdownMs, leaderboard, onTap }: CountupOverl
                 type="button"
                 onPointerDown={handleTap}
                 disabled={disabled}
-                className="w-full rounded-3xl bg-gradient-sunset px-12 py-12 text-center shadow-xl transition-all duration-100 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed ripple-effect"
+                className="w-full rounded-3xl bg-gradient-sunset px-12 py-16 text-center shadow-xl transition-all duration-100 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed min-h-[280px]"
               >
                 <div className="text-[min(25vw,10rem)] font-bold uppercase text-white animate-pulse drop-shadow-lg">
                   TAP!
@@ -885,29 +877,29 @@ function QuizOverlay({ phase, countdownMs, roomId, playerToken }: QuizOverlayPro
         </div>
 
         {/* Choices - 2x2 Grid */}
-        <div className="w-full max-w-2xl grid grid-cols-2 gap-4">
+        <div className="w-full max-w-2xl grid grid-cols-2 gap-5">
           {activeQuiz.choices.map((choice, index) => {
             const isSelected = selectedChoice === index;
             const isCorrect = quizResult && index === correctIndex;
             const isWrong = quizResult && isSelected && index !== correctIndex;
             const count = quizResult?.perChoiceCounts?.[index] ?? 0;
 
-            let buttonClass = 'glass-panel rounded-2xl p-4 shadow-lg transition-all duration-200';
+            let buttonClass = 'glass-panel rounded-2xl p-6 shadow-lg transition-all duration-200 min-h-[120px]';
 
             if (quizResult) {
               if (isCorrect) {
-                buttonClass = 'rounded-2xl p-4 shadow-xl bg-gradient-to-br from-red-500 to-red-600 border-2 border-red-700';
+                buttonClass = 'rounded-2xl p-6 shadow-xl bg-gradient-to-br from-red-500 to-red-600 border-2 border-red-700 min-h-[120px]';
               } else if (isWrong) {
-                buttonClass = 'rounded-2xl p-4 shadow-xl bg-error border-2 border-error-600';
+                buttonClass = 'rounded-2xl p-6 shadow-xl bg-error border-2 border-error-600 min-h-[120px]';
               } else {
-                buttonClass = 'rounded-2xl p-4 shadow-md glass-panel';
+                buttonClass = 'rounded-2xl p-6 shadow-md glass-panel min-h-[120px]';
               }
             } else if (isSelected) {
-              buttonClass = 'rounded-2xl p-4 shadow-xl bg-gradient-denim border-2 border-denim-deep scale-105';
+              buttonClass = 'rounded-2xl p-6 shadow-xl bg-gradient-denim border-2 border-denim-deep scale-105 min-h-[120px]';
             } else if (hasAnswered) {
-              buttonClass = 'rounded-2xl p-4 shadow-md glass-panel opacity-70';
+              buttonClass = 'rounded-2xl p-6 shadow-md glass-panel opacity-70 min-h-[120px]';
             } else {
-              buttonClass = 'glass-panel-strong rounded-2xl p-4 shadow-lg border border-white/30 hover:shadow-xl hover:scale-105 active:scale-95';
+              buttonClass = 'glass-panel-strong rounded-2xl p-6 shadow-lg border border-white/30 hover:shadow-xl hover:scale-105 active:scale-95 min-h-[120px]';
             }
 
             return (

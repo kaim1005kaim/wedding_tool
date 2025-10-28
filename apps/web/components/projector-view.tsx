@@ -1,17 +1,11 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState, memo } from 'react';
-import dynamic from 'next/dynamic';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useRoomStore } from '../lib/store/room-store';
 import type { LeaderboardEntry, RoomStoreState } from '../lib/store/room-store';
 import ParticleEffect from './ParticleEffect';
 import type { ParticleConfig } from './ParticleEffect';
-
-const ProjectorGradientClient = dynamic(() => import('./ProjectorGradientClient'), {
-  ssr: false,
-  loading: () => <div className="fixed inset-0 -z-10 bg-gradient-earth" />
-});
 
 const CHOICE_LABELS = ['A', 'B', 'C', 'D'];
 
@@ -132,12 +126,10 @@ export default function ProjectorView({ roomId: _roomId }: { roomId: string }) {
   return (
     <main
       ref={containerRef}
-      className="flex min-h-screen items-center justify-center relative overflow-hidden"
+      className="flex min-h-screen items-center justify-center relative overflow-hidden bg-gradient-earth"
       role="main"
       aria-label="投影画面"
     >
-      <ProjectorGradientClient />
-
       <div className="relative w-full h-screen flex flex-col z-10 px-12 py-10 gap-6" role="region" aria-label="ゲーム表示エリア">
         <Header mode={mode} countdownMs={countdownMs} isFullscreen={isFullscreen} onToggleFullscreen={toggleFullscreen} />
         <div className="flex-1 overflow-hidden">
@@ -277,14 +269,14 @@ const CountupBoard = memo(function CountupBoard({ entries }: { entries: Leaderbo
                   : 'ring-2 ring-terra-clay'
             }`}
           >
-            <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-full text-3xl glass-panel shadow-md">
+            <div className="mb-3 flex h-16 w-16 items-center justify-center rounded-full text-5xl glass-panel shadow-md">
               {['🥇', '🥈', '🥉'][entry.rank - 1]}
             </div>
-            <p className="mb-1 text-center text-xl font-bold text-ink">{entry.displayName}</p>
-            {entry.tableNo && <p className="mb-2 text-sm text-ink/70 font-bold">テーブル {entry.tableNo}</p>}
-            <div className="rounded-full glass-panel px-5 py-2 shadow-md">
-              <span className="text-2xl font-bold text-terra-clay">{entry.totalPoints}</span>
-              <span className="ml-1 text-sm text-ink/80 font-bold">pt</span>
+            <p className="mb-1 text-center text-2xl font-bold text-ink">{entry.displayName}</p>
+            {entry.tableNo && <p className="mb-2 text-base text-ink/70 font-bold">テーブル {entry.tableNo}</p>}
+            <div className="rounded-full glass-panel px-6 py-3 shadow-md">
+              <span className="text-3xl font-bold text-terra-clay">{entry.totalPoints}</span>
+              <span className="ml-2 text-lg text-ink/80 font-bold">pt</span>
             </div>
           </motion.div>
         ))}
@@ -297,13 +289,13 @@ const CountupBoard = memo(function CountupBoard({ entries }: { entries: Leaderbo
             {rest.map((entry) => (
               <div
                 key={entry.playerId}
-                className="flex items-center justify-between rounded-lg glass-panel px-3 py-2 text-sm shadow-sm border border-white/20"
+                className="flex items-center justify-between rounded-lg glass-panel px-4 py-3 text-base shadow-sm border border-white/20"
               >
-                <div className="flex items-center gap-2 min-w-0">
-                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-gradient-terracotta text-xs font-bold text-white">
+                <div className="flex items-center gap-3 min-w-0">
+                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-gradient-terracotta text-sm font-bold text-white">
                     {entry.rank}
                   </span>
-                  <span className="truncate font-bold text-ink">{entry.displayName}</span>
+                  <span className="truncate font-bold text-ink text-lg">{entry.displayName}</span>
                 </div>
                 <span className="ml-2 shrink-0 font-bold text-terra-clay">{entry.totalPoints}</span>
               </div>
@@ -433,7 +425,7 @@ const QuizBoard = memo(function QuizBoard({ activeQuiz, quizResult }: QuizPanelP
       {activeQuiz ? (
         <>
           <div className="text-center">
-            <p className="text-3xl font-bold leading-relaxed text-ink glass-panel-strong px-8 py-6 rounded-2xl border border-white/30 shadow-lg inline-block">
+            <p className="text-4xl font-bold leading-relaxed text-ink glass-panel-strong px-10 py-8 rounded-2xl border border-white/30 shadow-lg inline-block">
               {activeQuiz.question}
             </p>
           </div>
@@ -453,7 +445,7 @@ const QuizBoard = memo(function QuizBoard({ activeQuiz, quizResult }: QuizPanelP
                   className="relative"
                 >
                   <div
-                    className={`h-full rounded-2xl px-8 py-6 shadow-lg border-2 transition-all ${
+                    className={`h-full rounded-2xl px-10 py-8 shadow-lg border-2 transition-all ${
                       isCorrect
                         ? 'bg-gradient-to-br from-red-500 to-red-600 border-red-700 ring-4 ring-red-300'
                         : 'glass-panel-strong border-white/30'
@@ -465,19 +457,19 @@ const QuizBoard = memo(function QuizBoard({ activeQuiz, quizResult }: QuizPanelP
                         initial={{ scale: 0 }}
                         animate={{ scale: 1 }}
                         transition={{ type: 'spring', bounce: 0.5 }}
-                        className="absolute -top-4 -left-4 w-20 h-20 rounded-full bg-red-500 border-4 border-white shadow-xl flex items-center justify-center z-10"
+                        className="absolute -top-5 -left-5 w-24 h-24 rounded-full bg-red-500 border-4 border-white shadow-xl flex items-center justify-center z-10"
                       >
-                        <span className="text-4xl font-black text-white">{CHOICE_LABELS[index]}</span>
+                        <span className="text-5xl font-black text-white">{CHOICE_LABELS[index]}</span>
                       </motion.div>
                     )}
 
-                    <div className="flex items-center justify-between gap-4 h-full">
+                    <div className="flex items-center justify-between gap-6 h-full">
                       {/* Choice Label and Text */}
-                      <div className="flex items-center gap-4 flex-1">
-                        <span className={`text-4xl font-black ${isCorrect ? 'text-white' : 'text-ink'}`}>
+                      <div className="flex items-center gap-5 flex-1">
+                        <span className={`text-5xl font-black ${isCorrect ? 'text-white' : 'text-ink'}`}>
                           {CHOICE_LABELS[index]}.
                         </span>
-                        <span className={`text-2xl font-bold ${isCorrect ? 'text-white' : 'text-ink'}`}>
+                        <span className={`text-3xl font-bold ${isCorrect ? 'text-white' : 'text-ink'}`}>
                           {choice}
                         </span>
                       </div>

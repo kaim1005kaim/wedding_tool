@@ -11,20 +11,18 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // Terracotta & Denim カラーパレット
+        // ベースカラー
+        ink: 'var(--ink)',
+        ecru: 'var(--ecru)',
+
+        // Orange & Cyan カラーパレット
         terra: {
           rust: 'var(--terra-rust)',
           clay: 'var(--terra-clay)',
-          sand: 'var(--terra-sand)',
-          light: 'var(--terra-light)',
-          pale: 'var(--terra-pale)',
         },
         denim: {
-          midnight: 'var(--denim-midnight)',
           deep: 'var(--denim-deep)',
           sky: 'var(--denim-sky)',
-          light: 'var(--denim-light)',
-          pale: 'var(--denim-pale)',
         },
         primary: {
           50: 'var(--color-primary-50)',

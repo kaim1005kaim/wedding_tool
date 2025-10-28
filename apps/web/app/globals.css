@@ -1,134 +1,63 @@
-/* Terracotta & Denim Design System */
+/* Clean & Minimal Design System */
 @import './design-tokens.css';
 
 :root {
-  /* Base */
-  --ecru: #F7F3EA;
-  --ink: #1F2A37;
-
-  /* Blues - Extended */
-  --blue-50: #EEF6FB;
-  --blue-100: #D9EBFA;
-  --blue-200: #BFD9EF;
-  --blue-300: #99C5E7;
-  --blue-400: #7FB2DA;
-  --blue-500: #5A95C8;
-  --blue-600: #397AAE;
-  --blue-700: #275E8B;
-  --blue-800: #1A4565;
-  --blue-900: #0F2D45;
-
-  /* Terracotta - Extended */
-  --terra-50: #F6ECE8;
-  --terra-100: #EED9D0;
-  --terra-200: #E3BBAA;
-  --terra-300: #D8986F;
-  --terra-400: #C46B47;
-  --terra-500: #B0583A;
-  --terra-600: #9E4C33;
-  --terra-700: #7E3C29;
-  --terra-800: #5F2D1F;
-  --terra-900: #401E15;
-
-  /* System Colors */
-  --success: #3AA76D;
-  --success-light: #E8F7EF;
-  --warning: #D97706;
-  --warning-light: #FEF3E8;
-  --error: #CC3333;
-  --error-light: #FCE8E8;
-
-  /* Gradients */
-  --gradient-primary: linear-gradient(135deg, var(--blue-500) 0%, var(--blue-700) 100%);
-  --gradient-secondary: linear-gradient(135deg, var(--terra-400) 0%, var(--terra-600) 100%);
-  --gradient-accent: linear-gradient(135deg, var(--blue-400) 0%, var(--terra-400) 100%);
-  --gradient-celebration: linear-gradient(135deg, #FFD700 0%, #FFA500 50%, #FF6347 100%);
-
-  /* Surfaces & Elevation */
-  --panel: #FFFFFF;
-  --shadow-sm: 0 2px 8px rgba(16, 24, 40, 0.06);
-  --shadow: 0 6px 18px rgba(16, 24, 40, 0.08);
-  --shadow-md: 0 12px 32px rgba(16, 24, 40, 0.12);
-  --shadow-lg: 0 24px 48px rgba(16, 24, 40, 0.16);
-  --shadow-xl: 0 32px 64px rgba(16, 24, 40, 0.20);
+  /* Base colors */
+  --bg-primary: #FFFFFF;
+  --bg-secondary: #FAFAFA;
+  --text-primary: #171717;
+  --text-secondary: #525252;
+  --ink: #171717;
+  --ecru: #FAFAFA;
 }
 
 body {
   margin: 0;
   min-height: 100vh;
-  background-color: var(--ecru);
-  color: var(--ink);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+}
+
+/* シンプルなグラデーション背景 */
+.bg-gradient-warm {
+  background: linear-gradient(180deg, #FFF7ED 0%, #FFEDD5 50%, #FED7AA 100%);
+}
+
+.bg-gradient-cool {
+  background: linear-gradient(180deg, #ECFEFF 0%, #CFFAFE 50%, #A5F3FC 100%);
+}
+
+.bg-gradient-mobile {
+  background: linear-gradient(135deg, #FFF7ED 0%, #FFEDD5 25%, #ECFEFF 75%, #CFFAFE 100%);
+}
+
+.bg-gradient-projector {
+  background: linear-gradient(135deg, #FED7AA 0%, #A5F3FC 100%);
+}
+
+.bg-gradient-earth {
+  background: linear-gradient(135deg, #FED7AA 0%, #A5F3FC 100%);
 }
 
 .lace-overlay {
-  background: radial-gradient(60% 40% at 50% 0%, rgba(127, 178, 218, 0.1), transparent 70%),
-    radial-gradient(40% 40% at 20% 20%, rgba(196, 107, 71, 0.06), transparent 70%);
+  /* Removed for cleaner design */
 }
 
+/* ガラスモーフィズム効果（控えめ） */
 .glass-panel {
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.75), rgba(255, 255, 255, 0.6));
-  backdrop-filter: saturate(130%) blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-}
-
-.glass-panel-strong {
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.8));
-  backdrop-filter: saturate(140%) blur(16px);
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px) saturate(120%);
   border: 1px solid rgba(255, 255, 255, 0.5);
 }
 
-/* ========== Animations ========== */
-
-@keyframes sparkle-pop {
-  0% {
-    transform: scale(0.6) translateY(0);
-    opacity: 0.9;
-  }
-  60% {
-    opacity: 1;
-  }
-  100% {
-    transform: scale(1.4) translateY(-40px);
-    opacity: 0;
-  }
+.glass-panel-strong {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(16px) saturate(130%);
+  border: 1px solid rgba(255, 255, 255, 0.8);
 }
 
-@keyframes confetti-fall {
-  0% {
-    transform: translateY(-100vh) rotate(0deg);
-    opacity: 1;
-  }
-  100% {
-    transform: translateY(100vh) rotate(720deg);
-    opacity: 0.3;
-  }
-}
-
-@keyframes pulse-ring {
-  0% {
-    transform: scale(0.95);
-    opacity: 1;
-  }
-  50% {
-    transform: scale(1.05);
-    opacity: 0.7;
-  }
-  100% {
-    transform: scale(0.95);
-    opacity: 1;
-  }
-}
-
-@keyframes ripple {
-  0% {
-    transform: scale(0);
-    opacity: 0.6;
-  }
-  100% {
-    transform: scale(4);
-    opacity: 0;
-  }
-}
+/* ========== アニメーション（最適化版） ========== */
 
 @keyframes slide-up {
   from {
@@ -158,15 +87,6 @@ body {
   }
 }
 
-@keyframes shimmer {
-  0% {
-    background-position: -1000px 0;
-  }
-  100% {
-    background-position: 1000px 0;
-  }
-}
-
 @keyframes count-up {
   from {
     transform: translateY(10px) scale(1.2);
@@ -178,59 +98,115 @@ body {
   }
 }
 
-/* ========== Utility Classes ========== */
-
-.sparkle-pop {
-  animation: sparkle-pop 0.6s ease-out forwards;
-}
-
-.confetti-fall {
-  animation: confetti-fall 3s ease-in forwards;
-}
-
-.pulse-ring {
-  animation: pulse-ring 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-}
-
-.ripple {
-  animation: ripple 0.6s ease-out;
-}
+/* ========== Utility Classes（最適化版） ========== */
 
 .slide-up {
-  animation: slide-up 0.5s ease-out;
+  animation: slide-up 0.4s ease-out;
+  will-change: transform, opacity;
 }
 
 .bounce-in {
-  animation: bounce-in 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-}
-
-.shimmer {
-  background: linear-gradient(
-    90deg,
-    transparent 0%,
-    rgba(255, 255, 255, 0.3) 50%,
-    transparent 100%
-  );
-  background-size: 1000px 100%;
-  animation: shimmer 2s infinite;
+  animation: bounce-in 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  will-change: transform, opacity;
 }
 
 .count-up {
-  animation: count-up 0.4s ease-out;
+  animation: count-up 0.3s ease-out;
+  will-change: transform, opacity;
 }
 
-/* ========== Background Gradients ========== */
+/* ========== テキストサイズ（視認性向上） ========== */
 
-@keyframes gradientShift {
-  0%, 100% {
-    filter: hue-rotate(0deg) brightness(1);
-  }
-  50% {
-    filter: hue-rotate(10deg) brightness(1.05);
-  }
+.text-title-sm {
+  font-size: 1.5rem;   /* 24px */
+  line-height: 2rem;
+  font-weight: 700;
 }
 
-.bg-gradient-mobile {
-  background: linear-gradient(135deg, #F7F3EA 0%, #E8DFD6 20%, #BFB2A0 40%, #8196A9 60%, #4F6C8A 80%, #313559 100%);
-  animation: gradientShift 15s ease infinite;
+.text-title-md {
+  font-size: 2rem;     /* 32px */
+  line-height: 2.5rem;
+  font-weight: 700;
+}
+
+.text-title-lg {
+  font-size: 3rem;     /* 48px */
+  line-height: 3.5rem;
+  font-weight: 700;
+}
+
+/* Brand colors for backward compatibility */
+.brand-terra-600 {
+  color: var(--orange-600);
+}
+
+.brand-blue-700 {
+  color: var(--cyan-700);
+}
+
+.bg-brand-blue-50 {
+  background-color: var(--cyan-50);
+}
+
+.border-brand-blue-200 {
+  border-color: var(--cyan-200);
+}
+
+.text-brand-blue-700 {
+  color: var(--cyan-700);
+}
+
+.bg-brand-terra-50 {
+  background-color: var(--orange-50);
+}
+
+.terra-clay {
+  color: var(--orange-600);
+}
+
+.denim-deep {
+  color: var(--cyan-600);
+}
+
+.shadow-brand {
+  box-shadow: var(--shadow-md);
+}
+
+.accent-400 {
+  color: var(--color-accent-400);
+}
+
+/* エラーカラー */
+.bg-error {
+  background-color: var(--color-error-500);
+}
+
+.text-error {
+  color: var(--color-error-600);
+}
+
+.border-error\/30 {
+  border-color: rgba(220, 38, 38, 0.3);
+}
+
+.error-600 {
+  color: var(--color-error-600);
+}
+
+/* 成功カラー */
+.bg-success {
+  background-color: var(--color-success-500);
+}
+
+.text-success {
+  color: var(--color-success-600);
+}
+
+/* 警告カラー */
+.bg-warning {
+  background-color: var(--color-warning-500);
+}
+
+.text-warning {
+  color: var(--color-warning-600);
 }
