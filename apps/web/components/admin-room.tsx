@@ -699,7 +699,10 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
             </div>
           )}
 
-          <div className="space-y-6">
+          {/* 2カラムレイアウト */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* 左カラム: モード切替 */}
+            <div className="space-y-6">
           <AdminCard title="モード切替" description="ゲームの進行モードを選択します" icon={Gauge}>
             <div className="flex flex-wrap gap-4">
               <AdminButton
@@ -861,7 +864,10 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
               <p className="mt-2 text-sm text-blue-600">各テーブル1名のみ回答が有効です</p>
             )}
           </AdminCard>
+            </div>
 
+            {/* 右カラム: 抽選・ログ */}
+            <div className="space-y-6">
           <AdminCard title="抽選" description="候補リストからランダムに選出します" icon={Dice1}>
             <div className="flex flex-wrap gap-4">
               <AdminButton variant="secondary" icon={Dice1} onClick={() => handleLottery('all')}>
@@ -875,6 +881,18 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
               </AdminButton>
             </div>
           </AdminCard>
+
+          {isCloudMode && (
+            <AdminCard title="ログ / 抽選履歴" description="進行状況の確認" icon={ListChecks}>
+              <div className="mb-4 inline-flex rounded-xl bg-slate-100 p-1">
+                <TabButton label="操作ログ" active={activeLogTab === 'logs'} onClick={() => setActiveLogTab('logs')} />
+                <TabButton label="抽選履歴" active={activeLogTab === 'lottery'} onClick={() => setActiveLogTab('lottery')} />
+              </div>
+              {activeLogTab === 'logs' ? <LogsList logs={logs} /> : <LotteryList entries={lotteries} />}
+            </AdminCard>
+          )}
+        </div>
+      </div>
 
         {manageOpen && (
           <div className="fixed inset-0 z-40 flex items-center justify-center bg-ink/60 px-6">
@@ -1102,17 +1120,6 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
             </div>
           </div>
         )}
-
-        {isCloudMode && (
-          <AdminCard title="ログ / 抽選履歴" description="進行状況の確認" icon={ListChecks}>
-            <div className="mb-4 inline-flex rounded-xl bg-slate-100 p-1">
-              <TabButton label="操作ログ" active={activeLogTab === 'logs'} onClick={() => setActiveLogTab('logs')} />
-              <TabButton label="抽選履歴" active={activeLogTab === 'lottery'} onClick={() => setActiveLogTab('lottery')} />
-            </div>
-            {activeLogTab === 'logs' ? <LogsList logs={logs} /> : <LotteryList entries={lotteries} />}
-          </AdminCard>
-        )}
-        </div>
         </Section>
       </div>
 

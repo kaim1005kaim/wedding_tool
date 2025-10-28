@@ -563,12 +563,6 @@ const QuizBoard = memo(function QuizBoard({ activeQuiz, quizResult }: QuizPanelP
             })}
           </div>
         </>
-      ) : (
-        <div className="flex-1 flex items-center justify-center">
-          <p className="text-3xl text-ink/70 font-bold glass-panel-strong px-8 py-6 rounded-2xl border border-white/30">
-            次のクイズを準備中です
-          </p>
-        </div>
       )}
     </motion.section>
   );
