@@ -591,79 +591,83 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
 
   return (
     <main className="min-h-screen p-6 relative overflow-hidden bg-gradient-mobile">
-      <div className="mx-auto w-full px-4 relative z-10">
+      <div className="mx-auto max-w-[1800px] w-full px-4 relative z-10">
         <Section title="管理パネル" subtitle={`Room ${roomId}`}>
-          {/* 現在のステータス - 大きく表示 */}
-          <div className="mb-6 rounded-2xl glass-panel-strong p-8 shadow-lg border-2 border-accent-400">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-bold text-ink/70 mb-2">現在のモード</p>
-                <p className="text-4xl font-bold text-terra-clay">{modeIcon(mode)} {labelForMode(mode)}</p>
+          {/* 上部: ステータスと参加URL/QRコードを横並び */}
+          <div className="mb-6 grid grid-cols-1 xl:grid-cols-2 gap-6">
+            {/* 現在のステータス */}
+            <div className="rounded-2xl glass-panel-strong p-6 shadow-lg border-2 border-accent-400">
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <p className="text-sm font-bold text-ink/70 mb-2">現在のモード</p>
+                  <p className="text-3xl font-bold text-terra-clay">{modeIcon(mode)} {labelForMode(mode)}</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-sm font-bold text-ink/70 mb-2">フェーズ</p>
+                  <p className={`text-2xl font-bold ${phaseColor(phase)}`}>{phaseLabel(phase)}</p>
+                  {countdownMs > 0 && phase === 'running' && (
+                    <p className="mt-2 text-xl font-bold text-terra-clay">残り {Math.max(0, Math.ceil(countdownMs / 1000))} 秒</p>
+                  )}
+                </div>
               </div>
-              <div className="text-right">
-                <p className="text-sm font-bold text-ink/70 mb-2">フェーズ</p>
-                <p className={`text-2xl font-bold ${phaseColor(phase)}`}>{phaseLabel(phase)}</p>
-                {countdownMs > 0 && phase === 'running' && (
-                  <p className="mt-2 text-xl font-bold text-terra-clay">残り {Math.max(0, Math.ceil(countdownMs / 1000))} 秒</p>
-                )}
-              </div>
+              {activeQuiz && (
+                <div className="pt-4 border-t border-white/30">
+                  <p className="text-sm font-bold text-ink/70">表示中のクイズ</p>
+                  <p className="mt-1 text-base font-bold text-ink">{activeQuiz.ord ? `第${activeQuiz.ord}問: ` : ''}{activeQuiz.question}</p>
+                </div>
+              )}
             </div>
-            {activeQuiz && (
-              <div className="mt-4 pt-4 border-t border-white/30">
-                <p className="text-sm font-bold text-ink/70">表示中のクイズ</p>
-                <p className="mt-1 text-base font-bold text-ink">{activeQuiz.ord ? `第${activeQuiz.ord}問: ` : ''}{activeQuiz.question}</p>
+
+            {/* 参加用URL・QRコード */}
+            {roomCode && (
+              <div className="rounded-2xl glass-panel-strong p-6 shadow-lg border border-white/30">
+                <div className="flex items-start gap-4">
+                  <div className="flex-1">
+                    <div className="mb-3 flex items-center gap-3">
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-500 shadow-md">
+                        <QrCode className="h-5 w-5 text-white" />
+                      </div>
+                      <div>
+                        <h3 className="text-base font-bold text-ink">参加用URL</h3>
+                        <p className="text-xs text-ink/70">参加者はこのURLから参加できます</p>
+                      </div>
+                    </div>
+                    <div className="rounded-xl glass-panel p-3 border border-slate-200">
+                      <p className="mb-1 text-xs font-semibold text-ink/70 uppercase">Room Code</p>
+                      <p className="mb-2 text-xl font-bold text-ink">{roomCode}</p>
+                      <p className="mb-2 text-xs text-ink/80 break-all">{`${typeof window !== 'undefined' ? window.location.origin : ''}/join/${roomCode}`}</p>
+                      <button
+                        onClick={handleCopyUrl}
+                        className="flex w-full items-center justify-center gap-2 rounded-lg bg-blue-500 px-3 py-2 text-sm font-semibold text-white shadow-md transition-all hover:bg-blue-600 hover:shadow-lg active:scale-[0.98]"
+                      >
+                        {copied ? (
+                          <>
+                            <Check className="h-4 w-4" />
+                            コピーしました
+                          </>
+                        ) : (
+                          <>
+                            <Copy className="h-4 w-4" />
+                            URLをコピー
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                  <div className="shrink-0">
+                    <div className="rounded-xl bg-white p-3 shadow-md border border-slate-200">
+                      <QRCodeSVG
+                        value={`${typeof window !== 'undefined' ? window.location.origin : ''}/join/${roomCode}`}
+                        size={140}
+                        level="M"
+                        includeMargin
+                      />
+                    </div>
+                  </div>
+                </div>
               </div>
             )}
           </div>
-
-          {roomCode && (
-            <div className="mb-6 rounded-2xl glass-panel-strong p-6 shadow-lg border border-white/30">
-              <div className="flex items-start gap-6">
-                <div className="flex-1">
-                  <div className="mb-4 flex items-center gap-3">
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-500 shadow-md">
-                      <QrCode className="h-5 w-5 text-white" />
-                    </div>
-                    <div>
-                      <h3 className="text-lg font-bold text-ink">参加用URL</h3>
-                      <p className="text-sm text-ink/70">参加者はこのURLから参加できます</p>
-                    </div>
-                  </div>
-                  <div className="rounded-xl glass-panel p-4 border border-slate-200">
-                    <p className="mb-2 text-xs font-semibold text-ink/70 uppercase">Room Code</p>
-                    <p className="mb-3 text-2xl font-bold text-ink">{roomCode}</p>
-                    <p className="mb-3 text-sm text-ink/80 break-all">{`${typeof window !== 'undefined' ? window.location.origin : ''}/join/${roomCode}`}</p>
-                    <button
-                      onClick={handleCopyUrl}
-                      className="flex w-full items-center justify-center gap-2 rounded-lg bg-blue-500 px-4 py-3 text-sm font-semibold text-white shadow-md transition-all hover:bg-blue-600 hover:shadow-lg active:scale-[0.98]"
-                    >
-                      {copied ? (
-                        <>
-                          <Check className="h-4 w-4" />
-                          コピーしました
-                        </>
-                      ) : (
-                        <>
-                          <Copy className="h-4 w-4" />
-                          URLをコピー
-                        </>
-                      )}
-                    </button>
-                  </div>
-                </div>
-                <div className="shrink-0">
-                  <div className="rounded-xl bg-white p-4 shadow-md border border-slate-200">
-                    <QRCodeSVG
-                      value={`${typeof window !== 'undefined' ? window.location.origin : ''}/join/${roomCode}`}
-                      size={160}
-                      level="M"
-                      includeMargin
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
 
           <div className="mb-6 flex items-center justify-between gap-4">
             <div className="flex-1 rounded-xl bg-blue-50 px-5 py-3 border border-blue-200">
@@ -699,9 +703,9 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
             </div>
           )}
 
-          {/* 2カラムレイアウト */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* 左カラム: モード切替 */}
+          {/* 3カラムレイアウト (PC) / 1カラム (モバイル) */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+            {/* カラム1: モード切替 */}
             <div className="space-y-6">
           <AdminCard title="モード切替" description="ゲームの進行モードを選択します" icon={Gauge}>
             <div className="flex flex-wrap gap-4">
@@ -739,7 +743,10 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
               </AdminButton>
             </div>
           </AdminCard>
+            </div>
 
+            {/* カラム2: タップチャレンジ・抽選 */}
+            <div className="space-y-6">
           <AdminCard title="タップチャレンジ" description={`${tapSettings.countdownSeconds}秒カウント後に${tapSettings.durationSeconds}秒で自動終了します`} icon={Play}>
             {mode !== 'countup' && (
               <div className="mb-4 rounded-lg bg-yellow-50 border border-yellow-200 p-3">
@@ -810,6 +817,23 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
             </div>
           </AdminCard>
 
+          <AdminCard title="抽選" description="候補リストからランダムに選出します" icon={Dice1}>
+            <div className="flex flex-wrap gap-4">
+              <AdminButton variant="secondary" icon={Dice1} onClick={() => handleLottery('all')}>
+                全員対象
+              </AdminButton>
+              <AdminButton variant="secondary" icon={Dice2} onClick={() => handleLottery('groom')}>
+                新郎
+              </AdminButton>
+              <AdminButton variant="secondary" icon={Dice3} onClick={() => handleLottery('bride')}>
+                新婦
+              </AdminButton>
+            </div>
+          </AdminCard>
+            </div>
+
+            {/* カラム3: クイズ・ログ */}
+            <div className="space-y-6">
           <AdminCard title="クイズ操作" description="出題と正解の公開" icon={Eye}>
             {mode !== 'quiz' && (
               <div className="mb-4 rounded-lg bg-yellow-50 border border-yellow-200 p-3">
@@ -864,23 +888,6 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
               <p className="mt-2 text-sm text-blue-600">各テーブル1名のみ回答が有効です</p>
             )}
           </AdminCard>
-            </div>
-
-            {/* 右カラム: 抽選・ログ */}
-            <div className="space-y-6">
-          <AdminCard title="抽選" description="候補リストからランダムに選出します" icon={Dice1}>
-            <div className="flex flex-wrap gap-4">
-              <AdminButton variant="secondary" icon={Dice1} onClick={() => handleLottery('all')}>
-                全員対象
-              </AdminButton>
-              <AdminButton variant="secondary" icon={Dice2} onClick={() => handleLottery('groom')}>
-                新郎
-              </AdminButton>
-              <AdminButton variant="secondary" icon={Dice3} onClick={() => handleLottery('bride')}>
-                新婦
-              </AdminButton>
-            </div>
-          </AdminCard>
 
           {isCloudMode && (
             <AdminCard title="ログ / 抽選履歴" description="進行状況の確認" icon={ListChecks}>
@@ -891,8 +898,8 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
               {activeLogTab === 'logs' ? <LogsList logs={logs} /> : <LotteryList entries={lotteries} />}
             </AdminCard>
           )}
-        </div>
-      </div>
+            </div>
+          </div>
 
         {manageOpen && (
           <div className="fixed inset-0 z-40 flex items-center justify-center bg-ink/60 px-6">
