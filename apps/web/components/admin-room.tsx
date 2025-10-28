@@ -703,9 +703,9 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
             </div>
           )}
 
-          {/* 3カラムレイアウト (PC) / 1カラム (モバイル) */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6 items-start">
-            {/* カラム1: モード切替 */}
+          {/* 2カラムレイアウト (PC) / 1カラム (モバイル) */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+            {/* 左カラム: 全てのコントロール */}
             <div className="space-y-6 flex flex-col">
           <AdminCard title="モード切替" description="ゲームの進行モードを選択します" icon={Gauge}>
             <div className="grid grid-cols-2 gap-3">
@@ -743,10 +743,7 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
               </AdminButton>
             </div>
           </AdminCard>
-            </div>
 
-            {/* カラム2: タップチャレンジ・抽選 */}
-            <div className="space-y-6 flex flex-col">
           <AdminCard title="タップチャレンジ" description={`${tapSettings.countdownSeconds}秒カウント後に${tapSettings.durationSeconds}秒で自動終了します`} icon={Play}>
             {mode !== 'countup' && (
               <div className="mb-4 rounded-lg bg-yellow-50 border border-yellow-200 p-3">
@@ -830,10 +827,7 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
               </AdminButton>
             </div>
           </AdminCard>
-            </div>
 
-            {/* カラム3: クイズ・ログ */}
-            <div className="space-y-6 flex flex-col">
           <AdminCard title="クイズ操作" description="出題と正解の公開" icon={Eye}>
             {mode !== 'quiz' && (
               <div className="mb-4 rounded-lg bg-yellow-50 border border-yellow-200 p-3">
@@ -888,7 +882,10 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
               <p className="mt-2 text-sm text-blue-600">各テーブル1名のみ回答が有効です</p>
             )}
           </AdminCard>
+            </div>
 
+            {/* 右カラム: ログ / 抽選履歴 */}
+            <div className="space-y-6 flex flex-col">
           {isCloudMode && (
             <AdminCard title="ログ / 抽選履歴" description="進行状況の確認" icon={ListChecks}>
               <div className="mb-4 inline-flex rounded-xl bg-slate-100 p-1">
