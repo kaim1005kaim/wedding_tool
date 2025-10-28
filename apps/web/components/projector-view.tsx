@@ -288,17 +288,28 @@ const CountupBoard = memo(function CountupBoard({
   const top3 = entries.slice(0, 3);
   const rest = entries.slice(3);
   const timeLeftSeconds = Math.max(0, Math.ceil(countdownMs / 1000));
+  const [showTOP3, setShowTOP3] = useState(false);
   const [showPodium, setShowPodium] = useState(false);
 
-  // 終了時にスクロール演出を行った後、表彰台表示に切り替え
+  // 終了時の演出フロー
   useEffect(() => {
     if (phase === 'ended' && entries.length > 0) {
-      // 5秒後に表彰台表示に切り替え
-      const timer = setTimeout(() => {
-        setShowPodium(true);
+      // 5秒後にTOP3表示
+      const timer1 = setTimeout(() => {
+        setShowTOP3(true);
       }, 5000);
-      return () => clearTimeout(timer);
+
+      // 8秒後に表彰台表示に切り替え
+      const timer2 = setTimeout(() => {
+        setShowPodium(true);
+      }, 8000);
+
+      return () => {
+        clearTimeout(timer1);
+        clearTimeout(timer2);
+      };
     } else {
+      setShowTOP3(false);
       setShowPodium(false);
     }
   }, [phase, entries.length]);
@@ -390,53 +401,10 @@ const CountupBoard = memo(function CountupBoard({
         </motion.div>
       )}
 
-      {/* Leaderboard */}
-      {phase === 'running' && entries.length > 0 && (
-        <>
-          {/* Running時は通常のTOP3表示 */}
-          <div className="grid grid-cols-3 gap-6">
-            {top3.map((entry) => (
-              <div
-                key={entry.playerId}
-                className="flex flex-col items-center rounded-2xl p-6 shadow-2xl glass-panel-strong border-2 border-white/30"
-              >
-                <div className="mb-3 flex h-16 w-16 items-center justify-center rounded-full text-5xl glass-panel shadow-lg">
-                  {['🥇', '🥈', '🥉'][entry.rank - 1]}
-                </div>
-                <p className="mb-1 text-center text-2xl font-black text-ink">{entry.displayName}</p>
-                {entry.tableNo && <p className="mb-3 text-base text-ink/70 font-bold">テーブル {entry.tableNo}</p>}
-                <div className="rounded-full glass-panel px-6 py-3 shadow-lg border-2 border-white/40">
-                  <span className="text-3xl font-black text-terra-clay">{entry.totalPoints}</span>
-                  <span className="ml-2 text-lg text-ink/80 font-bold">タップ</span>
-                </div>
-              </div>
-            ))}
-          </div>
-          {rest.length > 0 && (
-            <div className="flex-1 overflow-auto rounded-2xl p-5 shadow-md glass-panel-strong border border-white/30">
-              <div className="grid grid-cols-4 gap-2">
-                {rest.map((entry) => (
-                  <div
-                    key={entry.playerId}
-                    className="flex items-center justify-between rounded-lg glass-panel px-4 py-3 text-base shadow-sm border border-white/20"
-                  >
-                    <div className="flex items-center gap-3 min-w-0">
-                      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-gradient-terracotta text-sm font-bold text-white">
-                        {entry.rank}
-                      </span>
-                      <span className="truncate font-bold text-ink text-lg">{entry.displayName}</span>
-                    </div>
-                    <span className="ml-2 shrink-0 font-bold text-terra-clay">{entry.totalPoints}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-        </>
-      )}
+      {/* Running時はランキング非表示（盛り上げに集中） */}
 
-      {/* 終了時の演出 */}
-      {phase === 'ended' && entries.length > 0 && !showPodium && (
+      {/* 終了時の演出: スクロール */}
+      {phase === 'ended' && entries.length > 0 && !showTOP3 && (
         <motion.div
           className="flex-1 overflow-hidden rounded-2xl p-6 shadow-md glass-panel-strong border border-white/30"
           initial={{ opacity: 0 }}
@@ -472,6 +440,52 @@ const CountupBoard = memo(function CountupBoard({
               </motion.div>
             ))}
           </motion.div>
+        </motion.div>
+      )}
+
+      {/* 終了時の演出: TOP3表示（スクロール後） */}
+      {phase === 'ended' && showTOP3 && !showPodium && top3.length >= 3 && (
+        <motion.div
+          className="flex-1 flex items-center justify-center"
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.6, type: 'spring', bounce: 0.4 }}
+        >
+          <div className="grid grid-cols-3 gap-8">
+            {top3.map((entry, index) => (
+              <motion.div
+                key={entry.playerId}
+                initial={{ y: 50, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ delay: index * 0.2, type: 'spring', bounce: 0.4 }}
+                className={`flex flex-col items-center rounded-2xl p-8 shadow-2xl glass-panel-strong border-4 ${
+                  entry.rank === 1
+                    ? 'border-yellow-400 ring-4 ring-yellow-300/50 bg-gradient-to-br from-yellow-50/40 to-orange-50/40'
+                    : entry.rank === 2
+                      ? 'border-gray-400 ring-4 ring-gray-300/50 bg-gradient-to-br from-gray-50/30 to-slate-50/30'
+                      : 'border-amber-600 ring-4 ring-amber-400/50 bg-gradient-to-br from-amber-50/30 to-orange-50/30'
+                }`}
+              >
+                <motion.div
+                  className="mb-4 text-8xl"
+                  animate={{ rotate: [0, -10, 10, -10, 0] }}
+                  transition={{ duration: 0.6, delay: 0.5 + index * 0.2 }}
+                >
+                  {['🥇', '🥈', '🥉'][index]}
+                </motion.div>
+                <p className="mb-2 text-center text-4xl font-black text-ink">{entry.displayName}</p>
+                {entry.tableNo && <p className="mb-4 text-xl text-ink/70 font-bold text-center">テーブル {entry.tableNo}</p>}
+                <motion.div
+                  className="rounded-full glass-panel px-8 py-4 shadow-lg border-2 border-white/40 text-center"
+                  animate={{ scale: [1, 1.2, 1] }}
+                  transition={{ duration: 0.4, delay: 0.8 + index * 0.2 }}
+                >
+                  <span className="text-5xl font-black text-terra-clay">{entry.totalPoints}</span>
+                  <span className="ml-2 text-2xl text-ink/80 font-bold">タップ</span>
+                </motion.div>
+              </motion.div>
+            ))}
+          </div>
         </motion.div>
       )}
 
