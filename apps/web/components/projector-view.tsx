@@ -403,39 +403,39 @@ const CountupBoard = memo(function CountupBoard({
 
       {/* Running時はランキング非表示（盛り上げに集中） */}
 
-      {/* 終了時の演出: スクロール */}
+      {/* 終了時の演出: スクロール（下から上へ、下位から上位） */}
       {phase === 'ended' && entries.length > 0 && !showTOP3 && (
         <motion.div
-          className="flex-1 overflow-hidden rounded-2xl p-6 shadow-md glass-panel-strong border border-white/30"
+          className="flex-1 overflow-hidden"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
         >
           <motion.div
             className="space-y-3"
-            initial={{ y: '100%' }}
-            animate={{ y: '-100%' }}
+            initial={{ y: 0 }}
+            animate={{ y: `-${entries.length * 100}px` }}
             transition={{ duration: 5, ease: 'linear' }}
           >
             {[...entries].reverse().map((entry) => (
               <motion.div
                 key={entry.playerId}
-                className="flex items-center justify-between rounded-xl glass-panel px-6 py-4 shadow-lg border-2 border-white/30"
+                className="flex items-center justify-between rounded-xl glass-panel-strong px-8 py-5 shadow-xl border-2 border-white/40"
                 initial={{ opacity: 0, x: -50 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.3 }}
               >
                 <div className="flex items-center gap-4">
-                  <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-gradient-terracotta text-xl font-black text-white shadow-lg">
+                  <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-gradient-terracotta text-2xl font-black text-white shadow-lg">
                     {entry.rank}
                   </span>
                   <div>
-                    <p className="text-2xl font-black text-ink">{entry.displayName}</p>
-                    {entry.tableNo && <p className="text-base text-ink/70 font-bold">テーブル {entry.tableNo}</p>}
+                    <p className="text-3xl font-black text-ink">{entry.displayName}</p>
+                    {entry.tableNo && <p className="text-lg text-ink/70 font-bold">テーブル {entry.tableNo}</p>}
                   </div>
                 </div>
                 <div className="text-right">
-                  <p className="text-3xl font-black text-terra-clay">{entry.totalPoints}</p>
-                  <p className="text-sm text-ink/80 font-bold">タップ</p>
+                  <p className="text-4xl font-black text-terra-clay">{entry.totalPoints}</p>
+                  <p className="text-base text-ink/80 font-bold">タップ</p>
                 </div>
               </motion.div>
             ))}

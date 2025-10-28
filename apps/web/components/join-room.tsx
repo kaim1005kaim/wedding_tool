@@ -448,8 +448,7 @@ type CountupOverlayProps = {
 function CountupOverlay({ phase, countdownMs, leaderboard, onTap }: CountupOverlayProps) {
   const [localCountdown, setLocalCountdown] = useState<number | null>(null);
   const [flash, setFlash] = useState(false);
-  const [phaseEndTime, setPhaseEndTime] = useState<number | null>(null);
-  const [timeLeftSeconds, setTimeLeftSeconds] = useState<number | null>(null);
+  const [localCountdownMs, setLocalCountdownMs] = useState(countdownMs);
   const [isTimerRunning, setIsTimerRunning] = useState(false);
   const [isFinished, setIsFinished] = useState(false);
   const [banner, setBanner] = useState<'start' | 'stop' | null>(null);
@@ -458,6 +457,8 @@ function CountupOverlay({ phase, countdownMs, leaderboard, onTap }: CountupOverl
   const startDelayRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const stopDelayRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const finishTriggeredRef = useRef(false);
+  const countdownStartTimeRef = useRef<number | null>(null);
+  const initialCountdownRef = useRef<number>(0);
 
   const clearStartDelay = useCallback(() => {
     if (startDelayRef.current !== null) {
@@ -488,8 +489,8 @@ function CountupOverlay({ phase, countdownMs, leaderboard, onTap }: CountupOverl
     clearStartDelay();
     setIsTimerRunning(false);
     setIsFinished(true);
-    setPhaseEndTime(null);
-    setTimeLeftSeconds(0);
+    countdownStartTimeRef.current = null;
+    setLocalCountdownMs(0);
     setBanner('stop');
     clearStopDelay();
     stopDelayRef.current = setTimeout(() => {
@@ -497,6 +498,35 @@ function CountupOverlay({ phase, countdownMs, leaderboard, onTap }: CountupOverl
       stopDelayRef.current = null;
     }, STOP_BANNER_DURATION_MS);
   }, [clearStartDelay, clearStopDelay]);
+
+  // クライアント側でカウントダウンを管理
+  useEffect(() => {
+    if (phase === 'running' && isTimerRunning && localCountdown === null) {
+      // 新しいカウントダウン開始
+      if (countdownStartTimeRef.current === null) {
+        countdownStartTimeRef.current = Date.now();
+        initialCountdownRef.current = countdownMs;
+        setLocalCountdownMs(countdownMs);
+      }
+
+      const interval = setInterval(() => {
+        const elapsed = Date.now() - (countdownStartTimeRef.current ?? 0);
+        const remaining = Math.max(0, initialCountdownRef.current - elapsed);
+        setLocalCountdownMs(remaining);
+
+        if (remaining <= 0) {
+          clearInterval(interval);
+        }
+      }, 100); // 100msごとに更新
+
+      return () => clearInterval(interval);
+    } else if (phase !== 'running') {
+      // phase が running でない場合はリセット
+      countdownStartTimeRef.current = null;
+      initialCountdownRef.current = 0;
+      setLocalCountdownMs(countdownMs);
+    }
+  }, [phase, isTimerRunning, localCountdown, countdownMs]);
 
   useEffect(() => {
     const prev = prevPhaseRef.current;
@@ -506,8 +536,6 @@ function CountupOverlay({ phase, countdownMs, leaderboard, onTap }: CountupOverl
       clearStopDelay();
       finishTriggeredRef.current = false;
       setLocalCountdown(3);
-      setPhaseEndTime(null);
-      setTimeLeftSeconds(null);
       setIsTimerRunning(false);
       setIsFinished(false);
       setBanner(null);
@@ -524,8 +552,6 @@ function CountupOverlay({ phase, countdownMs, leaderboard, onTap }: CountupOverl
       setIsTimerRunning(false);
       setIsFinished(false);
       setBanner(null);
-      setPhaseEndTime(null);
-      setTimeLeftSeconds(null);
     }
 
     prevPhaseRef.current = phase;
@@ -554,35 +580,13 @@ function CountupOverlay({ phase, countdownMs, leaderboard, onTap }: CountupOverl
     startDelayRef.current = setTimeout(() => {
       setBanner(null);
       setIsTimerRunning(true);
-      // Set exactly 10 seconds from now when timer starts
-      const now = Date.now();
-      const target = now + 10000; // Exactly 10 seconds
-      setPhaseEndTime(target);
-      setTimeLeftSeconds(10);
       startDelayRef.current = null;
     }, START_BANNER_DURATION_MS);
   }, [phase, localCountdown, isFinished, isTimerRunning, clearStartDelay]);
 
-  useEffect(() => {
-    if (!phaseEndTime || !isTimerRunning || phase !== 'running') return;
-
-    const tick = () => {
-      const remainingMs = phaseEndTime - Date.now();
-      if (remainingMs <= 0) {
-        triggerFinish();
-        return;
-      }
-      setTimeLeftSeconds(Math.max(0, Math.ceil(remainingMs / 1000)));
-    };
-
-    tick();
-    const id = setInterval(tick, 100);
-    return () => clearInterval(id);
-  }, [phase, phaseEndTime, isTimerRunning, triggerFinish]);
-
   const disabled = phase !== 'running' || localCountdown !== null || !isTimerRunning || banner === 'stop';
   const showPad = phase === 'running';
-  const displaySeconds = isTimerRunning && banner !== 'stop' && timeLeftSeconds !== null ? timeLeftSeconds : '';
+  const displaySeconds = isTimerRunning && banner !== 'stop' ? Math.max(0, Math.ceil(localCountdownMs / 1000)) : '';
 
   const handleTap = (e: React.PointerEvent) => {
     if (disabled) return;
