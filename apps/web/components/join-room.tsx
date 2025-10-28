@@ -227,21 +227,19 @@ export default function JoinRoom({ code }: { code: string }) {
         </div>
 
         {registered ? (
-          <div className="rounded-2xl glass-panel-strong px-8 py-6 text-center shadow-md bounce-in border border-white/30 ring-2 ring-accent-400" aria-live="polite">
-            <div className="mb-3 text-4xl">🎉</div>
-            <p className="text-xl font-bold text-ink">参加登録完了！</p>
-            <p className="mt-3 text-lg text-ink">
-              <span className="rounded-full glass-panel px-4 py-1 font-bold text-terra-clay border border-white/20">{registeredTableNo}</span>
+          <div className="rounded-2xl glass-panel-strong px-6 py-4 text-center shadow-md bounce-in border border-white/30 ring-2 ring-accent-400" aria-live="polite">
+            <div className="mb-2 text-3xl">🎉</div>
+            <p className="text-lg font-bold text-ink">参加登録完了！</p>
+            <p className="mt-2 text-base text-ink">
+              <span className="rounded-full glass-panel px-3 py-1 font-bold text-terra-clay border border-white/20">{registeredTableNo}</span>
               <span className="mx-2 font-bold">テーブル</span>
             </p>
-            <p className="mt-2 text-2xl font-bold text-ink">{registeredName} さん</p>
-            <p className="mt-4 text-sm font-bold text-ink/70">ゲーム開始までお待ちください</p>
+            <p className="mt-1 text-xl font-bold text-ink">{registeredName} さん</p>
+            <p className="mt-3 text-sm font-bold text-ink/70">ゲーム開始までお待ちください</p>
           </div>
         ) : (
-          <div className="rounded-2xl glass-panel-strong p-8 text-center shadow-md slide-up border border-white/30">
-            <div className="mb-4 text-5xl">📱</div>
-            <p className="text-lg font-bold text-ink">参加登録してください</p>
-            <p className="mt-3 text-sm leading-relaxed text-ink/80 font-semibold">
+          <div className="text-center py-4">
+            <p className="text-base font-bold text-ink/80">
               画面中央のモーダルでテーブル番号とお名前を入力し、<br />
               「参加する」ボタンを押してください
             </p>
@@ -366,30 +364,30 @@ function JoinModal({ visible, tableNo, displayName, onTableNoChange, onDisplayNa
   const guidanceIcon = mode === 'quiz' ? '🎯' : mode === 'countup' ? '⚡' : '🎮';
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center px-6 relative overflow-hidden">
-      <div className="glass-panel-strong w-full max-w-md rounded-2xl px-8 py-10 shadow-xl bounce-in border border-white/30 relative z-10">
-        <div className="mb-6 text-center">
-          <div className="mb-4 text-5xl">{guidanceIcon}</div>
-          <h2 className="text-title-md font-bold text-ink">参加登録</h2>
-          <div className="mt-3 rounded-xl glass-panel px-4 py-3 border border-white/20">
-            <p className="text-sm font-bold leading-relaxed text-ink">{guidanceText}</p>
+    <div className="fixed inset-0 z-50 flex items-center justify-center px-4 relative overflow-hidden">
+      <div className="glass-panel-strong w-full max-w-sm rounded-2xl px-6 py-6 shadow-xl bounce-in border border-white/30 relative z-10">
+        <div className="mb-4 text-center">
+          <div className="mb-2 text-3xl">{guidanceIcon}</div>
+          <h2 className="text-xl font-bold text-ink">参加登録</h2>
+          <div className="mt-2 rounded-lg glass-panel px-3 py-2 border border-white/20">
+            <p className="text-xs font-bold leading-relaxed text-ink">{guidanceText}</p>
           </div>
         </div>
         <form
-          className="space-y-5"
+          className="space-y-4"
           onSubmit={(event) => {
             event.preventDefault();
             onSubmit();
           }}
         >
-          <div className="space-y-2">
-            <label className="flex items-center gap-2 text-sm font-bold text-ink" htmlFor="table-no">
+          <div className="space-y-1">
+            <label className="flex items-center gap-1.5 text-xs font-bold text-ink" htmlFor="table-no">
               <span>📍</span>
               <span>テーブル番号</span>
             </label>
             <input
               id="table-no"
-              className="input-terra w-full"
+              className="input-terra w-full text-base py-3"
               value={tableNo}
               onChange={(event) => onTableNoChange(event.target.value)}
               placeholder="例：A-3 / 5 / C"
@@ -397,14 +395,14 @@ function JoinModal({ visible, tableNo, displayName, onTableNoChange, onDisplayNa
               required
             />
           </div>
-          <div className="space-y-2">
-            <label className="flex items-center gap-2 text-sm font-bold text-ink" htmlFor="display-name">
+          <div className="space-y-1">
+            <label className="flex items-center gap-1.5 text-xs font-bold text-ink" htmlFor="display-name">
               <span>👤</span>
               <span>お名前</span>
             </label>
             <input
               id="display-name"
-              className="input-terra w-full"
+              className="input-terra w-full text-base py-3"
               value={displayName}
               onChange={(event) => onDisplayNameChange(event.target.value)}
               placeholder="例：山田花子"
@@ -414,13 +412,13 @@ function JoinModal({ visible, tableNo, displayName, onTableNoChange, onDisplayNa
             />
           </div>
           {error && (
-            <div className="rounded-xl glass-panel-strong px-4 py-3 text-sm font-bold text-error shadow-sm bounce-in border border-error/30" role="alert">
+            <div className="rounded-lg glass-panel-strong px-3 py-2 text-xs font-bold text-error shadow-sm bounce-in border border-error/30" role="alert">
               ⚠️ {error}
             </div>
           )}
           <button
             type="submit"
-            className="btn-primary mt-6 w-full text-xl py-5 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="btn-primary mt-4 w-full text-lg py-4 disabled:opacity-50 disabled:cursor-not-allowed"
             disabled={isJoining}
           >
             {isJoining ? (
