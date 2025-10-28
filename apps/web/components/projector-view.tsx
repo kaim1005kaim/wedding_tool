@@ -13,6 +13,7 @@ export default function ProjectorView({ roomId: _roomId }: { roomId: string }) {
   const mode = useRoomStore((state) => state.mode);
   const phase = useRoomStore((state) => state.phase);
   const countdownMs = useRoomStore((state) => state.countdownMs);
+  const serverTime = useRoomStore((state) => state.serverTime);
   const leaderboard = useRoomStore((state) => state.leaderboard);
   const activeQuiz = useRoomStore((state) => state.activeQuiz);
   const quizResult = useRoomStore((state) => state.quizResult);
@@ -23,8 +24,40 @@ export default function ProjectorView({ roomId: _roomId }: { roomId: string }) {
   const [isSpinning, setIsSpinning] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [particleTrigger, setParticleTrigger] = useState<ParticleConfig | null>(null);
+  const [localCountdownMs, setLocalCountdownMs] = useState(countdownMs);
   const containerRef = useRef<HTMLDivElement>(null);
   const prevModeRef = useRef<typeof mode>();
+  const countdownStartTimeRef = useRef<number | null>(null);
+  const initialCountdownRef = useRef<number>(0);
+
+  // クライアント側でカウントダウンを管理
+  useEffect(() => {
+    if (phase === 'running' && mode === 'countup') {
+      // 新しいカウントダウン開始
+      if (countdownStartTimeRef.current === null) {
+        countdownStartTimeRef.current = Date.now();
+        initialCountdownRef.current = countdownMs;
+        setLocalCountdownMs(countdownMs);
+      }
+
+      const interval = setInterval(() => {
+        const elapsed = Date.now() - (countdownStartTimeRef.current ?? 0);
+        const remaining = Math.max(0, initialCountdownRef.current - elapsed);
+        setLocalCountdownMs(remaining);
+
+        if (remaining <= 0) {
+          clearInterval(interval);
+        }
+      }, 100); // 100msごとに更新
+
+      return () => clearInterval(interval);
+    } else {
+      // phase が running でない場合はリセット
+      countdownStartTimeRef.current = null;
+      initialCountdownRef.current = 0;
+      setLocalCountdownMs(countdownMs);
+    }
+  }, [phase, mode, countdownMs]);
 
   useEffect(() => {
     if (!lotteryResult?.player?.id) return;
@@ -132,9 +165,9 @@ export default function ProjectorView({ roomId: _roomId }: { roomId: string }) {
       aria-label="投影画面"
     >
       <div className="relative w-full h-screen flex flex-col z-10 px-12 py-10 gap-6" role="region" aria-label="ゲーム表示エリア">
-        <Header mode={mode} countdownMs={countdownMs} isFullscreen={isFullscreen} onToggleFullscreen={toggleFullscreen} />
+        <Header mode={mode} countdownMs={localCountdownMs} isFullscreen={isFullscreen} onToggleFullscreen={toggleFullscreen} />
         <div className="flex-1 overflow-hidden">
-          <AnimatePresence mode="wait">{renderSection(mode, phase, countdownMs, topTen, activeQuiz, quizResult, lotteryResult, isSpinning, lotteryKey)}</AnimatePresence>
+          <AnimatePresence mode="wait">{renderSection(mode, phase, localCountdownMs, topTen, activeQuiz, quizResult, lotteryResult, isSpinning, lotteryKey)}</AnimatePresence>
         </div>
       </div>
 
@@ -255,6 +288,20 @@ const CountupBoard = memo(function CountupBoard({
   const top3 = entries.slice(0, 3);
   const rest = entries.slice(3);
   const timeLeftSeconds = Math.max(0, Math.ceil(countdownMs / 1000));
+  const [showPodium, setShowPodium] = useState(false);
+
+  // 終了時にスクロール演出を行った後、表彰台表示に切り替え
+  useEffect(() => {
+    if (phase === 'ended' && entries.length > 0) {
+      // 5秒後に表彰台表示に切り替え
+      const timer = setTimeout(() => {
+        setShowPodium(true);
+      }, 5000);
+      return () => clearTimeout(timer);
+    } else {
+      setShowPodium(false);
+    }
+  }, [phase, entries.length]);
 
   return (
     <motion.section
@@ -278,26 +325,38 @@ const CountupBoard = memo(function CountupBoard({
       )}
 
       {phase === 'running' && (
-        <div className="text-center py-6 space-y-4">
+        <div className="text-center py-8 space-y-6">
           <motion.div
             initial={{ scale: 0.9 }}
             animate={{ scale: [1, 1.05, 1] }}
             transition={{ duration: 1, repeat: Infinity }}
           >
-            <div className="text-8xl mb-2">⚡</div>
+            <div className="text-9xl mb-4">⚡</div>
           </motion.div>
           <motion.div
-            className="glass-panel-strong rounded-2xl px-12 py-6 inline-block shadow-xl border-2 border-accent-400"
-            animate={{ boxShadow: ['0 0 20px rgba(251, 146, 60, 0.3)', '0 0 40px rgba(251, 146, 60, 0.6)', '0 0 20px rgba(251, 146, 60, 0.3)'] }}
+            className="glass-panel-strong rounded-3xl px-16 py-10 inline-block shadow-2xl border-4 border-accent-400"
+            animate={{
+              boxShadow: [
+                '0 0 40px rgba(251, 146, 60, 0.5)',
+                '0 0 80px rgba(251, 146, 60, 0.8)',
+                '0 0 40px rgba(251, 146, 60, 0.5)'
+              ]
+            }}
             transition={{ duration: 1.5, repeat: Infinity }}
           >
-            <p className="text-2xl font-bold text-ink/70 mb-2">タップチャレンジ実行中！</p>
-            <p className="text-6xl font-black text-gradient-sunset">
-              残り {timeLeftSeconds} 秒
-            </p>
+            <p className="text-3xl font-bold text-ink/70 mb-4">タップチャレンジ実行中！</p>
+            <motion.p
+              className="font-black bg-gradient-to-r from-orange-500 via-red-500 to-orange-500 bg-clip-text text-transparent"
+              style={{ fontSize: '10rem', lineHeight: 1 }}
+              animate={{ scale: timeLeftSeconds <= 5 ? [1, 1.1, 1] : 1 }}
+              transition={{ duration: 0.5, repeat: timeLeftSeconds <= 5 ? Infinity : 0 }}
+            >
+              {timeLeftSeconds}
+            </motion.p>
+            <p className="text-4xl font-black text-terra-clay mt-2">秒</p>
           </motion.div>
           <motion.p
-            className="text-3xl font-bold text-ink"
+            className="text-4xl font-bold text-ink"
             animate={{ opacity: [0.6, 1, 0.6] }}
             transition={{ duration: 1.5, repeat: Infinity }}
           >
@@ -331,78 +390,178 @@ const CountupBoard = memo(function CountupBoard({
         </motion.div>
       )}
 
-      {/* Leaderboard - Show when running or ended */}
-      {(phase === 'running' || phase === 'ended') && entries.length > 0 && (
+      {/* Leaderboard */}
+      {phase === 'running' && entries.length > 0 && (
         <>
-      {/* Top 3 - Large Display */}
-      <div className="grid grid-cols-3 gap-6">
-        {top3.map((entry, index) => (
-          <motion.div
-            key={entry.playerId}
-            layout
-            initial={{ opacity: 0, y: 50, scale: 0.8 }}
-            animate={{
-              opacity: 1,
-              y: 0,
-              scale: phase === 'ended' ? [0.8, 1.1, 1] : 1
-            }}
-            transition={{
-              duration: 0.6,
-              delay: phase === 'ended' ? index * 0.2 : 0,
-              type: 'spring',
-              bounce: 0.4
-            }}
-            className={`flex flex-col items-center rounded-2xl p-6 shadow-2xl glass-panel-strong border-2 ${
-              entry.rank === 1
-                ? 'border-yellow-400 ring-4 ring-yellow-300/50 bg-gradient-to-br from-yellow-50/30 to-orange-50/30'
-                : entry.rank === 2
-                  ? 'border-gray-400 ring-4 ring-gray-300/50 bg-gradient-to-br from-gray-50/30 to-slate-50/30'
-                  : 'border-amber-600 ring-4 ring-amber-400/50 bg-gradient-to-br from-amber-50/30 to-orange-50/30'
-            }`}
-          >
-            <motion.div
-              className="mb-3 flex h-20 w-20 items-center justify-center rounded-full text-6xl glass-panel shadow-lg"
-              animate={phase === 'ended' ? { rotate: [0, -10, 10, -10, 0] } : {}}
-              transition={{ duration: 0.5, delay: phase === 'ended' ? 0.5 + index * 0.2 : 0 }}
-            >
-              {['🥇', '🥈', '🥉'][entry.rank - 1]}
-            </motion.div>
-            <p className="mb-1 text-center text-3xl font-black text-ink">{entry.displayName}</p>
-            {entry.tableNo && <p className="mb-3 text-lg text-ink/70 font-bold">テーブル {entry.tableNo}</p>}
-            <motion.div
-              className="rounded-full glass-panel px-8 py-4 shadow-lg border-2 border-white/40"
-              animate={phase === 'ended' ? { scale: [1, 1.2, 1] } : {}}
-              transition={{ duration: 0.4, delay: phase === 'ended' ? 0.8 + index * 0.2 : 0 }}
-            >
-              <span className="text-4xl font-black text-terra-clay">{entry.totalPoints}</span>
-              <span className="ml-2 text-xl text-ink/80 font-bold">タップ</span>
-            </motion.div>
-          </motion.div>
-        ))}
-      </div>
-
-      {/* Rest - Compact Grid */}
-      {rest.length > 0 && (
-        <div className="flex-1 overflow-auto rounded-2xl p-5 shadow-md glass-panel-strong border border-white/30">
-          <div className="grid grid-cols-4 gap-2">
-            {rest.map((entry) => (
+          {/* Running時は通常のTOP3表示 */}
+          <div className="grid grid-cols-3 gap-6">
+            {top3.map((entry) => (
               <div
                 key={entry.playerId}
-                className="flex items-center justify-between rounded-lg glass-panel px-4 py-3 text-base shadow-sm border border-white/20"
+                className="flex flex-col items-center rounded-2xl p-6 shadow-2xl glass-panel-strong border-2 border-white/30"
               >
-                <div className="flex items-center gap-3 min-w-0">
-                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-gradient-terracotta text-sm font-bold text-white">
-                    {entry.rank}
-                  </span>
-                  <span className="truncate font-bold text-ink text-lg">{entry.displayName}</span>
+                <div className="mb-3 flex h-16 w-16 items-center justify-center rounded-full text-5xl glass-panel shadow-lg">
+                  {['🥇', '🥈', '🥉'][entry.rank - 1]}
                 </div>
-                <span className="ml-2 shrink-0 font-bold text-terra-clay">{entry.totalPoints}</span>
+                <p className="mb-1 text-center text-2xl font-black text-ink">{entry.displayName}</p>
+                {entry.tableNo && <p className="mb-3 text-base text-ink/70 font-bold">テーブル {entry.tableNo}</p>}
+                <div className="rounded-full glass-panel px-6 py-3 shadow-lg border-2 border-white/40">
+                  <span className="text-3xl font-black text-terra-clay">{entry.totalPoints}</span>
+                  <span className="ml-2 text-lg text-ink/80 font-bold">タップ</span>
+                </div>
               </div>
             ))}
           </div>
-        </div>
-      )}
+          {rest.length > 0 && (
+            <div className="flex-1 overflow-auto rounded-2xl p-5 shadow-md glass-panel-strong border border-white/30">
+              <div className="grid grid-cols-4 gap-2">
+                {rest.map((entry) => (
+                  <div
+                    key={entry.playerId}
+                    className="flex items-center justify-between rounded-lg glass-panel px-4 py-3 text-base shadow-sm border border-white/20"
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-gradient-terracotta text-sm font-bold text-white">
+                        {entry.rank}
+                      </span>
+                      <span className="truncate font-bold text-ink text-lg">{entry.displayName}</span>
+                    </div>
+                    <span className="ml-2 shrink-0 font-bold text-terra-clay">{entry.totalPoints}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </>
+      )}
+
+      {/* 終了時の演出 */}
+      {phase === 'ended' && entries.length > 0 && !showPodium && (
+        <motion.div
+          className="flex-1 overflow-hidden rounded-2xl p-6 shadow-md glass-panel-strong border border-white/30"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+        >
+          <motion.div
+            className="space-y-3"
+            initial={{ y: '100%' }}
+            animate={{ y: '-100%' }}
+            transition={{ duration: 5, ease: 'linear' }}
+          >
+            {[...entries].reverse().map((entry) => (
+              <motion.div
+                key={entry.playerId}
+                className="flex items-center justify-between rounded-xl glass-panel px-6 py-4 shadow-lg border-2 border-white/30"
+                initial={{ opacity: 0, x: -50 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.3 }}
+              >
+                <div className="flex items-center gap-4">
+                  <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-gradient-terracotta text-xl font-black text-white shadow-lg">
+                    {entry.rank}
+                  </span>
+                  <div>
+                    <p className="text-2xl font-black text-ink">{entry.displayName}</p>
+                    {entry.tableNo && <p className="text-base text-ink/70 font-bold">テーブル {entry.tableNo}</p>}
+                  </div>
+                </div>
+                <div className="text-right">
+                  <p className="text-3xl font-black text-terra-clay">{entry.totalPoints}</p>
+                  <p className="text-sm text-ink/80 font-bold">タップ</p>
+                </div>
+              </motion.div>
+            ))}
+          </motion.div>
+        </motion.div>
+      )}
+
+      {/* 表彰台スタイル表示 */}
+      {phase === 'ended' && showPodium && top3.length >= 3 && (
+        <div className="flex-1 flex items-end justify-center gap-8 pb-12">
+          {/* 2位 - 左 */}
+          <motion.div
+            initial={{ y: 100, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.2, type: 'spring', bounce: 0.4 }}
+            className="flex flex-col items-center"
+          >
+            <motion.div
+              animate={{ rotate: [0, -10, 10, -10, 0] }}
+              transition={{ duration: 0.6, delay: 0.8 }}
+              className="mb-4 text-8xl"
+            >
+              🥈
+            </motion.div>
+            <div className="rounded-2xl glass-panel-strong p-8 shadow-2xl border-4 border-gray-400 ring-4 ring-gray-300/50 bg-gradient-to-br from-gray-50/30 to-slate-50/30">
+              <p className="text-3xl font-black text-ink text-center mb-2">{top3[1].displayName}</p>
+              {top3[1].tableNo && <p className="text-lg text-ink/70 font-bold text-center mb-4">テーブル {top3[1].tableNo}</p>}
+              <div className="rounded-full glass-panel px-8 py-4 shadow-lg border-2 border-white/40 text-center">
+                <span className="text-4xl font-black text-terra-clay">{top3[1].totalPoints}</span>
+                <span className="ml-2 text-xl text-ink/80 font-bold">タップ</span>
+              </div>
+            </div>
+            {/* 台座 */}
+            <div className="w-48 h-32 bg-gradient-to-b from-gray-300/80 to-gray-400/80 rounded-t-2xl shadow-xl mt-4 flex items-center justify-center border-4 border-gray-500">
+              <span className="text-6xl font-black text-white">2</span>
+            </div>
+          </motion.div>
+
+          {/* 1位 - 中央（高い位置） */}
+          <motion.div
+            initial={{ y: 100, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.4, type: 'spring', bounce: 0.4 }}
+            className="flex flex-col items-center -translate-y-12"
+          >
+            <motion.div
+              animate={{ rotate: [0, -15, 15, -15, 0], scale: [1, 1.2, 1] }}
+              transition={{ duration: 0.8, delay: 1 }}
+              className="mb-4 text-9xl"
+            >
+              🥇
+            </motion.div>
+            <div className="rounded-2xl glass-panel-strong p-10 shadow-2xl border-4 border-yellow-400 ring-4 ring-yellow-300/50 bg-gradient-to-br from-yellow-50/40 to-orange-50/40">
+              <p className="text-4xl font-black text-ink text-center mb-2">{top3[0].displayName}</p>
+              {top3[0].tableNo && <p className="text-xl text-ink/70 font-bold text-center mb-4">テーブル {top3[0].tableNo}</p>}
+              <div className="rounded-full glass-panel px-10 py-5 shadow-lg border-2 border-white/40 text-center">
+                <span className="text-5xl font-black text-terra-clay">{top3[0].totalPoints}</span>
+                <span className="ml-2 text-2xl text-ink/80 font-bold">タップ</span>
+              </div>
+            </div>
+            {/* 台座 */}
+            <div className="w-52 h-40 bg-gradient-to-b from-yellow-300/80 to-yellow-500/80 rounded-t-2xl shadow-2xl mt-4 flex items-center justify-center border-4 border-yellow-600">
+              <span className="text-7xl font-black text-white">1</span>
+            </div>
+          </motion.div>
+
+          {/* 3位 - 右 */}
+          <motion.div
+            initial={{ y: 100, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0, type: 'spring', bounce: 0.4 }}
+            className="flex flex-col items-center"
+          >
+            <motion.div
+              animate={{ rotate: [0, -10, 10, -10, 0] }}
+              transition={{ duration: 0.6, delay: 0.6 }}
+              className="mb-4 text-8xl"
+            >
+              🥉
+            </motion.div>
+            <div className="rounded-2xl glass-panel-strong p-8 shadow-2xl border-4 border-amber-600 ring-4 ring-amber-400/50 bg-gradient-to-br from-amber-50/30 to-orange-50/30">
+              <p className="text-3xl font-black text-ink text-center mb-2">{top3[2].displayName}</p>
+              {top3[2].tableNo && <p className="text-lg text-ink/70 font-bold text-center mb-4">テーブル {top3[2].tableNo}</p>}
+              <div className="rounded-full glass-panel px-8 py-4 shadow-lg border-2 border-white/40 text-center">
+                <span className="text-4xl font-black text-terra-clay">{top3[2].totalPoints}</span>
+                <span className="ml-2 text-xl text-ink/80 font-bold">タップ</span>
+              </div>
+            </div>
+            {/* 台座 */}
+            <div className="w-48 h-24 bg-gradient-to-b from-amber-500/80 to-amber-700/80 rounded-t-2xl shadow-xl mt-4 flex items-center justify-center border-4 border-amber-800">
+              <span className="text-6xl font-black text-white">3</span>
+            </div>
+          </motion.div>
+        </div>
       )}
     </motion.section>
   );
