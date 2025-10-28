@@ -593,10 +593,27 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
     <main className="min-h-screen p-6 relative overflow-hidden bg-gradient-mobile">
       <div className="mx-auto w-full px-4 relative z-10">
         <Section title="管理パネル" subtitle={`Room ${roomId}`}>
-          <div className="mb-6 grid grid-cols-3 gap-4 rounded-2xl glass-panel-strong p-6 shadow-lg border border-white/30">
-            <StatusItem label="モード" value={labelForMode(mode)} icon={Gauge} />
-            <StatusItem label="フェーズ" value={phaseLabel(phase)} icon={PauseCircle} />
-            <StatusItem label="カウントダウン" value={`${Math.max(0, Math.ceil(countdownMs / 1000))} 秒`} icon={ListChecks} />
+          {/* 現在のステータス - 大きく表示 */}
+          <div className="mb-6 rounded-2xl glass-panel-strong p-8 shadow-lg border-2 border-accent-400">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-bold text-ink/70 mb-2">現在のモード</p>
+                <p className="text-4xl font-bold text-terra-clay">{modeIcon(mode)} {labelForMode(mode)}</p>
+              </div>
+              <div className="text-right">
+                <p className="text-sm font-bold text-ink/70 mb-2">フェーズ</p>
+                <p className={`text-2xl font-bold ${phaseColor(phase)}`}>{phaseLabel(phase)}</p>
+                {countdownMs > 0 && phase === 'running' && (
+                  <p className="mt-2 text-xl font-bold text-terra-clay">残り {Math.max(0, Math.ceil(countdownMs / 1000))} 秒</p>
+                )}
+              </div>
+            </div>
+            {activeQuiz && (
+              <div className="mt-4 pt-4 border-t border-white/30">
+                <p className="text-sm font-bold text-ink/70">表示中のクイズ</p>
+                <p className="mt-1 text-base font-bold text-ink">{activeQuiz.ord ? `第${activeQuiz.ord}問: ` : ''}{activeQuiz.question}</p>
+              </div>
+            )}
           </div>
 
           {roomCode && (
@@ -721,50 +738,62 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
           </AdminCard>
 
           <AdminCard title="タップチャレンジ" description={`${tapSettings.countdownSeconds}秒カウント後に${tapSettings.durationSeconds}秒で自動終了します`} icon={Play}>
+            {mode !== 'countup' && (
+              <div className="mb-4 rounded-lg bg-yellow-50 border border-yellow-200 p-3">
+                <p className="text-sm font-bold text-yellow-800">⚠️ タップチャレンジモードに切り替えてください</p>
+              </div>
+            )}
             <div className="mb-4 space-y-3">
               <div className="flex items-center gap-4">
-                <label className="text-sm font-medium text-brand-blue-700 w-32">カウントダウン</label>
+                <label className="text-sm font-medium text-ink w-32">カウントダウン</label>
                 <input
                   type="number"
                   min="1"
                   max="10"
                   value={tapSettings.countdownSeconds}
                   onChange={(e) => setTapSettings((prev) => ({ ...prev, countdownSeconds: parseInt(e.target.value) || 3 }))}
-                  className="w-20 rounded-lg border border-brand-blue-200 bg-white px-3 py-2 text-sm text-center"
+                  className="w-20 rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm text-center"
+                  disabled={mode !== 'countup'}
                 />
-                <span className="text-sm text-brand-blue-700">秒</span>
+                <span className="text-sm text-ink">秒</span>
               </div>
               <div className="flex items-center gap-4">
-                <label className="text-sm font-medium text-brand-blue-700 w-32">タップ時間</label>
+                <label className="text-sm font-medium text-ink w-32">タップ時間</label>
                 <input
                   type="number"
                   min="5"
                   max="60"
                   value={tapSettings.durationSeconds}
                   onChange={(e) => setTapSettings((prev) => ({ ...prev, durationSeconds: parseInt(e.target.value) || 10 }))}
-                  className="w-20 rounded-lg border border-brand-blue-200 bg-white px-3 py-2 text-sm text-center"
+                  className="w-20 rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm text-center"
+                  disabled={mode !== 'countup'}
                 />
-                <span className="text-sm text-brand-blue-700">秒</span>
+                <span className="text-sm text-ink">秒</span>
               </div>
             </div>
             <div className="flex flex-wrap gap-4">
-              <AdminButton icon={Play} onClick={async () => {
-                if (autoStopRef.current) {
-                  clearTimeout(autoStopRef.current);
-                }
-                const countdownMs = tapSettings.countdownSeconds * 1000;
-                const durationMs = tapSettings.durationSeconds * 1000;
-                await send({ type: 'game:start', payload: undefined }, { countdownMs });
-                autoStopRef.current = setTimeout(() => {
-                  void send({ type: 'game:stop', payload: undefined });
-                  autoStopRef.current = null;
-                }, countdownMs + durationMs + 500);
-              }}>
+              <AdminButton
+                icon={Play}
+                disabled={mode !== 'countup' || phase === 'running'}
+                onClick={async () => {
+                  if (autoStopRef.current) {
+                    clearTimeout(autoStopRef.current);
+                  }
+                  const countdownMs = tapSettings.countdownSeconds * 1000;
+                  const durationMs = tapSettings.durationSeconds * 1000;
+                  await send({ type: 'game:start', payload: undefined }, { countdownMs });
+                  autoStopRef.current = setTimeout(() => {
+                    void send({ type: 'game:stop', payload: undefined });
+                    autoStopRef.current = null;
+                  }, countdownMs + durationMs + 500);
+                }}
+              >
                 スタート
               </AdminButton>
               <AdminButton
                 variant="secondary"
                 icon={Square}
+                disabled={phase !== 'running'}
                 onClick={() => {
                   if (autoStopRef.current) {
                     clearTimeout(autoStopRef.current);
@@ -779,6 +808,11 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
           </AdminCard>
 
           <AdminCard title="クイズ操作" description="出題と正解の公開" icon={Eye}>
+            {mode !== 'quiz' && (
+              <div className="mb-4 rounded-lg bg-yellow-50 border border-yellow-200 p-3">
+                <p className="text-sm font-bold text-yellow-800">⚠️ クイズモードに切り替えてください</p>
+              </div>
+            )}
             <div className="mb-4 flex items-center gap-3 rounded-lg bg-blue-50 p-3 border border-blue-200">
               <label className="flex cursor-pointer items-center gap-2 text-sm text-slate-700">
                 <input
@@ -786,26 +820,42 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
                   checked={quizSettings.representativeByTable}
                   onChange={(e) => setQuizSettings({ ...quizSettings, representativeByTable: e.target.checked })}
                   className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-2 focus:ring-blue-400"
+                  disabled={mode !== 'quiz'}
                 />
                 <span className="font-medium">代表者制（各テーブル1回答まで）</span>
               </label>
             </div>
             <div className="flex flex-wrap gap-4">
-              <AdminButton icon={ListChecks} onClick={() => {
-                const deadlineMs = quizSettings.quizDurationSeconds * 1000;
-                void send({ type: 'quiz:next', payload: undefined }, {
-                  deadlineMs,
-                  representativeByTable: quizSettings.representativeByTable
-                });
-              }}>
-                次のクイズ
+              <AdminButton
+                icon={ListChecks}
+                disabled={mode !== 'quiz' || activeQuiz !== null}
+                onClick={() => {
+                  const deadlineMs = quizSettings.quizDurationSeconds * 1000;
+                  void send({ type: 'quiz:next', payload: undefined }, {
+                    deadlineMs,
+                    representativeByTable: quizSettings.representativeByTable
+                  });
+                }}
+              >
+                クイズ表示
               </AdminButton>
-              <AdminButton variant="danger" icon={Eye} onClick={handleReveal}>
+              <AdminButton
+                variant="danger"
+                icon={Eye}
+                disabled={!activeQuiz}
+                onClick={handleReveal}
+              >
                 正解を公開
               </AdminButton>
             </div>
-            {activeQuiz && (
-              <p className="mt-4 text-sm text-ink/80">表示中: {activeQuiz.question}</p>
+            {activeQuiz ? (
+              <div className="mt-4 rounded-lg bg-green-50 border border-green-200 p-3">
+                <p className="text-sm font-bold text-green-800">✓ 表示中: {activeQuiz.question}</p>
+              </div>
+            ) : (
+              <div className="mt-4 rounded-lg bg-gray-50 border border-gray-200 p-3">
+                <p className="text-sm font-bold text-gray-600">クイズ待機中 - 「クイズ表示」ボタンで表示します</p>
+              </div>
             )}
             {quizSettings.representativeByTable && (
               <p className="mt-2 text-sm text-blue-600">各テーブル1名のみ回答が有効です</p>
@@ -1273,6 +1323,19 @@ function ConfirmDialog({ state, onClose }: { state: ConfirmState | null; onClose
   );
 }
 
+function modeIcon(mode: string) {
+  switch (mode) {
+    case 'countup':
+      return '⚡';
+    case 'quiz':
+      return '🎯';
+    case 'lottery':
+      return '🎰';
+    default:
+      return '⏸️';
+  }
+}
+
 function labelForMode(mode: string) {
   switch (mode) {
     case 'countup':
@@ -1283,6 +1346,17 @@ function labelForMode(mode: string) {
       return '抽選';
     default:
       return '待機';
+  }
+}
+
+function phaseColor(phase: 'idle' | 'running' | 'ended') {
+  switch (phase) {
+    case 'running':
+      return 'text-green-600';
+    case 'ended':
+      return 'text-blue-600';
+    default:
+      return 'text-ink/70';
   }
 }
 
