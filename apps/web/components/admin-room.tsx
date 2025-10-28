@@ -704,11 +704,11 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
           )}
 
           {/* 3カラムレイアウト (PC) / 1カラム (モバイル) */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6 items-start">
             {/* カラム1: モード切替 */}
-            <div className="space-y-6">
+            <div className="space-y-6 flex flex-col">
           <AdminCard title="モード切替" description="ゲームの進行モードを選択します" icon={Gauge}>
-            <div className="flex flex-wrap gap-4">
+            <div className="grid grid-cols-2 gap-3">
               <AdminButton
                 variant={mode === 'idle' ? 'primary' : 'secondary'}
                 icon={PauseCircle}
@@ -746,7 +746,7 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
             </div>
 
             {/* カラム2: タップチャレンジ・抽選 */}
-            <div className="space-y-6">
+            <div className="space-y-6 flex flex-col">
           <AdminCard title="タップチャレンジ" description={`${tapSettings.countdownSeconds}秒カウント後に${tapSettings.durationSeconds}秒で自動終了します`} icon={Play}>
             {mode !== 'countup' && (
               <div className="mb-4 rounded-lg bg-yellow-50 border border-yellow-200 p-3">
@@ -781,7 +781,7 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
                 <span className="text-sm text-ink">秒</span>
               </div>
             </div>
-            <div className="flex flex-wrap gap-4">
+            <div className="grid grid-cols-2 gap-3">
               <AdminButton
                 icon={Play}
                 disabled={mode !== 'countup' || phase === 'running'}
@@ -818,8 +818,8 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
           </AdminCard>
 
           <AdminCard title="抽選" description="候補リストからランダムに選出します" icon={Dice1}>
-            <div className="flex flex-wrap gap-4">
-              <AdminButton variant="secondary" icon={Dice1} onClick={() => handleLottery('all')}>
+            <div className="grid grid-cols-2 gap-3">
+              <AdminButton variant="secondary" icon={Dice1} onClick={() => handleLottery('all')} className="col-span-2">
                 全員対象
               </AdminButton>
               <AdminButton variant="secondary" icon={Dice2} onClick={() => handleLottery('groom')}>
@@ -833,7 +833,7 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
             </div>
 
             {/* カラム3: クイズ・ログ */}
-            <div className="space-y-6">
+            <div className="space-y-6 flex flex-col">
           <AdminCard title="クイズ操作" description="出題と正解の公開" icon={Eye}>
             {mode !== 'quiz' && (
               <div className="mb-4 rounded-lg bg-yellow-50 border border-yellow-200 p-3">
@@ -852,7 +852,7 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
                 <span className="font-medium">代表者制（各テーブル1回答まで）</span>
               </label>
             </div>
-            <div className="flex flex-wrap gap-4">
+            <div className="grid grid-cols-2 gap-3">
               <AdminButton
                 icon={ListChecks}
                 disabled={mode !== 'quiz' || activeQuiz !== null}
