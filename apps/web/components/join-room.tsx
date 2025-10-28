@@ -253,19 +253,18 @@ export default function JoinRoom({ code }: { code: string }) {
         )}
       </div>
 
-      {registered && mode !== 'countup' && mode !== 'quiz' && (
+      {/* 抽選モード非表示 */}
+      {registered && mode !== 'countup' && mode !== 'quiz' && mode !== 'lottery' && (
         <div className="mx-auto w-full max-w-3xl mt-8 space-y-6 relative z-10">
           <div className="rounded-2xl glass-panel-strong p-8 text-center shadow-md slide-up border border-white/30">
             <div className="mb-4 text-3xl">
-              {mode === 'lottery' ? '🎰' : '🎮'}
+              🎮
             </div>
             <h2 className="text-title-sm font-bold text-ink">
-              {mode === 'lottery' ? '抽選' : 'ゲーム'}
+              ゲーム
             </h2>
             <p className="mt-4 text-base leading-relaxed text-ink/80 font-medium">
-              {mode === 'lottery'
-                ? '抽選の結果発表をお待ちください。当選者はスクリーンに表示されます。'
-                : 'まもなくゲームが始まります。画面の指示に従ってください。'}
+              まもなくゲームが始まります。画面の指示に従ってください。
             </p>
           </div>
 

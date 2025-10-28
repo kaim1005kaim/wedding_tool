@@ -233,8 +233,10 @@ function renderSection(
       return <CountupBoard key="countup" entries={leaderboard} phase={phase} countdownMs={countdownMs} />;
     case 'quiz':
       return <QuizBoard key={`quiz-${quizResult?.quizId ?? activeQuiz?.quizId ?? 'waiting'}`} activeQuiz={activeQuiz} quizResult={quizResult} />;
+    /* 抽選モード非表示
     case 'lottery':
       return <LotteryBoard key={lotteryKey} lotteryResult={lotteryResult} isSpinning={isSpinning} leaderboard={leaderboard} />;
+    */
     default:
       return <IdleBoard key="idle" leaderboard={leaderboard} />;
   }

@@ -703,17 +703,15 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
             </div>
           )}
 
-          {/* 2カラムレイアウト (PC) / 1カラム (モバイル) */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
-            {/* 左カラム: 全てのコントロール */}
-            <div className="space-y-6 flex flex-col">
+          {/* 1段目: モード切替（全幅） */}
           <AdminCard title="モード切替" description="ゲームの進行モードを選択します" icon={Gauge}>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="flex gap-3">
               <AdminButton
                 variant={mode === 'idle' ? 'primary' : 'secondary'}
                 icon={PauseCircle}
                 onClick={() => send({ type: 'mode:switch', payload: { to: 'idle' } })}
                 disabled={modeSwitching}
+                className="flex-1"
               >
                 {modeSwitching && mode !== 'idle' ? '切替中...' : '待機モード'}
               </AdminButton>
@@ -722,6 +720,7 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
                 icon={Shuffle}
                 onClick={() => send({ type: 'mode:switch', payload: { to: 'countup' } })}
                 disabled={modeSwitching}
+                className="flex-1"
               >
                 {modeSwitching && mode !== 'countup' ? '切替中...' : 'タップチャレンジ'}
               </AdminButton>
@@ -730,20 +729,26 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
                 icon={Eye}
                 onClick={() => send({ type: 'mode:switch', payload: { to: 'quiz' } })}
                 disabled={modeSwitching}
+                className="flex-1"
               >
                 {modeSwitching && mode !== 'quiz' ? '切替中...' : 'クイズ'}
               </AdminButton>
+              {/* 抽選モード非表示
               <AdminButton
                 variant={mode === 'lottery' ? 'primary' : 'secondary'}
                 icon={Dice3}
                 onClick={() => send({ type: 'mode:switch', payload: { to: 'lottery' } })}
                 disabled={modeSwitching}
+                className="flex-1"
               >
                 {modeSwitching && mode !== 'lottery' ? '切替中...' : '抽選'}
               </AdminButton>
+              */}
             </div>
           </AdminCard>
 
+          {/* 2段目: タップチャレンジとクイズ操作（2カラム） */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <AdminCard title="タップチャレンジ" description={`${tapSettings.countdownSeconds}秒カウント後に${tapSettings.durationSeconds}秒で自動終了します`} icon={Play}>
             {mode !== 'countup' && (
               <div className="mb-4 rounded-lg bg-yellow-50 border border-yellow-200 p-3">
@@ -814,6 +819,7 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
             </div>
           </AdminCard>
 
+          {/* 抽選機能非表示
           <AdminCard title="抽選" description="候補リストからランダムに選出します" icon={Dice1}>
             <div className="grid grid-cols-2 gap-3">
               <AdminButton variant="secondary" icon={Dice1} onClick={() => handleLottery('all')} className="col-span-2">
@@ -827,6 +833,7 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
               </AdminButton>
             </div>
           </AdminCard>
+          */}
 
           <AdminCard title="クイズ操作" description="出題と正解の公開" icon={Eye}>
             {mode !== 'quiz' && (
@@ -882,21 +889,21 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
               <p className="mt-2 text-sm text-blue-600">各テーブル1名のみ回答が有効です</p>
             )}
           </AdminCard>
-            </div>
+          </div>
 
-            {/* 右カラム: ログ / 抽選履歴 */}
-            <div className="space-y-6 flex flex-col">
+          {/* 3段目: ログ（全幅） */}
           {isCloudMode && (
-            <AdminCard title="ログ / 抽選履歴" description="進行状況の確認" icon={ListChecks}>
+            <AdminCard title="操作ログ" description="進行状況の確認" icon={ListChecks}>
+              {/* 抽選履歴タブを非表示
               <div className="mb-4 inline-flex rounded-xl bg-slate-100 p-1">
                 <TabButton label="操作ログ" active={activeLogTab === 'logs'} onClick={() => setActiveLogTab('logs')} />
                 <TabButton label="抽選履歴" active={activeLogTab === 'lottery'} onClick={() => setActiveLogTab('lottery')} />
               </div>
               {activeLogTab === 'logs' ? <LogsList logs={logs} /> : <LotteryList entries={lotteries} />}
+              */}
+              <LogsList logs={logs} />
             </AdminCard>
           )}
-            </div>
-          </div>
 
         {manageOpen && (
           <div className="fixed inset-0 z-40 flex items-center justify-center bg-ink/60 px-6">
@@ -914,15 +921,18 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
                   閉じる
                 </button>
               </div>
+              {/* 抽選タブ非表示
               <div className="mt-4 inline-flex rounded-full bg-brand-blue-50 p-1 text-sm">
                 <TabButton label="クイズ作成" active={manageTab === 'quiz'} onClick={() => setManageTab('quiz')} />
                 <TabButton label="抽選リスト" active={manageTab === 'lottery'} onClick={() => setManageTab('lottery')} />
               </div>
+              */}
               {!isCloudMode && (
                 <p className="mt-4 text-sm text-brand-blue-700/70">LANモードでは設定を閲覧のみ利用できます。クラウドモードで編集してください。</p>
               )}
               {manageMessage && <p className="mt-4 text-sm text-brand-terra-600">{manageMessage}</p>}
-              {manageTab === 'quiz' ? (
+              {/* 常にクイズ作成タブを表示 */}
+              {true ? (
                 <div className="mt-6 space-y-6">
                   <form
                     ref={quizFormRef}
