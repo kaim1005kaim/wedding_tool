@@ -835,7 +835,17 @@ function QuizOverlay({ phase, countdownMs, roomId, playerToken }: QuizOverlayPro
   };
 
   if (!activeQuiz) {
-    return null;
+    return (
+      <div className="mx-auto w-full max-w-3xl mt-8 space-y-6 relative z-10">
+        <div className="rounded-2xl glass-panel-strong p-8 text-center shadow-md slide-up border border-white/30">
+          <div className="mb-4 text-5xl">🎯</div>
+          <h2 className="text-title-sm font-bold text-ink">クイズ待機中</h2>
+          <p className="mt-4 text-base leading-relaxed text-ink/80 font-medium">
+            管理画面からクイズが表示されるまでお待ちください
+          </p>
+        </div>
+      </div>
+    );
   }
 
   // Get background image based on question number

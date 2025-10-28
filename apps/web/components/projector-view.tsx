@@ -11,6 +11,7 @@ const CHOICE_LABELS = ['A', 'B', 'C', 'D'];
 
 export default function ProjectorView({ roomId: _roomId }: { roomId: string }) {
   const mode = useRoomStore((state) => state.mode);
+  const phase = useRoomStore((state) => state.phase);
   const countdownMs = useRoomStore((state) => state.countdownMs);
   const leaderboard = useRoomStore((state) => state.leaderboard);
   const activeQuiz = useRoomStore((state) => state.activeQuiz);
@@ -133,7 +134,7 @@ export default function ProjectorView({ roomId: _roomId }: { roomId: string }) {
       <div className="relative w-full h-screen flex flex-col z-10 px-12 py-10 gap-6" role="region" aria-label="ゲーム表示エリア">
         <Header mode={mode} countdownMs={countdownMs} isFullscreen={isFullscreen} onToggleFullscreen={toggleFullscreen} />
         <div className="flex-1 overflow-hidden">
-          <AnimatePresence mode="wait">{renderSection(mode, topTen, activeQuiz, quizResult, lotteryResult, isSpinning, lotteryKey)}</AnimatePresence>
+          <AnimatePresence mode="wait">{renderSection(mode, phase, countdownMs, topTen, activeQuiz, quizResult, lotteryResult, isSpinning, lotteryKey)}</AnimatePresence>
         </div>
       </div>
 
@@ -218,6 +219,8 @@ const Header = memo(function Header({
 
 function renderSection(
   mode: string,
+  phase: 'idle' | 'running' | 'ended',
+  countdownMs: number,
   leaderboard: LeaderboardEntry[],
   activeQuiz: RoomStoreState['activeQuiz'],
   quizResult: RoomStoreState['quizResult'],
@@ -227,7 +230,7 @@ function renderSection(
 ) {
   switch (mode) {
     case 'countup':
-      return <CountupBoard key="countup" entries={leaderboard} />;
+      return <CountupBoard key="countup" entries={leaderboard} phase={phase} countdownMs={countdownMs} />;
     case 'quiz':
       return <QuizBoard key={`quiz-${quizResult?.quizId ?? activeQuiz?.quizId ?? 'waiting'}`} activeQuiz={activeQuiz} quizResult={quizResult} />;
     case 'lottery':
@@ -237,10 +240,19 @@ function renderSection(
   }
 }
 
-const CountupBoard = memo(function CountupBoard({ entries }: { entries: LeaderboardEntry[] }) {
+const CountupBoard = memo(function CountupBoard({
+  entries,
+  phase,
+  countdownMs
+}: {
+  entries: LeaderboardEntry[];
+  phase: 'idle' | 'running' | 'ended';
+  countdownMs: number;
+}) {
   // Top 3 highlighted, rest in compact grid
   const top3 = entries.slice(0, 3);
   const rest = entries.slice(3);
+  const timeLeftSeconds = Math.max(0, Math.ceil(countdownMs / 1000));
 
   return (
     <motion.section
@@ -252,6 +264,40 @@ const CountupBoard = memo(function CountupBoard({ entries }: { entries: Leaderbo
       role="region"
       aria-label="タップチャレンジランキング"
     >
+      {/* Phase Status */}
+      {phase === 'idle' && (
+        <div className="text-center py-8">
+          <div className="mb-4 text-6xl">⚡</div>
+          <h2 className="text-4xl font-bold text-ink glass-panel-strong px-8 py-4 rounded-2xl inline-block shadow-lg border border-white/30">
+            タップチャレンジ準備中
+          </h2>
+          <p className="mt-4 text-xl text-ink/70 font-bold">まもなく開始します</p>
+        </div>
+      )}
+
+      {phase === 'running' && (
+        <div className="text-center py-4">
+          <div className="glass-panel-strong rounded-2xl px-8 py-4 inline-block shadow-lg border border-white/30">
+            <p className="text-3xl font-bold text-terra-clay">
+              残り {timeLeftSeconds} 秒
+            </p>
+          </div>
+        </div>
+      )}
+
+      {phase === 'ended' && (
+        <div className="text-center py-4">
+          <div className="glass-panel-strong rounded-2xl px-8 py-4 inline-block shadow-lg border border-white/30 ring-2 ring-accent-400">
+            <p className="text-3xl font-bold text-ink">
+              🎉 タップチャレンジ終了！
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Leaderboard - Show when running or ended */}
+      {(phase === 'running' || phase === 'ended') && (
+        <>
       {/* Top 3 - Large Display */}
       <div className="grid grid-cols-3 gap-4">
         {top3.map((entry) => (
@@ -302,6 +348,8 @@ const CountupBoard = memo(function CountupBoard({ entries }: { entries: Leaderbo
             ))}
           </div>
         </div>
+      )}
+        </>
       )}
     </motion.section>
   );
@@ -390,6 +438,29 @@ const QuizBoard = memo(function QuizBoard({ activeQuiz, quizResult }: QuizPanelP
   const counts = quizResult?.perChoiceCounts ?? [0, 0, 0, 0];
   const correctIndex = quizResult?.correctIndex ?? -1;
 
+  // Show waiting screen when no active quiz
+  if (!activeQuiz) {
+    return (
+      <motion.section
+        initial={{ opacity: 0, y: 30 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -30 }}
+        transition={{ duration: 0.5, ease: 'easeOut' }}
+        className="flex h-full items-center justify-center"
+        role="region"
+        aria-label="クイズ待機中"
+      >
+        <div className="text-center">
+          <div className="mb-6 text-8xl">🎯</div>
+          <h2 className="text-5xl font-bold text-ink glass-panel-strong px-10 py-6 rounded-2xl inline-block shadow-lg border border-white/30">
+            クイズ待機中
+          </h2>
+          <p className="mt-6 text-2xl text-ink/70 font-bold">管理画面からクイズを表示してください</p>
+        </div>
+      </motion.section>
+    );
+  }
+
   return (
     <motion.section
       initial={{ opacity: 0, y: 30 }}
@@ -422,7 +493,7 @@ const QuizBoard = memo(function QuizBoard({ activeQuiz, quizResult }: QuizPanelP
       )}
 
       {/* Question */}
-      {activeQuiz ? (
+      {activeQuiz && (
         <>
           <div className="text-center">
             <p className="text-4xl font-bold leading-relaxed text-ink glass-panel-strong px-10 py-8 rounded-2xl border border-white/30 shadow-lg inline-block">
