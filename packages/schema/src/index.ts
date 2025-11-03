@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { lotteryResultBroadcastSchema } from './events';
 export { z };
 
-export const roomModeSchema = z.enum(['idle', 'countup', 'quiz', 'lottery']);
+export const roomModeSchema = z.enum(['idle', 'countup', 'quiz', 'buzzer', 'lottery']);
 export const roomPhaseSchema = z.enum(['idle', 'running', 'ended']);
 
 export const playerSchema = z.object({

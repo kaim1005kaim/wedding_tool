@@ -898,38 +898,63 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
                 <span className="text-sm text-ink">秒</span>
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-3">
+              <div className="grid grid-cols-2 gap-3">
+                <AdminButton
+                  icon={Play}
+                  disabled={mode !== 'countup' || phase === 'running'}
+                  onClick={async () => {
+                    if (autoStopRef.current) {
+                      clearTimeout(autoStopRef.current);
+                    }
+                    const countdownMs = tapSettings.countdownSeconds * 1000;
+                    const durationMs = tapSettings.durationSeconds * 1000;
+                    await send({ type: 'game:start', payload: undefined }, { countdownMs });
+                    autoStopRef.current = setTimeout(() => {
+                      void send({ type: 'game:stop', payload: undefined });
+                      autoStopRef.current = null;
+                    }, countdownMs + durationMs + 500);
+                  }}
+                >
+                  スタート
+                </AdminButton>
+                <AdminButton
+                  variant="secondary"
+                  icon={Square}
+                  disabled={phase !== 'running'}
+                  onClick={() => {
+                    if (autoStopRef.current) {
+                      clearTimeout(autoStopRef.current);
+                      autoStopRef.current = null;
+                    }
+                    void send({ type: 'game:stop', payload: undefined });
+                  }}
+                >
+                  緊急停止
+                </AdminButton>
+              </div>
               <AdminButton
-                icon={Play}
+                variant="danger"
                 disabled={mode !== 'countup' || phase === 'running'}
                 onClick={async () => {
-                  if (autoStopRef.current) {
-                    clearTimeout(autoStopRef.current);
+                  if (!window.confirm('タップチャレンジのスコアをリセットしますか？（練習→本番の切り替え時に使用）')) return;
+                  try {
+                    const response = await fetch(`/api/admin/rooms/${roomId}/reset-tap-scores`, {
+                      method: 'POST',
+                      headers: {
+                        'Content-Type': 'application/json',
+                        Authorization: `Bearer ${adminToken}`
+                      }
+                    });
+                    if (!response.ok) throw new Error('Failed to reset scores');
+                    window.alert('スコアをリセットしました');
+                  } catch (err) {
+                    window.alert('スコアのリセットに失敗しました');
                   }
-                  const countdownMs = tapSettings.countdownSeconds * 1000;
-                  const durationMs = tapSettings.durationSeconds * 1000;
-                  await send({ type: 'game:start', payload: undefined }, { countdownMs });
-                  autoStopRef.current = setTimeout(() => {
-                    void send({ type: 'game:stop', payload: undefined });
-                    autoStopRef.current = null;
-                  }, countdownMs + durationMs + 500);
                 }}
+                className="w-full"
               >
-                スタート
-              </AdminButton>
-              <AdminButton
-                variant="secondary"
-                icon={Square}
-                disabled={phase !== 'running'}
-                onClick={() => {
-                  if (autoStopRef.current) {
-                    clearTimeout(autoStopRef.current);
-                    autoStopRef.current = null;
-                  }
-                  void send({ type: 'game:stop', payload: undefined });
-                }}
-              >
-                緊急停止
+                スコアリセット（練習→本番）
               </AdminButton>
             </div>
           </AdminCard>

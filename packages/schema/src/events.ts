@@ -23,7 +23,7 @@ export const helloEventSchema = z.object({
 });
 
 export const modeSwitchEventSchema = z.object({
-  to: z.enum(['idle', 'countup', 'quiz', 'lottery'])
+  to: z.enum(['idle', 'countup', 'quiz', 'buzzer', 'lottery'])
 });
 
 const legacyLotteryKinds = ['escort', 'cake_groom', 'cake_bride', 'groom_friends', 'bride_friends'] as const;
@@ -60,7 +60,7 @@ export const lotteryResultBroadcastSchema = z.object({
 });
 
 export const stateUpdateBroadcastSchema = z.object({
-  mode: z.enum(['countup', 'quiz', 'lottery', 'idle']),
+  mode: z.enum(['countup', 'quiz', 'buzzer', 'lottery', 'idle']),
   phase: z.enum(['idle', 'running', 'ended']),
   serverTime: z.number(),
   countdownMs: z.number().nonnegative(),

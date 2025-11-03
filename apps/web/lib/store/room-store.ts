@@ -6,7 +6,7 @@ import type {
   StateUpdatePayload
 } from '@wedding_tool/schema';
 
-export type RoomView = 'idle' | 'countup' | 'quiz' | 'lottery';
+export type RoomView = 'idle' | 'countup' | 'quiz' | 'buzzer' | 'lottery';
 
 export type LeaderboardEntry = {
   playerId: string;
