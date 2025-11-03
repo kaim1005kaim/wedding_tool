@@ -265,7 +265,7 @@ function renderSection(
     case 'countup':
       return <CountupBoard key="countup" entries={leaderboard} phase={phase} countdownMs={countdownMs} />;
     case 'quiz':
-      return <QuizBoard key={`quiz-${quizResult?.quizId ?? activeQuiz?.quizId ?? 'waiting'}`} activeQuiz={activeQuiz} quizResult={quizResult} />;
+      return <QuizBoard key={`quiz-${quizResult?.quizId ?? activeQuiz?.quizId ?? 'waiting'}`} activeQuiz={activeQuiz} quizResult={quizResult} leaderboard={leaderboard} />;
     /* 抽選モード非表示
     case 'lottery':
       return <LotteryBoard key={lotteryKey} lotteryResult={lotteryResult} isSpinning={isSpinning} leaderboard={leaderboard} />;
@@ -326,12 +326,21 @@ const CountupBoard = memo(function CountupBoard({
     >
       {/* Phase Status */}
       {phase === 'idle' && (
-        <div className="text-center py-8">
-          <div className="mb-4 text-6xl">⚡</div>
+        <div className="text-center py-8 space-y-6">
+          {/* SVG Title */}
+          <motion.div
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ duration: 0.6, ease: 'easeOut' }}
+            className="flex justify-center"
+          >
+            <img src="/tap-title.svg" alt="Tap Challenge" className="h-32 w-auto" />
+          </motion.div>
+
           <h2 className="text-4xl font-bold text-ink glass-panel-strong px-8 py-4 rounded-2xl inline-block shadow-lg border border-white/30">
-            タップチャレンジ準備中
+            準備中
           </h2>
-          <p className="mt-4 text-xl text-ink/70 font-bold">まもなく開始します</p>
+          <p className="mt-2 text-xl text-ink/70 font-bold">まもなく開始します</p>
         </div>
       )}
 
@@ -658,11 +667,21 @@ const IdleBoard = memo(function IdleBoard({ leaderboard }: { leaderboard: Leader
 type QuizPanelProps = {
   activeQuiz: RoomStoreState['activeQuiz'];
   quizResult: RoomStoreState['quizResult'];
+  leaderboard: LeaderboardEntry[];
 };
 
-const QuizBoard = memo(function QuizBoard({ activeQuiz, quizResult }: QuizPanelProps) {
+const QuizBoard = memo(function QuizBoard({ activeQuiz, quizResult, leaderboard }: QuizPanelProps) {
   const counts = quizResult?.perChoiceCounts ?? [0, 0, 0, 0];
   const correctIndex = quizResult?.correctIndex ?? -1;
+
+  // Get quiz participants (tables that have answered at least one quiz)
+  const quizParticipants = leaderboard
+    .filter(entry => entry.quizPoints && entry.quizPoints > 0 && entry.tableNo)
+    .map(entry => ({
+      tableNo: entry.tableNo!,
+      displayName: entry.displayName,
+      quizPoints: entry.quizPoints
+    }));
 
   // Show waiting screen when no active quiz
   if (!activeQuiz) {
@@ -676,12 +695,21 @@ const QuizBoard = memo(function QuizBoard({ activeQuiz, quizResult }: QuizPanelP
         role="region"
         aria-label="クイズ待機中"
       >
-        <div className="text-center">
-          <div className="mb-6 text-8xl">🎯</div>
-          <h2 className="text-5xl font-bold text-ink glass-panel-strong px-10 py-6 rounded-2xl inline-block shadow-lg border border-white/30">
-            クイズ待機中
+        <div className="text-center space-y-8">
+          {/* SVG Title */}
+          <motion.div
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ duration: 0.6, ease: 'easeOut' }}
+            className="flex justify-center"
+          >
+            <img src="/quiz-title.svg" alt="Quiz" className="h-32 w-auto" />
+          </motion.div>
+
+          <h2 className="text-4xl font-bold text-ink glass-panel-strong px-10 py-5 rounded-2xl inline-block shadow-lg border border-white/30">
+            待機中
           </h2>
-          <p className="mt-6 text-2xl text-ink/70 font-bold">管理画面からクイズを表示してください</p>
+          <p className="mt-4 text-xl text-ink/70 font-bold">管理画面からクイズを表示してください</p>
         </div>
       </motion.section>
     );
@@ -776,6 +804,27 @@ const QuizBoard = memo(function QuizBoard({ activeQuiz, quizResult }: QuizPanelP
               );
             })}
           </div>
+
+          {/* Quiz Participants List */}
+          {quizParticipants.length > 0 && (
+            <div className="mt-4">
+              <div className="glass-panel-strong rounded-2xl px-6 py-4 border border-white/30">
+                <h3 className="text-lg font-bold text-ink mb-3">参加テーブル</h3>
+                <div className="flex flex-wrap gap-2">
+                  {quizParticipants.map((participant, index) => (
+                    <div
+                      key={index}
+                      className="glass-panel rounded-xl px-4 py-2 border border-white/20 flex items-center gap-2"
+                    >
+                      <span className="text-sm font-black text-terra-clay">{participant.tableNo}</span>
+                      <span className="text-sm font-bold text-ink">{participant.displayName}</span>
+                      <span className="text-xs font-bold text-ink/70">({participant.quizPoints}問正解)</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
         </>
       )}
     </motion.section>

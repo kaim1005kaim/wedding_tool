@@ -624,11 +624,15 @@ function CountupOverlay({ phase, countdownMs, leaderboard, onTap, registeredName
       {/* Waiting screen for idle phase */}
       {!showPad && !isFinished && phase === 'idle' && (
         <div className="mx-auto w-full max-w-3xl mt-8 space-y-6 relative z-10">
-          <div className="rounded-2xl glass-panel-strong p-8 text-center shadow-md slide-up border border-white/30">
-            <div className="mb-4 text-3xl">🎮</div>
-            <h2 className="text-title-sm font-bold text-ink">ゲーム</h2>
-            <p className="mt-4 text-base leading-relaxed text-ink/80 font-medium">
-              まもなくゲームが始まります。画面の指示に従ってください。
+          <div className="rounded-2xl glass-panel-strong p-8 text-center shadow-md slide-up border border-white/30 space-y-6">
+            {/* SVG Title */}
+            <div className="flex justify-center">
+              <img src="/tap-title.svg" alt="Tap Challenge" className="h-24 w-auto" />
+            </div>
+
+            <h2 className="text-xl font-bold text-ink">準備中</h2>
+            <p className="text-base leading-relaxed text-ink/80 font-medium">
+              まもなく開始します。画面の指示に従ってください。
             </p>
           </div>
         </div>
@@ -862,10 +866,14 @@ function QuizOverlay({ phase, countdownMs, roomId, playerToken }: QuizOverlayPro
   if (!activeQuiz) {
     return (
       <div className="mx-auto w-full max-w-3xl mt-8 space-y-6 relative z-10">
-        <div className="rounded-2xl glass-panel-strong p-8 text-center shadow-md slide-up border border-white/30">
-          <div className="mb-4 text-5xl">🎯</div>
-          <h2 className="text-title-sm font-bold text-ink">クイズ待機中</h2>
-          <p className="mt-4 text-base leading-relaxed text-ink/80 font-medium">
+        <div className="rounded-2xl glass-panel-strong p-8 text-center shadow-md slide-up border border-white/30 space-y-6">
+          {/* SVG Title */}
+          <div className="flex justify-center">
+            <img src="/quiz-title.svg" alt="Quiz" className="h-24 w-auto" />
+          </div>
+
+          <h2 className="text-xl font-bold text-ink">待機中</h2>
+          <p className="text-base leading-relaxed text-ink/80 font-medium">
             管理画面からクイズが表示されるまでお待ちください
           </p>
         </div>
