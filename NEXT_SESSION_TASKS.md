@@ -67,14 +67,62 @@
 
 #### 優先度: 低（大規模な機能追加・設計変更）
 8. **クイズをルーム単位から共通保存に変更**
-   - 現在: クイズは各ルームに紐付いている
-   - 変更後: 全ルームで共通のクイズプールを使用
-   - DB変更必要:
-     - `quizzes`テーブルから`room_id`を削除
-     - 共通クイズプール用の新テーブル作成
-   - 影響範囲大:
-     - `apps/web/app/api/admin/rooms/[roomId]/manage/quizzes/**`
-     - `apps/web/lib/server/room-engine.ts`
+   - **現在の構造**: `quizzes`テーブルは`room_id`で各ルームに紐付けられている
+   - **変更後**: 全ルームで共通のクイズプールを使用
+
+   **実装方法（推奨）**:
+
+   1. **新しいテーブル構造**:
+      ```sql
+      -- 共通クイズプール（room_idを削除）
+      create table quiz_templates (
+        id uuid primary key default gen_random_uuid(),
+        question text not null,
+        choices text[] not null check (array_length(choices, 1) = 4),
+        answer_index int not null check (answer_index between 0 and 3),
+        image_url text,
+        created_at timestamptz default now()
+      );
+
+      -- ルームごとのクイズ使用履歴（どのクイズを使ったか記録）
+      create table room_quiz_usage (
+        id uuid primary key default gen_random_uuid(),
+        room_id uuid references rooms(id) on delete cascade,
+        quiz_template_id uuid references quiz_templates(id) on delete cascade,
+        ord int not null,  -- このルームでの順番
+        used_at timestamptz default now(),
+        unique(room_id, quiz_template_id)
+      );
+      ```
+
+   2. **マイグレーション手順**:
+      - 既存の`quizzes`テーブルから`quiz_templates`へデータ移行
+      - `room_quiz_usage`に使用履歴を作成
+      - `answers`テーブルの`quiz_id`は`room_quiz_usage.id`を参照するように変更
+      - または、`answers`に`quiz_template_id`と`room_id`の両方を持たせる
+
+   3. **影響範囲**:
+      - **DB**: マイグレーションファイル作成 (`supabase/migrations/`)
+      - **API**:
+        - `apps/web/app/api/admin/rooms/[roomId]/manage/quizzes/route.ts` (クイズ一覧取得)
+        - `apps/web/app/api/admin/rooms/[roomId]/manage/quizzes/[quizId]/route.ts` (CRUD)
+        - `apps/web/app/api/admin/rooms/[roomId]/quiz/show/route.ts` (クイズ表示)
+      - **ロジック**:
+        - `apps/web/lib/server/room-engine.ts` (`showQuiz`, `revealQuiz`関数)
+        - SQLクエリをすべて修正
+      - **UI**:
+        - `apps/web/components/admin-room.tsx` (クイズ管理UI)
+        - 共通クイズプールから選択するUIに変更
+
+   4. **メリット**:
+      - クイズを一度作成すれば全ルームで再利用可能
+      - クイズのメンテナンスが一元化
+
+   5. **デメリット**:
+      - 各ルームでカスタムクイズを作りたい場合の柔軟性が下がる
+      - マイグレーションの複雑さ
+
+   **代替案**: 既存の`quizzes`テーブルに`is_template`フラグを追加し、`room_id`がnullのクイズを共通プールとして扱う方法もあります。
 
 9. **早押しクイズ機能実装**
    - 新モード追加: `early_answer_quiz`
@@ -118,7 +166,24 @@
 
 ### データベース
 - Supabase使用
-- 主要テーブル: `rooms`, `players`, `quizzes`, `quiz_answers`, `leaderboard_snapshots`
+- マイグレーションファイル: `supabase/migrations/`
+
+**主要テーブル**:
+- `rooms` - ルーム情報（id, code, mode, phase）
+- `players` - プレイヤー情報（id, room_id, display_name, table_no）
+- `scores` - スコア（room_id, player_id, total_points）
+- `quizzes` - クイズ（id, room_id, question, choices[], answer_index, ord, image_url）
+- `answers` - クイズ回答（quiz_id, player_id, choice_index）
+- `room_snapshots` - リアルタイム配信用スナップショット
+- `awarded_quizzes` - 正解発表済みクイズの記録
+- `lottery_picks` - 抽選結果
+
+**重要な関数**:
+- `refresh_room_leaderboard(room_id)` - リーダーボード更新
+- `apply_tap_delta(room_id, player_id, delta)` - タップスコア加算
+- `record_quiz_answer(room_id, quiz_id, player_id, choice)` - クイズ回答記録
+- `reveal_quiz(room_id, quiz_id, points)` - クイズ正解発表＆スコア加算
+- `draw_lottery(room_id, kind)` - 抽選実行
 
 ### アセット
 - SVGタイトル: `apps/web/public/quiz-title.svg`, `tap-title.svg`
