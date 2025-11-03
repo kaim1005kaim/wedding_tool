@@ -150,6 +150,7 @@ export async function showQuiz(
       choices: data.choices ?? [],
       deadlineTs,
       ord: data.ord ?? null,
+      imageUrl: data.image_url ?? null,
       startTs,
       representativeByTable,
       ...(suddenDeath && { suddenDeath })

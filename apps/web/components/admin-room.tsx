@@ -65,7 +65,8 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
     question: '',
     choices: ['', '', '', ''],
     answerIndex: 0,
-    ord: ''
+    ord: '',
+    imageUrl: ''
   });
   const [editingQuizId, setEditingQuizId] = useState<string | null>(null);
   const quizFormRef = useRef<HTMLFormElement>(null);
@@ -375,7 +376,8 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
           question: quizForm.question.trim(),
           choices: quizForm.choices.map((choice) => choice.trim()),
           answerIndex: quizForm.answerIndex,
-          ord: quizForm.ord ? Number.parseInt(quizForm.ord, 10) : undefined
+          ord: quizForm.ord ? Number.parseInt(quizForm.ord, 10) : undefined,
+          imageUrl: quizForm.imageUrl.trim() || undefined
         })
       });
 
@@ -386,7 +388,7 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
 
       const json = (await response.json()) as { quiz: QuizSummary };
       setQuizzes((prev) => [...prev, json.quiz].sort((a, b) => (a.ord ?? 0) - (b.ord ?? 0)));
-      setQuizForm({ question: '', choices: ['', '', '', ''], answerIndex: 0, ord: '' });
+      setQuizForm({ question: '', choices: ['', '', '', ''], answerIndex: 0, ord: '', imageUrl: '' });
       setManageMessage('クイズを追加しました');
     } catch (err) {
       setManageMessage(err instanceof Error ? err.message : 'クイズの追加に失敗しました');
@@ -403,12 +405,13 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
     })
       .then((res) => res.json())
       .then((data) => {
-        const quizData = data as { quiz: { question: string; choices: string[]; answer_index: number; ord: number } };
+        const quizData = data as { quiz: { question: string; choices: string[]; answer_index: number; ord: number; image_url?: string } };
         setQuizForm({
           question: quizData.quiz.question,
           choices: quizData.quiz.choices,
           answerIndex: quizData.quiz.answer_index,
-          ord: quizData.quiz.ord?.toString() ?? ''
+          ord: quizData.quiz.ord?.toString() ?? '',
+          imageUrl: quizData.quiz.image_url ?? ''
         });
         // Scroll to form
         setTimeout(() => {
@@ -440,7 +443,8 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
           question: quizForm.question.trim(),
           choices: quizForm.choices.map((choice) => choice.trim()),
           answerIndex: quizForm.answerIndex,
-          ord: quizForm.ord ? Number.parseInt(quizForm.ord, 10) : undefined
+          ord: quizForm.ord ? Number.parseInt(quizForm.ord, 10) : undefined,
+          imageUrl: quizForm.imageUrl.trim() || undefined
         })
       });
 
@@ -453,7 +457,7 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
       setQuizzes((prev) =>
         prev.map((q) => (q.id === editingQuizId ? json.quiz : q)).sort((a, b) => (a.ord ?? 0) - (b.ord ?? 0))
       );
-      setQuizForm({ question: '', choices: ['', '', '', ''], answerIndex: 0, ord: '' });
+      setQuizForm({ question: '', choices: ['', '', '', ''], answerIndex: 0, ord: '', imageUrl: '' });
       setEditingQuizId(null);
       setManageMessage('クイズを更新しました');
     } catch (err) {
@@ -490,7 +494,7 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
 
   const handleCancelEdit = () => {
     setEditingQuizId(null);
-    setQuizForm({ question: '', choices: ['', '', '', ''], answerIndex: 0, ord: '' });
+    setQuizForm({ question: '', choices: ['', '', '', ''], answerIndex: 0, ord: '', imageUrl: '' });
   };
 
   const handleAddCandidate = async () => {
@@ -1023,19 +1027,31 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
                         </div>
                       ))}
                     </div>
-                    <div className="grid gap-3 md:grid-cols-2">
+                    <div className="space-y-3">
                       <div className="space-y-2">
-                        <label className="text-sm font-medium text-brand-blue-700">表示順 (任意)</label>
+                        <label className="text-sm font-medium text-brand-blue-700">画像URL (任意)</label>
                         <input
                           className="w-full rounded-xl border border-brand-blue-200 bg-white px-4 py-3 text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-blue-400"
-                          value={quizForm.ord}
-                          onChange={(event) => setQuizForm((prev) => ({ ...prev, ord: event.target.value }))}
-                          type="number"
-                          min={1}
-                          placeholder="自動採番"
+                          value={quizForm.imageUrl}
+                          onChange={(event) => setQuizForm((prev) => ({ ...prev, imageUrl: event.target.value }))}
+                          type="url"
+                          placeholder="https://example.com/image.jpg"
                         />
+                        <p className="text-xs text-brand-blue-700/70">※投影画面のみに表示されます</p>
                       </div>
-                    <div className="flex items-end gap-2">
+                      <div className="grid gap-3 md:grid-cols-2">
+                        <div className="space-y-2">
+                          <label className="text-sm font-medium text-brand-blue-700">表示順 (任意)</label>
+                          <input
+                            className="w-full rounded-xl border border-brand-blue-200 bg-white px-4 py-3 text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-blue-400"
+                            value={quizForm.ord}
+                            onChange={(event) => setQuizForm((prev) => ({ ...prev, ord: event.target.value }))}
+                            type="number"
+                            min={1}
+                            placeholder="自動採番"
+                          />
+                        </div>
+                        <div className="flex items-end gap-2">
                       {editingQuizId ? (
                         <>
                           <PrimaryButton type="button" onClick={handleUpdateQuiz} disabled={manageLoading || !isCloudMode}>
@@ -1059,7 +1075,8 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
                           クイズを追加
                         </button>
                       )}
-                    </div>
+                        </div>
+                      </div>
                     </div>
                   </form>
                   <div className="space-y-2">

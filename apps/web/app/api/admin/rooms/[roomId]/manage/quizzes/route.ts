@@ -8,7 +8,8 @@ const createQuizSchema = z.object({
   question: z.string().min(1).max(280),
   choices: z.array(z.string().min(1).max(120)).length(4),
   answerIndex: z.number().int().min(0).max(3),
-  ord: z.number().int().min(1).optional()
+  ord: z.number().int().min(1).optional(),
+  imageUrl: z.string().url().optional().or(z.literal(''))
 });
 
 export async function GET(_request: Request, { params }: { params: { roomId: string } }) {
@@ -50,7 +51,7 @@ export async function POST(request: Request, { params }: { params: { roomId: str
   }
 
   const json = await request.json();
-  const { question, choices, answerIndex, ord } = createQuizSchema.parse(json);
+  const { question, choices, answerIndex, ord, imageUrl } = createQuizSchema.parse(json);
 
   const client = getSupabaseServiceRoleClient();
   let finalOrd = ord;
@@ -72,7 +73,8 @@ export async function POST(request: Request, { params }: { params: { roomId: str
       question,
       choices,
       answer_index: answerIndex,
-      ord: finalOrd
+      ord: finalOrd,
+      image_url: imageUrl || null
     })
     .select('id, question, ord')
     .single();

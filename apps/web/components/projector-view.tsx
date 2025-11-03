@@ -892,10 +892,25 @@ const QuizBoard = memo(function QuizBoard({ activeQuiz, quizResult, leaderboard,
       {/* Question */}
       {activeQuiz && (
         <>
-          <div className="text-center">
+          <div className="text-center space-y-4">
             <p className="text-3xl font-bold leading-relaxed text-ink glass-panel-strong px-8 py-6 rounded-2xl border border-white/30 shadow-lg inline-block max-w-5xl">
               {activeQuiz.question}
             </p>
+            {/* Quiz Image - Projector only */}
+            {activeQuiz.imageUrl && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.3 }}
+                className="flex justify-center"
+              >
+                <img
+                  src={activeQuiz.imageUrl}
+                  alt="Quiz visual"
+                  className="max-w-2xl max-h-64 rounded-2xl shadow-xl border-4 border-white/30 object-contain"
+                />
+              </motion.div>
+            )}
           </div>
 
           {/* 2x2 Grid Layout for Choices */}

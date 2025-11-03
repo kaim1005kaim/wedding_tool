@@ -40,6 +40,7 @@ export const roomSnapshotSchema = z.object({
       choices: z.array(z.string()).length(4),
       deadlineTs: z.number().int(),
       ord: z.number().int().min(1),
+      imageUrl: z.string().url().nullable().optional(),
       startTs: z.number().int().optional(),
       representativeByTable: z.boolean().optional().default(true),
       suddenDeath: z.object({

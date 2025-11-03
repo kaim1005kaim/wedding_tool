@@ -8,7 +8,8 @@ const updateQuizSchema = z.object({
   question: z.string().min(1).max(280).optional(),
   choices: z.array(z.string().min(1).max(120)).length(4).optional(),
   answerIndex: z.number().int().min(0).max(3).optional(),
-  ord: z.number().int().min(1).optional()
+  ord: z.number().int().min(1).optional(),
+  imageUrl: z.string().url().optional().or(z.literal(''))
 });
 
 // GET individual quiz details
@@ -63,6 +64,7 @@ export async function PUT(request: Request, { params }: { params: { roomId: stri
   if (updates.choices !== undefined) updateData.choices = updates.choices;
   if (updates.answerIndex !== undefined) updateData.answer_index = updates.answerIndex;
   if (updates.ord !== undefined) updateData.ord = updates.ord;
+  if (updates.imageUrl !== undefined) updateData.image_url = updates.imageUrl || null;
 
   const { data, error } = await client
     .from('quizzes')
