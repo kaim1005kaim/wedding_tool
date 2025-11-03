@@ -929,9 +929,9 @@ function QuizOverlay({ phase, countdownMs, roomId, playerToken }: QuizOverlayPro
 
             if (quizResult) {
               if (isCorrect) {
-                buttonClass = 'rounded-2xl p-5 shadow-xl bg-gradient-to-br from-red-500 to-red-600 border-2 border-red-700';
+                buttonClass = 'rounded-2xl p-5 shadow-xl bg-gradient-to-br from-green-500 to-green-600 border-2 border-green-700';
               } else if (isWrong) {
-                buttonClass = 'rounded-2xl p-5 shadow-xl bg-error border-2 border-error-600';
+                buttonClass = 'rounded-2xl p-5 shadow-xl bg-gradient-to-br from-red-500 to-red-600 border-2 border-red-700';
               } else {
                 buttonClass = 'rounded-2xl p-5 shadow-md glass-panel';
               }
@@ -953,15 +953,27 @@ function QuizOverlay({ phase, countdownMs, roomId, playerToken }: QuizOverlayPro
                 animate={{ scale: 1, opacity: 1 }}
                 transition={{ delay: index * 0.1 }}
               >
-                {/* Correct Answer Circle */}
+                {/* Correct Answer Indicator */}
                 {isCorrect && (
                   <motion.div
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
                     transition={{ type: 'spring', bounce: 0.5 }}
-                    className="absolute -top-3 -left-3 w-14 h-14 rounded-full bg-red-500 border-4 border-white shadow-xl flex items-center justify-center z-10"
+                    className="absolute -top-4 -left-4 w-16 h-16 flex items-center justify-center z-10"
                   >
-                    <span className="text-2xl font-black text-white">{CHOICE_LABELS[index]}</span>
+                    <span className="text-5xl drop-shadow-lg">⭕️</span>
+                  </motion.div>
+                )}
+
+                {/* Wrong Answer Indicator */}
+                {isWrong && (
+                  <motion.div
+                    initial={{ scale: 0, rotate: -90 }}
+                    animate={{ scale: 1, rotate: 0 }}
+                    transition={{ type: 'spring', bounce: 0.5 }}
+                    className="absolute -top-4 -left-4 w-16 h-16 flex items-center justify-center z-10"
+                  >
+                    <span className="text-5xl drop-shadow-lg">❌</span>
                   </motion.div>
                 )}
 

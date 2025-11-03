@@ -747,8 +747,79 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
             </div>
           </AdminCard>
 
-          {/* 2段目: タップチャレンジとクイズ操作（2カラム） */}
+          {/* 2段目: クイズ操作とタップチャレンジ（2カラム） */}
           <div className="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <AdminCard title="クイズ操作" description="出題と正解の公開" icon={Eye}>
+            {mode !== 'quiz' && (
+              <div className="mb-4 rounded-lg bg-yellow-50 border border-yellow-200 p-3">
+                <p className="text-sm font-bold text-yellow-800">⚠️ クイズモードに切り替えてください</p>
+              </div>
+            )}
+            <div className="mb-4 flex items-center gap-3 rounded-lg bg-blue-50 p-3 border border-blue-200">
+              <label className="flex cursor-pointer items-center gap-2 text-sm text-slate-700">
+                <input
+                  type="checkbox"
+                  checked={quizSettings.representativeByTable}
+                  onChange={(e) => setQuizSettings({ ...quizSettings, representativeByTable: e.target.checked })}
+                  className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-2 focus:ring-blue-400"
+                  disabled={mode !== 'quiz'}
+                />
+                <span className="font-medium">代表者制（各テーブル1回答まで）</span>
+              </label>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <AdminButton
+                icon={ListChecks}
+                disabled={mode !== 'quiz' || activeQuiz !== null}
+                onClick={() => {
+                  const deadlineMs = quizSettings.quizDurationSeconds * 1000;
+                  void send({ type: 'quiz:next', payload: undefined }, {
+                    deadlineMs,
+                    representativeByTable: quizSettings.representativeByTable
+                  });
+                }}
+              >
+                クイズ表示
+              </AdminButton>
+              <AdminButton
+                variant="danger"
+                icon={Eye}
+                disabled={!activeQuiz}
+                onClick={handleReveal}
+              >
+                正解を公開
+              </AdminButton>
+            </div>
+            {activeQuiz ? (
+              <div className="mt-4 rounded-lg bg-green-50 border border-green-200 p-3">
+                <p className="text-sm font-bold text-green-800">✓ 表示中: {activeQuiz.question}</p>
+              </div>
+            ) : (
+              <div className="mt-4 rounded-lg bg-gray-50 border border-gray-200 p-3">
+                <p className="text-sm font-bold text-gray-600">クイズ待機中 - 「クイズ表示」ボタンで表示します</p>
+              </div>
+            )}
+            {quizSettings.representativeByTable && (
+              <p className="mt-2 text-sm text-blue-600">各テーブル1名のみ回答が有効です</p>
+            )}
+          </AdminCard>
+
+          {/* 抽選機能非表示
+          <AdminCard title="抽選" description="候補リストからランダムに選出します" icon={Dice1}>
+            <div className="grid grid-cols-2 gap-3">
+              <AdminButton variant="secondary" icon={Dice1} onClick={() => handleLottery('all')} className="col-span-2">
+                全員対象
+              </AdminButton>
+              <AdminButton variant="secondary" icon={Dice2} onClick={() => handleLottery('groom')}>
+                新郎
+              </AdminButton>
+              <AdminButton variant="secondary" icon={Dice3} onClick={() => handleLottery('bride')}>
+                新婦
+              </AdminButton>
+            </div>
+          </AdminCard>
+          */}
+
           <AdminCard title="タップチャレンジ" description={`${tapSettings.countdownSeconds}秒カウント後に${tapSettings.durationSeconds}秒で自動終了します`} icon={Play}>
             {mode !== 'countup' && (
               <div className="mb-4 rounded-lg bg-yellow-50 border border-yellow-200 p-3">
@@ -817,77 +888,6 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
                 緊急停止
               </AdminButton>
             </div>
-          </AdminCard>
-
-          {/* 抽選機能非表示
-          <AdminCard title="抽選" description="候補リストからランダムに選出します" icon={Dice1}>
-            <div className="grid grid-cols-2 gap-3">
-              <AdminButton variant="secondary" icon={Dice1} onClick={() => handleLottery('all')} className="col-span-2">
-                全員対象
-              </AdminButton>
-              <AdminButton variant="secondary" icon={Dice2} onClick={() => handleLottery('groom')}>
-                新郎
-              </AdminButton>
-              <AdminButton variant="secondary" icon={Dice3} onClick={() => handleLottery('bride')}>
-                新婦
-              </AdminButton>
-            </div>
-          </AdminCard>
-          */}
-
-          <AdminCard title="クイズ操作" description="出題と正解の公開" icon={Eye}>
-            {mode !== 'quiz' && (
-              <div className="mb-4 rounded-lg bg-yellow-50 border border-yellow-200 p-3">
-                <p className="text-sm font-bold text-yellow-800">⚠️ クイズモードに切り替えてください</p>
-              </div>
-            )}
-            <div className="mb-4 flex items-center gap-3 rounded-lg bg-blue-50 p-3 border border-blue-200">
-              <label className="flex cursor-pointer items-center gap-2 text-sm text-slate-700">
-                <input
-                  type="checkbox"
-                  checked={quizSettings.representativeByTable}
-                  onChange={(e) => setQuizSettings({ ...quizSettings, representativeByTable: e.target.checked })}
-                  className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-2 focus:ring-blue-400"
-                  disabled={mode !== 'quiz'}
-                />
-                <span className="font-medium">代表者制（各テーブル1回答まで）</span>
-              </label>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <AdminButton
-                icon={ListChecks}
-                disabled={mode !== 'quiz' || activeQuiz !== null}
-                onClick={() => {
-                  const deadlineMs = quizSettings.quizDurationSeconds * 1000;
-                  void send({ type: 'quiz:next', payload: undefined }, {
-                    deadlineMs,
-                    representativeByTable: quizSettings.representativeByTable
-                  });
-                }}
-              >
-                クイズ表示
-              </AdminButton>
-              <AdminButton
-                variant="danger"
-                icon={Eye}
-                disabled={!activeQuiz}
-                onClick={handleReveal}
-              >
-                正解を公開
-              </AdminButton>
-            </div>
-            {activeQuiz ? (
-              <div className="mt-4 rounded-lg bg-green-50 border border-green-200 p-3">
-                <p className="text-sm font-bold text-green-800">✓ 表示中: {activeQuiz.question}</p>
-              </div>
-            ) : (
-              <div className="mt-4 rounded-lg bg-gray-50 border border-gray-200 p-3">
-                <p className="text-sm font-bold text-gray-600">クイズ待機中 - 「クイズ表示」ボタンで表示します</p>
-              </div>
-            )}
-            {quizSettings.representativeByTable && (
-              <p className="mt-2 text-sm text-blue-600">各テーブル1名のみ回答が有効です</p>
-            )}
           </AdminCard>
           </div>
 

@@ -294,19 +294,14 @@ const CountupBoard = memo(function CountupBoard({
   // 終了時の演出フロー
   useEffect(() => {
     if (phase === 'ended' && entries.length > 0) {
-      // 5秒後にTOP3表示
-      const timer1 = setTimeout(() => {
+      // 3秒後に表彰台表示に切り替え（スクロール後）
+      const timer = setTimeout(() => {
         setShowTOP3(true);
-      }, 5000);
-
-      // 8秒後に表彰台表示に切り替え
-      const timer2 = setTimeout(() => {
         setShowPodium(true);
-      }, 8000);
+      }, 3000);
 
       return () => {
-        clearTimeout(timer1);
-        clearTimeout(timer2);
+        clearTimeout(timer);
       };
     } else {
       setShowTOP3(false);
@@ -412,8 +407,8 @@ const CountupBoard = memo(function CountupBoard({
 
       {/* Running時はランキング非表示（盛り上げに集中） */}
 
-      {/* 終了時の演出: スクロール（下から上へ、下位から上位） */}
-      {phase === 'ended' && entries.length > 0 && !showTOP3 && (
+      {/* 終了時の演出: スクロール（下から上へ、下位から上位）- TOP3のみ */}
+      {phase === 'ended' && top3.length > 0 && !showTOP3 && (
         <motion.div
           className="flex-1 overflow-hidden"
           initial={{ opacity: 0 }}
@@ -422,10 +417,10 @@ const CountupBoard = memo(function CountupBoard({
           <motion.div
             className="space-y-3"
             initial={{ y: 0 }}
-            animate={{ y: `-${entries.length * 100}px` }}
-            transition={{ duration: 5, ease: 'linear' }}
+            animate={{ y: `-${top3.length * 100}px` }}
+            transition={{ duration: 3, ease: 'linear' }}
           >
-            {[...entries].reverse().map((entry) => (
+            {[...top3].reverse().map((entry) => (
               <motion.div
                 key={entry.playerId}
                 className="flex items-center justify-between rounded-xl glass-panel-strong px-8 py-5 shadow-xl border-2 border-white/40"
@@ -449,52 +444,6 @@ const CountupBoard = memo(function CountupBoard({
               </motion.div>
             ))}
           </motion.div>
-        </motion.div>
-      )}
-
-      {/* 終了時の演出: TOP3表示（スクロール後） */}
-      {phase === 'ended' && showTOP3 && !showPodium && top3.length >= 3 && (
-        <motion.div
-          className="flex-1 flex items-center justify-center"
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.6, type: 'spring', bounce: 0.4 }}
-        >
-          <div className="grid grid-cols-3 gap-8">
-            {top3.map((entry, index) => (
-              <motion.div
-                key={entry.playerId}
-                initial={{ y: 50, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ delay: index * 0.2, type: 'spring', bounce: 0.4 }}
-                className={`flex flex-col items-center rounded-2xl p-8 shadow-2xl glass-panel-strong border-4 ${
-                  entry.rank === 1
-                    ? 'border-yellow-400 ring-4 ring-yellow-300/50 bg-gradient-to-br from-yellow-50/40 to-orange-50/40'
-                    : entry.rank === 2
-                      ? 'border-gray-400 ring-4 ring-gray-300/50 bg-gradient-to-br from-gray-50/30 to-slate-50/30'
-                      : 'border-amber-600 ring-4 ring-amber-400/50 bg-gradient-to-br from-amber-50/30 to-orange-50/30'
-                }`}
-              >
-                <motion.div
-                  className="mb-4 text-8xl"
-                  animate={{ rotate: [0, -10, 10, -10, 0] }}
-                  transition={{ duration: 0.6, delay: 0.5 + index * 0.2 }}
-                >
-                  {['🥇', '🥈', '🥉'][index]}
-                </motion.div>
-                <p className="mb-2 text-center text-4xl font-black text-ink">{entry.displayName}</p>
-                {entry.tableNo && <p className="mb-4 text-xl text-ink/70 font-bold text-center">テーブル {entry.tableNo}</p>}
-                <motion.div
-                  className="rounded-full glass-panel px-8 py-4 shadow-lg border-2 border-white/40 text-center"
-                  animate={{ scale: [1, 1.2, 1] }}
-                  transition={{ duration: 0.4, delay: 0.8 + index * 0.2 }}
-                >
-                  <span className="text-5xl font-black text-terra-clay">{entry.totalPoints}</span>
-                  <span className="ml-2 text-2xl text-ink/80 font-bold">タップ</span>
-                </motion.div>
-              </motion.div>
-            ))}
-          </div>
         </motion.div>
       )}
 
