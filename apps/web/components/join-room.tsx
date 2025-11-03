@@ -216,16 +216,6 @@ export default function JoinRoom({ code }: { code: string }) {
   return (
     <main className="min-h-screen px-6 py-10 relative overflow-hidden bg-gradient-mobile">
       <div className="mx-auto w-full max-w-3xl relative z-10">
-        <div className="mb-6 flex items-center justify-between rounded-xl glass-panel-strong px-5 py-3 shadow-sm slide-up border border-white/30">
-          <div className="flex items-center gap-3">
-            <span className={`flex h-6 w-6 items-center justify-center rounded-full ${connectionConfig[connection].dot} text-white text-xs font-bold`} aria-hidden="true">
-              {connectionConfig[connection].icon}
-            </span>
-            <span className="font-bold text-ink">{connectionConfig[connection].label}</span>
-          </div>
-          <span className="text-xs font-bold text-ink/70">接続中</span>
-        </div>
-
         {registered ? (
           <div className="rounded-2xl glass-panel-strong px-6 py-4 text-center shadow-md bounce-in border border-white/30 ring-2 ring-accent-400" aria-live="polite">
             <div className="mb-2 text-3xl">🎉</div>

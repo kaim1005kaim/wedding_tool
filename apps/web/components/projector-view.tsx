@@ -164,8 +164,7 @@ export default function ProjectorView({ roomId: _roomId }: { roomId: string }) {
       role="main"
       aria-label="投影画面"
     >
-      <div className="relative w-full h-screen flex flex-col z-10 px-12 py-10 gap-6" role="region" aria-label="ゲーム表示エリア">
-        <Header mode={mode} countdownMs={localCountdownMs} isFullscreen={isFullscreen} onToggleFullscreen={toggleFullscreen} />
+      <div className="relative w-full h-screen flex flex-col z-10" role="region" aria-label="ゲーム表示エリア">
         <div className="flex-1 overflow-hidden">
           <AnimatePresence mode="wait">{renderSection(mode, phase, localCountdownMs, topTen, activeQuiz, quizResult, lotteryResult, isSpinning, lotteryKey)}</AnimatePresence>
         </div>
@@ -191,64 +190,6 @@ export default function ProjectorView({ roomId: _roomId }: { roomId: string }) {
     </main>
   );
 }
-
-const Header = memo(function Header({
-  mode,
-  countdownMs,
-  isFullscreen,
-  onToggleFullscreen
-}: {
-  mode: string;
-  countdownMs: number;
-  isFullscreen: boolean;
-  onToggleFullscreen: () => void;
-}) {
-  const modeIcon = mode === 'countup' ? '⚡' : mode === 'quiz' ? '🎯' : mode === 'lottery' ? '🎰' : '🎮';
-  const countdown = Math.max(0, Math.ceil(countdownMs / 1000));
-
-  return (
-    <motion.header
-      key={`header-${mode}`}
-      initial={{ opacity: 0, y: -20 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -20 }}
-      transition={{ duration: 0.5, ease: 'easeOut' }}
-      className="rounded-2xl glass-panel-strong px-10 py-8 shadow-lg border border-white/30"
-    >
-      <div className="flex flex-col gap-5 text-center md:flex-row md:items-center md:justify-between md:text-left">
-        <div className="flex items-center justify-center gap-5 md:justify-start">
-          <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-terracotta text-4xl shadow-md">
-            {modeIcon}
-          </div>
-          <div className="space-y-1">
-            <p className="text-xs font-bold uppercase tracking-[0.3em] text-ink/60">Wedding Party Game</p>
-            <p className="text-3xl font-bold tracking-tight text-ink">
-              {labelForMode(mode)}
-            </p>
-          </div>
-        </div>
-        <div className="flex items-center gap-3">
-          <div className="rounded-xl glass-panel px-6 py-3 shadow-sm border border-white/20">
-            <p className="text-xs font-bold uppercase tracking-[0.25em] text-ink/60">Countdown</p>
-            <div className="mt-1 flex items-center justify-center gap-2">
-              <p className="text-4xl font-bold text-terra-clay count-up">{countdown}</p>
-              <p className="text-xl font-bold text-ink/70">秒</p>
-            </div>
-          </div>
-          {!isFullscreen && (
-            <button
-              onClick={onToggleFullscreen}
-              className="flex h-14 w-14 items-center justify-center rounded-xl glass-panel text-2xl shadow-sm border border-white/20 transition-all duration-300 hover:scale-110 hover:bg-gradient-denim hover:text-white"
-              title="全画面表示 (F キー)"
-            >
-              ⛶
-            </button>
-          )}
-        </div>
-      </div>
-    </motion.header>
-  );
-});
 
 function renderSection(
   mode: string,
@@ -321,61 +262,37 @@ const CountupBoard = memo(function CountupBoard({
     >
       {/* Phase Status */}
       {phase === 'idle' && (
-        <div className="text-center py-8 space-y-6">
+        <div className="flex flex-col items-center justify-center h-full space-y-12">
           {/* SVG Title */}
           <motion.div
-            initial={{ scale: 0.8, opacity: 0 }}
+            initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            transition={{ duration: 0.6, ease: 'easeOut' }}
+            transition={{ duration: 0.8, ease: 'easeOut' }}
             className="flex justify-center"
           >
-            <img src="/tap-title.svg" alt="Tap Challenge" className="h-32 w-auto" />
+            <img src="/tap-title.svg" alt="Tap Challenge" className="w-[800px] max-w-[80vw] h-auto" />
           </motion.div>
 
-          <h2 className="text-4xl font-bold text-ink glass-panel-strong px-8 py-4 rounded-2xl inline-block shadow-lg border border-white/30">
-            準備中
-          </h2>
-          <p className="mt-2 text-xl text-ink/70 font-bold">まもなく開始します</p>
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.3, duration: 0.5 }}
+            className="text-3xl font-bold text-ink/80"
+          >
+            開始まで少々お待ちください
+          </motion.p>
         </div>
       )}
 
       {phase === 'running' && (
-        <div className="text-center py-8 space-y-6">
-          <motion.div
-            initial={{ scale: 0.9 }}
-            animate={{ scale: [1, 1.05, 1] }}
-            transition={{ duration: 1, repeat: Infinity }}
-          >
-            <div className="text-9xl mb-4">⚡</div>
-          </motion.div>
-          <motion.div
-            className="glass-panel-strong rounded-3xl px-16 py-10 inline-block shadow-2xl border-4 border-accent-400"
-            animate={{
-              boxShadow: [
-                '0 0 40px rgba(251, 146, 60, 0.5)',
-                '0 0 80px rgba(251, 146, 60, 0.8)',
-                '0 0 40px rgba(251, 146, 60, 0.5)'
-              ]
-            }}
-            transition={{ duration: 1.5, repeat: Infinity }}
-          >
-            <p className="text-3xl font-bold text-ink/70 mb-4">タップチャレンジ実行中！</p>
-            <motion.p
-              className="font-black bg-gradient-to-r from-orange-500 via-red-500 to-orange-500 bg-clip-text text-transparent"
-              style={{ fontSize: '10rem', lineHeight: 1 }}
-              animate={{ scale: timeLeftSeconds <= 5 ? [1, 1.1, 1] : 1 }}
-              transition={{ duration: 0.5, repeat: timeLeftSeconds <= 5 ? Infinity : 0 }}
-            >
-              {timeLeftSeconds}
-            </motion.p>
-            <p className="text-4xl font-black text-terra-clay mt-2">秒</p>
-          </motion.div>
+        <div className="flex flex-col items-center justify-center h-full">
           <motion.p
-            className="text-4xl font-bold text-ink"
-            animate={{ opacity: [0.6, 1, 0.6] }}
-            transition={{ duration: 1.5, repeat: Infinity }}
+            className="font-black text-ink"
+            style={{ fontSize: '20rem', lineHeight: 1 }}
+            animate={{ scale: timeLeftSeconds <= 5 ? [1, 1.05, 1] : 1 }}
+            transition={{ duration: 0.5, repeat: timeLeftSeconds <= 5 ? Infinity : 0 }}
           >
-            全力でタップしよう！🔥
+            {timeLeftSeconds}
           </motion.p>
         </div>
       )}
@@ -850,21 +767,25 @@ const QuizBoard = memo(function QuizBoard({ activeQuiz, quizResult, leaderboard,
         role="region"
         aria-label="クイズ待機中"
       >
-        <div className="text-center space-y-8">
+        <div className="flex flex-col items-center justify-center space-y-12">
           {/* SVG Title */}
           <motion.div
-            initial={{ scale: 0.8, opacity: 0 }}
+            initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            transition={{ duration: 0.6, ease: 'easeOut' }}
+            transition={{ duration: 0.8, ease: 'easeOut' }}
             className="flex justify-center"
           >
-            <img src="/quiz-title.svg" alt="Quiz" className="h-32 w-auto" />
+            <img src="/quiz-title.svg" alt="Quiz" className="w-[800px] max-w-[80vw] h-auto" />
           </motion.div>
 
-          <h2 className="text-4xl font-bold text-ink glass-panel-strong px-10 py-5 rounded-2xl inline-block shadow-lg border border-white/30">
-            待機中
-          </h2>
-          <p className="mt-4 text-xl text-ink/70 font-bold">管理画面からクイズを表示してください</p>
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.3, duration: 0.5 }}
+            className="text-3xl font-bold text-ink/80"
+          >
+            開始まで少々お待ちください
+          </motion.p>
         </div>
       </motion.section>
     );
