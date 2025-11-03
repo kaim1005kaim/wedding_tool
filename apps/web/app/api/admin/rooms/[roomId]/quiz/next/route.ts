@@ -6,6 +6,7 @@ import { showNextQuiz } from '@/lib/server/room-engine';
 
 const bodySchema = z.object({
   representativeByTable: z.boolean().optional().default(true),
+  deadlineMs: z.number().int().positive().optional(),
   suddenDeath: z.object({
     enabled: z.boolean(),
     by: z.enum(['table', 'player']),
@@ -27,9 +28,10 @@ export async function POST(request: Request, { params }: { params: { roomId: str
   try {
     const body = await request.json().catch(() => ({}));
     const validated = bodySchema.parse(body);
+    const deadlineMs = validated?.deadlineMs !== undefined ? validated.deadlineMs : 30_000;
     const quizId = await showNextQuiz(
       params.roomId,
-      undefined,
+      deadlineMs,
       validated?.representativeByTable ?? true,
       validated?.suddenDeath ?? null
     );

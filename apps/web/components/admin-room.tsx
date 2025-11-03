@@ -75,7 +75,8 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
   });
   const [quizSettings, setQuizSettings] = useState({
     representativeByTable: true,
-    quizDurationSeconds: 30
+    quizDurationSeconds: 30,
+    enableTimeLimit: true
   });
   const [tapSettings, setTapSettings] = useState({
     countdownSeconds: 3,
@@ -755,24 +756,52 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
                 <p className="text-sm font-bold text-yellow-800">⚠️ クイズモードに切り替えてください</p>
               </div>
             )}
-            <div className="mb-4 flex items-center gap-3 rounded-lg bg-blue-50 p-3 border border-blue-200">
-              <label className="flex cursor-pointer items-center gap-2 text-sm text-slate-700">
-                <input
-                  type="checkbox"
-                  checked={quizSettings.representativeByTable}
-                  onChange={(e) => setQuizSettings({ ...quizSettings, representativeByTable: e.target.checked })}
-                  className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-2 focus:ring-blue-400"
-                  disabled={mode !== 'quiz'}
-                />
-                <span className="font-medium">代表者制（各テーブル1回答まで）</span>
-              </label>
+            <div className="mb-4 space-y-3">
+              <div className="flex items-center gap-3 rounded-lg bg-blue-50 p-3 border border-blue-200">
+                <label className="flex cursor-pointer items-center gap-2 text-sm text-slate-700">
+                  <input
+                    type="checkbox"
+                    checked={quizSettings.representativeByTable}
+                    onChange={(e) => setQuizSettings({ ...quizSettings, representativeByTable: e.target.checked })}
+                    className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-2 focus:ring-blue-400"
+                    disabled={mode !== 'quiz'}
+                  />
+                  <span className="font-medium">代表者制（各テーブル1回答まで）</span>
+                </label>
+              </div>
+              <div className="flex items-center gap-3 rounded-lg bg-blue-50 p-3 border border-blue-200">
+                <label className="flex cursor-pointer items-center gap-2 text-sm text-slate-700 flex-1">
+                  <input
+                    type="checkbox"
+                    checked={quizSettings.enableTimeLimit}
+                    onChange={(e) => setQuizSettings({ ...quizSettings, enableTimeLimit: e.target.checked })}
+                    className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-2 focus:ring-blue-400"
+                    disabled={mode !== 'quiz'}
+                  />
+                  <span className="font-medium">制限時間</span>
+                </label>
+                {quizSettings.enableTimeLimit && (
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="number"
+                      min="10"
+                      max="120"
+                      value={quizSettings.quizDurationSeconds}
+                      onChange={(e) => setQuizSettings({ ...quizSettings, quizDurationSeconds: parseInt(e.target.value) || 30 })}
+                      className="w-16 rounded-lg border border-slate-300 bg-white px-3 py-1 text-sm text-center"
+                      disabled={mode !== 'quiz'}
+                    />
+                    <span className="text-sm text-slate-700">秒</span>
+                  </div>
+                )}
+              </div>
             </div>
             <div className="grid grid-cols-2 gap-3">
               <AdminButton
                 icon={ListChecks}
                 disabled={mode !== 'quiz' || activeQuiz !== null}
                 onClick={() => {
-                  const deadlineMs = quizSettings.quizDurationSeconds * 1000;
+                  const deadlineMs = quizSettings.enableTimeLimit ? quizSettings.quizDurationSeconds * 1000 : undefined;
                   void send({ type: 'quiz:next', payload: undefined }, {
                     deadlineMs,
                     representativeByTable: quizSettings.representativeByTable

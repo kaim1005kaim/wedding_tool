@@ -27,7 +27,7 @@ export async function POST(request: Request, { params }: { params: { roomId: str
   }
 
   const body = bodySchema.parse(await request.json());
-  const deadlineTs = body.deadlineTs ?? Date.now() + 20_000;
+  const deadlineTs = body.deadlineTs ?? Date.now() + 30_000;
   await showQuiz(
     params.roomId,
     body.quizId,
