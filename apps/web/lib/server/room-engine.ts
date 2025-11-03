@@ -212,6 +212,21 @@ export async function revealQuiz(roomId: string, quizId: string, awardedPoints =
   // await upsertRoomSnapshot(roomId, { current_quiz: null });
 }
 
+export async function revealBuzzerQuiz(roomId: string, quizId: string, awardedPoints = 10) {
+  const client = getSupabaseServiceRoleClient();
+  const { data, error } = await client.rpc('reveal_buzzer_quiz', {
+    p_room_id: roomId,
+    p_quiz_id: quizId,
+    p_points: awardedPoints
+  });
+
+  if (error) {
+    throw error;
+  }
+
+  return data as { winnerId: string | null; awarded: Array<{ playerId: string; delta: number; answeredAt: string }> };
+}
+
 export async function drawLottery(roomId: string, kind: 'all' | 'groom' | 'bride') {
   const client = getSupabaseServiceRoleClient();
   const { error } = await client.rpc('draw_lottery', {

@@ -80,7 +80,8 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
   const [quizSettings, setQuizSettings] = useState({
     representativeByTable: true,
     quizDurationSeconds: 30,
-    enableTimeLimit: true
+    enableTimeLimit: true,
+    buzzerMode: false
   });
   const [tapSettings, setTapSettings] = useState({
     countdownSeconds: 3,
@@ -588,13 +589,42 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
       setError('表示中のクイズがありません');
       return;
     }
+
+    const isBuzzerMode = quizSettings.buzzerMode;
+
     openConfirm({
-      title: '正解を公開しますか？',
-      description: '一度公開すると取り消せません。',
+      title: isBuzzerMode ? '早押しクイズの正解を公開しますか？' : '正解を公開しますか？',
+      description: isBuzzerMode ? '最速正解者のみ得点が付与されます。一度公開すると取り消せません。' : '一度公開すると取り消せません。',
       confirmLabel: '公開する',
       variant: 'danger',
-      onConfirm: () => {
-        void send({ type: 'quiz:reveal', payload: undefined }, { quizId: activeQuiz.quizId });
+      onConfirm: async () => {
+        if (isBuzzerMode) {
+          // 早押しモード: 専用APIを直接呼ぶ
+          if (!isCloudMode || !adminToken) {
+            setError('管理トークンがありません');
+            return;
+          }
+          try {
+            const response = await fetch(`/api/admin/rooms/${roomId}/buzzer-quiz/reveal`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${adminToken}`
+              },
+              body: JSON.stringify({ quizId: activeQuiz.quizId, points: 10 })
+            });
+            if (!response.ok) {
+              const data = (await response.json().catch(() => ({}))) as { error?: string };
+              throw new Error(data.error ?? 'Failed to reveal buzzer quiz');
+            }
+            await loadLogs();
+          } catch (err) {
+            setError(err instanceof Error ? err.message : '早押しクイズの公開に失敗しました');
+          }
+        } else {
+          // 通常モード
+          void send({ type: 'quiz:reveal', payload: undefined }, { quizId: activeQuiz.quizId });
+        }
       }
     });
   };
@@ -846,6 +876,18 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
                     <span className="text-sm text-slate-700">秒</span>
                   </div>
                 )}
+              </div>
+              <div className="flex items-center gap-3 rounded-lg bg-orange-50 p-3 border border-orange-200">
+                <label className="flex cursor-pointer items-center gap-2 text-sm text-orange-700">
+                  <input
+                    type="checkbox"
+                    checked={quizSettings.buzzerMode}
+                    onChange={(e) => setQuizSettings({ ...quizSettings, buzzerMode: e.target.checked })}
+                    className="h-4 w-4 rounded border-orange-300 text-orange-600 focus:ring-2 focus:ring-orange-400"
+                    disabled={mode !== 'quiz'}
+                  />
+                  <span className="font-medium">早押しモード（最速正解者のみ得点）</span>
+                </label>
               </div>
             </div>
             <div className="space-y-3">
