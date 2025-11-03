@@ -861,9 +861,9 @@ const QuizBoard = memo(function QuizBoard({ activeQuiz, quizResult, leaderboard,
                         initial={{ scale: 0 }}
                         animate={{ scale: 1 }}
                         transition={{ type: 'spring', bounce: 0.5 }}
-                        className="absolute -top-5 -left-5 w-24 h-24 rounded-full bg-red-500 border-4 border-white shadow-xl flex items-center justify-center z-10"
+                        className="absolute -top-5 -left-5 w-24 h-24 flex items-center justify-center z-10"
                       >
-                        <span className="text-5xl font-black text-white">{CHOICE_LABELS[index]}</span>
+                        <span className="text-7xl drop-shadow-xl">⭕️</span>
                       </motion.div>
                     )}
 

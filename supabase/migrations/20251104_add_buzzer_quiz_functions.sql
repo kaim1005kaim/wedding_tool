@@ -64,6 +64,15 @@ begin
     'isBuzzerMode', true
   );
 
+  -- Update room snapshot to trigger real-time updates
+  insert into room_snapshots(room_id, quiz_result, updated_at)
+  values (p_room_id, result, now())
+  on conflict (room_id)
+  do update set quiz_result = excluded.quiz_result, updated_at = now();
+
+  insert into admin_audit_logs(room_id, actor, action, payload, created_at)
+  values (p_room_id, 'server', 'quiz:reveal', result, now());
+
   return result;
 end;
 $$;

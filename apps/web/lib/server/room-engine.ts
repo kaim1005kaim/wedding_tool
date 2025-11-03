@@ -17,6 +17,13 @@ export async function switchRoomMode(roomId: string, to: 'countup' | 'quiz' | 'l
     quiz_result: null,
     lottery_result: null
   });
+
+  // クイズモードに切り替えたときは進行状態をリセット
+  if (to === 'quiz') {
+    await client.from('awarded_quizzes').delete().eq('room_id', roomId);
+    await client.from('answers').delete().eq('room_id', roomId);
+  }
+
   await appendAuditLog(roomId, 'mode:switch', { to });
 }
 

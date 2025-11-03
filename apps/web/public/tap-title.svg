@@ -10,11 +10,11 @@
       }
 
       .cls-2 {
-        letter-spacing: -.02em;
+        letter-spacing: 0em;
       }
 
       .cls-3 {
-        letter-spacing: -.05em;
+        letter-spacing: 0em;
       }
     </style>
   </defs>

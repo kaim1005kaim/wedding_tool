@@ -46,12 +46,38 @@ export default function JoinRoom({ code }: { code: string }) {
     if (typeof window === 'undefined') return;
     const storedTableNo = window.localStorage.getItem(`${storageKey}:tableNo`);
     const storedName = window.localStorage.getItem(`${storageKey}:name`);
+    const storedPlayerData = window.localStorage.getItem(storageKey);
+
     if (storedTableNo) setTableNo(storedTableNo);
     if (storedName) setDisplayName(storedName);
+
+    // Check if there's existing valid player session
+    if (storedPlayerData && storedTableNo && storedName) {
+      try {
+        const { playerId, token, expiresAt } = JSON.parse(storedPlayerData) as {
+          playerId: string;
+          token: string;
+          expiresAt: number;
+        };
+
+        // Check if token is still valid
+        if (expiresAt > Date.now()) {
+          setPlayerAuth({ playerId, token });
+          setRegistered(true);
+          setRegisteredTableNo(storedTableNo);
+          setRegisteredName(storedName);
+          setShowModal(false);
+          return;
+        }
+      } catch (err) {
+        console.error('Failed to restore player session:', err);
+      }
+    }
+
     clearPlayerAuth();
     setRegistered(false);
     setShowModal(true);
-  }, [storageKey, clearPlayerAuth]);
+  }, [storageKey, clearPlayerAuth, setPlayerAuth]);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -898,6 +924,19 @@ function QuizOverlay({ phase, countdownMs, roomId, playerToken }: QuizOverlayPro
       )}
 
       <div className="flex-1 flex flex-col items-center justify-center p-6">
+        {/* Already Answered Message */}
+        {hasAnswered && !quizResult && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="w-full max-w-2xl mb-4"
+          >
+            <div className="rounded-2xl bg-blue-500 text-white px-6 py-3 text-center shadow-lg">
+              <p className="text-lg font-bold">回答済みです。正解発表までお待ちください</p>
+            </div>
+          </motion.div>
+        )}
+
         {/* Question */}
         <div className="w-full max-w-2xl mb-8">
           <div className="glass-panel-strong rounded-3xl p-6 shadow-xl border border-white/30">
@@ -921,11 +960,13 @@ function QuizOverlay({ phase, countdownMs, roomId, playerToken }: QuizOverlayPro
               if (isCorrect) {
                 buttonClass = 'rounded-2xl p-5 shadow-xl bg-gradient-to-br from-green-500 to-green-600 border-2 border-green-700';
               } else if (isWrong) {
-                buttonClass = 'rounded-2xl p-5 shadow-xl bg-gradient-to-br from-red-500 to-red-600 border-2 border-red-700';
+                // 不正解時も青色に変更
+                buttonClass = 'rounded-2xl p-5 shadow-xl bg-gradient-denim border-2 border-denim-deep';
               } else {
                 buttonClass = 'rounded-2xl p-5 shadow-md glass-panel';
               }
             } else if (isSelected) {
+              // 選択中は青色を維持
               buttonClass = 'rounded-2xl p-5 shadow-xl bg-gradient-denim border-2 border-denim-deep scale-105';
             } else if (hasAnswered) {
               buttonClass = 'rounded-2xl p-5 shadow-md glass-panel opacity-70';
