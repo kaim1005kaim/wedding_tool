@@ -14,7 +14,7 @@ export default function LandingPage() {
           <p className="mt-8 max-w-2xl text-lg leading-relaxed text-brand-blue-700/90">
             会場に設置されたQRコードからアクセスし、スマホでリアルタイム演出に参加できます。<br />
             参加者は <code className="mx-1 rounded-xl bg-brand-blue-100 px-3 py-1.5 text-base font-semibold text-brand-blue-700">/join/&lt;ルームコード&gt;</code> にアクセスし、
-            表示されたモーダルでテーブル番号とお名前を入力してください。
+            表示されたモーダルでテーブルナンバーとお名前を入力してください。
           </p>
         </div>
 
@@ -41,7 +41,7 @@ export default function LandingPage() {
             <div className="rounded-2xl bg-white/80 p-6 shadow-brand-sm transition-all duration-300 hover:shadow-brand hover:scale-[1.02]">
               <div className="mb-3 text-4xl">📱</div>
               <p className="font-bold text-brand-terra-600">1. 参加登録</p>
-              <p className="mt-2 leading-relaxed">QRからアクセスし、テーブル番号とお名前を入力して参加します。</p>
+              <p className="mt-2 leading-relaxed">QRからアクセスし、テーブルナンバーとお名前を入力して参加します。</p>
             </div>
             <div className="rounded-2xl bg-white/80 p-6 shadow-brand-sm transition-all duration-300 hover:shadow-brand hover:scale-[1.02]">
               <div className="mb-3 text-4xl">⚡</div>

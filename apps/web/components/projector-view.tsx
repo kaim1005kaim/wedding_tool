@@ -693,27 +693,15 @@ const QuizBoard = memo(function QuizBoard({ activeQuiz, quizResult }: QuizPanelP
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -30 }}
       transition={{ duration: 0.5, ease: 'easeOut' }}
-      className="flex h-full flex-col gap-8 rounded-2xl p-12"
+      className="flex h-full flex-col gap-6 rounded-2xl p-12"
       role="region"
       aria-label="クイズ表示"
     >
-      {/* Quiz Title */}
-      {quizResult && (
-        <motion.div
-          initial={{ scale: 0.9, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          className="text-center"
-        >
-          <h2 className="text-5xl font-bold text-ink glass-panel-strong px-8 py-4 rounded-2xl inline-block shadow-lg border border-white/30">
-            正解発表
-          </h2>
-        </motion.div>
-      )}
-
-      {!quizResult && activeQuiz?.ord && (
+      {/* Quiz Number - Always show */}
+      {activeQuiz?.ord && (
         <div className="text-center">
-          <h2 className="text-5xl font-bold text-ink glass-panel-strong px-8 py-4 rounded-2xl inline-block shadow-lg border border-white/30">
-            第{activeQuiz.ord}問
+          <h2 className="text-4xl font-bold text-ink glass-panel-strong px-8 py-3 rounded-2xl inline-block shadow-lg border border-white/30">
+            第{activeQuiz.ord}問{quizResult ? ' - 正解発表' : ''}
           </h2>
         </div>
       )}
@@ -722,13 +710,13 @@ const QuizBoard = memo(function QuizBoard({ activeQuiz, quizResult }: QuizPanelP
       {activeQuiz && (
         <>
           <div className="text-center">
-            <p className="text-4xl font-bold leading-relaxed text-ink glass-panel-strong px-10 py-8 rounded-2xl border border-white/30 shadow-lg inline-block">
+            <p className="text-3xl font-bold leading-relaxed text-ink glass-panel-strong px-8 py-6 rounded-2xl border border-white/30 shadow-lg inline-block max-w-5xl">
               {activeQuiz.question}
             </p>
           </div>
 
           {/* 2x2 Grid Layout for Choices */}
-          <div className="flex-1 grid grid-cols-2 gap-6">
+          <div className="flex-1 grid grid-cols-2 gap-5">
             {activeQuiz.choices.map((choice, index) => {
               const isCorrect = quizResult && index === correctIndex;
               const count = counts[index];
@@ -742,7 +730,7 @@ const QuizBoard = memo(function QuizBoard({ activeQuiz, quizResult }: QuizPanelP
                   className="relative"
                 >
                   <div
-                    className={`h-full rounded-2xl px-10 py-8 shadow-lg border-2 transition-all ${
+                    className={`h-full rounded-2xl px-8 py-6 shadow-lg border-2 transition-all flex items-center ${
                       isCorrect
                         ? 'bg-gradient-to-br from-red-500 to-red-600 border-red-700 ring-4 ring-red-300'
                         : 'glass-panel-strong border-white/30'
@@ -760,13 +748,13 @@ const QuizBoard = memo(function QuizBoard({ activeQuiz, quizResult }: QuizPanelP
                       </motion.div>
                     )}
 
-                    <div className="flex items-center justify-between gap-6 h-full">
+                    <div className="flex items-center justify-between gap-4 w-full">
                       {/* Choice Label and Text */}
-                      <div className="flex items-center gap-5 flex-1">
-                        <span className={`text-5xl font-black ${isCorrect ? 'text-white' : 'text-ink'}`}>
+                      <div className="flex items-center gap-4 flex-1">
+                        <span className={`text-4xl font-black ${isCorrect ? 'text-white' : 'text-ink'}`}>
                           {CHOICE_LABELS[index]}.
                         </span>
-                        <span className={`text-3xl font-bold ${isCorrect ? 'text-white' : 'text-ink'}`}>
+                        <span className={`text-2xl font-bold ${isCorrect ? 'text-white' : 'text-ink'}`}>
                           {choice}
                         </span>
                       </div>
@@ -777,9 +765,9 @@ const QuizBoard = memo(function QuizBoard({ activeQuiz, quizResult }: QuizPanelP
                           initial={{ scale: 0, rotate: -180 }}
                           animate={{ scale: 1, rotate: 0 }}
                           transition={{ delay: 0.3 + index * 0.1, type: 'spring' }}
-                          className="bg-yellow-400 rounded-full px-5 py-2 shadow-lg border-2 border-yellow-500"
+                          className="bg-yellow-400 rounded-full px-4 py-1.5 shadow-lg border-2 border-yellow-500"
                         >
-                          <span className="text-xl font-black text-ink">回答数{count}</span>
+                          <span className="text-lg font-black text-ink">回答数{count}</span>
                         </motion.div>
                       )}
                     </div>

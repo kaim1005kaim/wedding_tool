@@ -94,7 +94,7 @@ export default function JoinRoom({ code }: { code: string }) {
 
   const handleJoin = async () => {
     if (!tableNo.trim()) {
-      setModalError('テーブル番号を入力してください');
+      setModalError('テーブルナンバーを入力してください');
       return;
     }
     if (!displayName.trim()) {
@@ -240,7 +240,7 @@ export default function JoinRoom({ code }: { code: string }) {
         ) : (
           <div className="text-center py-4">
             <p className="text-base font-bold text-ink/80">
-              画面中央のモーダルでテーブル番号とお名前を入力し、<br />
+              画面中央のモーダルでテーブルナンバーとお名前を入力し、<br />
               「参加する」ボタンを押してください
             </p>
           </div>
@@ -312,6 +312,7 @@ export default function JoinRoom({ code }: { code: string }) {
           countdownMs={countdownMs}
           leaderboard={leaderboard}
           onTap={handleTap}
+          registeredName={registeredName}
         />
       )}
 
@@ -358,12 +359,15 @@ function JoinModal({ visible, tableNo, displayName, onTableNoChange, onDisplayNa
     ? '各テーブル代表者の方のみ登録してください。'
     : mode === 'countup'
       ? '全員ご参加ください。'
-      : 'テーブル番号とお名前を入力してください。';
+      : 'テーブルナンバーとお名前を入力してください。';
 
   const guidanceIcon = mode === 'quiz' ? '🎯' : mode === 'countup' ? '⚡' : '🎮';
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center px-4 relative overflow-hidden">
+    <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
+      {/* Backdrop overlay */}
+      <div className="absolute inset-0 bg-gradient-mobile backdrop-blur-md" />
+
       <div className="glass-panel-strong w-full max-w-sm rounded-2xl px-6 py-6 shadow-xl bounce-in border border-white/30 relative z-10">
         <div className="mb-4 text-center">
           <div className="mb-2 text-3xl">{guidanceIcon}</div>
@@ -382,14 +386,14 @@ function JoinModal({ visible, tableNo, displayName, onTableNoChange, onDisplayNa
           <div className="space-y-1">
             <label className="flex items-center gap-1.5 text-xs font-bold text-ink" htmlFor="table-no">
               <span>📍</span>
-              <span>テーブル番号</span>
+              <span>テーブルナンバー</span>
             </label>
             <input
               id="table-no"
               className="input-terra w-full text-base py-3"
               value={tableNo}
-              onChange={(event) => onTableNoChange(event.target.value)}
-              placeholder="例：A-3 / 5 / C"
+              onChange={(event) => onTableNoChange(event.target.value.toUpperCase())}
+              placeholder="例：A"
               maxLength={8}
               required
             />
@@ -443,9 +447,11 @@ type CountupOverlayProps = {
   countdownMs: number;
   leaderboard: LeaderboardEntry[];
   onTap: () => Promise<void> | void;
+  registeredName: string;
 };
 
-function CountupOverlay({ phase, countdownMs, leaderboard, onTap }: CountupOverlayProps) {
+function CountupOverlay({ phase, countdownMs, leaderboard, onTap, registeredName }: CountupOverlayProps) {
+
   const [localCountdown, setLocalCountdown] = useState<number | null>(null);
   const [flash, setFlash] = useState(false);
   const [localCountdownMs, setLocalCountdownMs] = useState(countdownMs);
@@ -459,6 +465,11 @@ function CountupOverlay({ phase, countdownMs, leaderboard, onTap }: CountupOverl
   const finishTriggeredRef = useRef(false);
   const countdownStartTimeRef = useRef<number | null>(null);
   const initialCountdownRef = useRef<number>(0);
+
+  // Find current player's stats
+  const myEntry = leaderboard.find(entry => entry.displayName === registeredName);
+  const myRank = leaderboard.findIndex(entry => entry.displayName === registeredName) + 1;
+  const myTapCount = myEntry?.countupTapCount ?? 0;
 
   const clearStartDelay = useCallback(() => {
     if (startDelayRef.current !== null) {
@@ -628,6 +639,17 @@ function CountupOverlay({ phase, countdownMs, leaderboard, onTap }: CountupOverl
         <div className="fixed top-4 right-4 z-[70] pointer-events-none">
           <div className="rounded-2xl glass-panel-strong px-5 py-3 shadow-xl border border-white/30">
             <span className="text-4xl font-bold text-terra-clay drop-shadow">{displaySeconds}</span>
+          </div>
+        </div>
+      )}
+
+      {/* Rank and Tap Count - Top Left - Show during active tapping */}
+      {showPad && isTimerRunning && banner !== 'start' && localCountdown === null && myRank > 0 && (
+        <div className="fixed top-4 left-4 z-[70] pointer-events-none">
+          <div className="rounded-2xl glass-panel-strong px-5 py-3 shadow-xl border border-white/30 space-y-1">
+            <div className="text-sm font-bold text-ink/70">現在の順位</div>
+            <div className="text-3xl font-black text-terra-clay">{myRank}位</div>
+            <div className="text-lg font-bold text-ink">{myTapCount}回</div>
           </div>
         </div>
       )}
@@ -887,30 +909,30 @@ function QuizOverlay({ phase, countdownMs, roomId, playerToken }: QuizOverlayPro
           </div>
         </div>
 
-        {/* Choices - 2x2 Grid */}
-        <div className="w-full max-w-2xl grid grid-cols-2 gap-5">
+        {/* Choices - 1 Column Vertical */}
+        <div className="w-full max-w-2xl flex flex-col gap-4">
           {activeQuiz.choices.map((choice, index) => {
             const isSelected = selectedChoice === index;
             const isCorrect = quizResult && index === correctIndex;
             const isWrong = quizResult && isSelected && index !== correctIndex;
             const count = quizResult?.perChoiceCounts?.[index] ?? 0;
 
-            let buttonClass = 'glass-panel rounded-2xl p-6 shadow-lg transition-all duration-200 min-h-[120px]';
+            let buttonClass = 'glass-panel rounded-2xl p-5 shadow-lg transition-all duration-200';
 
             if (quizResult) {
               if (isCorrect) {
-                buttonClass = 'rounded-2xl p-6 shadow-xl bg-gradient-to-br from-red-500 to-red-600 border-2 border-red-700 min-h-[120px]';
+                buttonClass = 'rounded-2xl p-5 shadow-xl bg-gradient-to-br from-red-500 to-red-600 border-2 border-red-700';
               } else if (isWrong) {
-                buttonClass = 'rounded-2xl p-6 shadow-xl bg-error border-2 border-error-600 min-h-[120px]';
+                buttonClass = 'rounded-2xl p-5 shadow-xl bg-error border-2 border-error-600';
               } else {
-                buttonClass = 'rounded-2xl p-6 shadow-md glass-panel min-h-[120px]';
+                buttonClass = 'rounded-2xl p-5 shadow-md glass-panel';
               }
             } else if (isSelected) {
-              buttonClass = 'rounded-2xl p-6 shadow-xl bg-gradient-denim border-2 border-denim-deep scale-105 min-h-[120px]';
+              buttonClass = 'rounded-2xl p-5 shadow-xl bg-gradient-denim border-2 border-denim-deep scale-105';
             } else if (hasAnswered) {
-              buttonClass = 'rounded-2xl p-6 shadow-md glass-panel opacity-70 min-h-[120px]';
+              buttonClass = 'rounded-2xl p-5 shadow-md glass-panel opacity-70';
             } else {
-              buttonClass = 'glass-panel-strong rounded-2xl p-6 shadow-lg border border-white/30 hover:shadow-xl hover:scale-105 active:scale-95 min-h-[120px]';
+              buttonClass = 'glass-panel-strong rounded-2xl p-5 shadow-lg border border-white/30 hover:shadow-xl hover:scale-[1.02] active:scale-95';
             }
 
             return (
