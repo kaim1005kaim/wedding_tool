@@ -796,27 +796,38 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
                 )}
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-3">
+              <div className="grid grid-cols-2 gap-3">
+                <AdminButton
+                  icon={ListChecks}
+                  disabled={mode !== 'quiz' || activeQuiz !== null}
+                  onClick={() => {
+                    const deadlineMs = quizSettings.enableTimeLimit ? quizSettings.quizDurationSeconds * 1000 : undefined;
+                    void send({ type: 'quiz:next', payload: undefined }, {
+                      deadlineMs,
+                      representativeByTable: quizSettings.representativeByTable
+                    });
+                  }}
+                >
+                  クイズ表示
+                </AdminButton>
+                <AdminButton
+                  variant="danger"
+                  icon={Eye}
+                  disabled={!activeQuiz}
+                  onClick={handleReveal}
+                >
+                  正解を公開
+                </AdminButton>
+              </div>
               <AdminButton
+                variant="secondary"
                 icon={ListChecks}
-                disabled={mode !== 'quiz' || activeQuiz !== null}
-                onClick={() => {
-                  const deadlineMs = quizSettings.enableTimeLimit ? quizSettings.quizDurationSeconds * 1000 : undefined;
-                  void send({ type: 'quiz:next', payload: undefined }, {
-                    deadlineMs,
-                    representativeByTable: quizSettings.representativeByTable
-                  });
-                }}
+                disabled={mode !== 'quiz' || phase !== 'idle'}
+                onClick={() => send({ type: 'game:stop', payload: undefined })}
+                className="w-full"
               >
-                クイズ表示
-              </AdminButton>
-              <AdminButton
-                variant="danger"
-                icon={Eye}
-                disabled={!activeQuiz}
-                onClick={handleReveal}
-              >
-                正解を公開
+                ランキング表示
               </AdminButton>
             </div>
             {activeQuiz ? (

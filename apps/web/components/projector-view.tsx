@@ -265,7 +265,7 @@ function renderSection(
     case 'countup':
       return <CountupBoard key="countup" entries={leaderboard} phase={phase} countdownMs={countdownMs} />;
     case 'quiz':
-      return <QuizBoard key={`quiz-${quizResult?.quizId ?? activeQuiz?.quizId ?? 'waiting'}`} activeQuiz={activeQuiz} quizResult={quizResult} leaderboard={leaderboard} />;
+      return <QuizBoard key={`quiz-${quizResult?.quizId ?? activeQuiz?.quizId ?? 'waiting'}`} activeQuiz={activeQuiz} quizResult={quizResult} leaderboard={leaderboard} phase={phase} />;
     /* 抽選モード非表示
     case 'lottery':
       return <LotteryBoard key={lotteryKey} lotteryResult={lotteryResult} isSpinning={isSpinning} leaderboard={leaderboard} />;
@@ -617,11 +617,21 @@ type QuizPanelProps = {
   activeQuiz: RoomStoreState['activeQuiz'];
   quizResult: RoomStoreState['quizResult'];
   leaderboard: LeaderboardEntry[];
+  phase: 'idle' | 'running' | 'ended';
 };
 
-const QuizBoard = memo(function QuizBoard({ activeQuiz, quizResult, leaderboard }: QuizPanelProps) {
+const QuizBoard = memo(function QuizBoard({ activeQuiz, quizResult, leaderboard, phase }: QuizPanelProps) {
   const counts = quizResult?.perChoiceCounts ?? [0, 0, 0, 0];
   const correctIndex = quizResult?.correctIndex ?? -1;
+  const [showPodium, setShowPodium] = useState(false);
+
+  // Get quiz leaderboard sorted by quizPoints
+  const quizLeaderboard = leaderboard
+    .filter(entry => entry.quizPoints && entry.quizPoints > 0)
+    .sort((a, b) => b.quizPoints - a.quizPoints)
+    .map((entry, index) => ({ ...entry, rank: index + 1 }));
+
+  const top3 = quizLeaderboard.slice(0, 3);
 
   // Get quiz participants (tables that have answered at least one quiz)
   const quizParticipants = leaderboard
@@ -631,6 +641,202 @@ const QuizBoard = memo(function QuizBoard({ activeQuiz, quizResult, leaderboard 
       displayName: entry.displayName,
       quizPoints: entry.quizPoints
     }));
+
+  // 終了時の演出フロー
+  useEffect(() => {
+    if (phase === 'ended' && quizLeaderboard.length > 0) {
+      // 3秒後に表彰台表示に切り替え
+      const timer = setTimeout(() => {
+        setShowPodium(true);
+      }, 3000);
+
+      return () => {
+        clearTimeout(timer);
+      };
+    } else {
+      setShowPodium(false);
+    }
+  }, [phase, quizLeaderboard.length]);
+
+  // Show ranking when phase is ended
+  if (phase === 'ended' && quizLeaderboard.length > 0) {
+    // スクロール演出: TOP3のみ
+    if (!showPodium) {
+      return (
+        <motion.section
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -30 }}
+          transition={{ duration: 0.5, ease: 'easeOut' }}
+          className="flex h-full flex-col gap-5"
+          role="region"
+          aria-label="クイズランキング"
+        >
+          <motion.div
+            className="text-center py-6"
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ type: 'spring', bounce: 0.5 }}
+          >
+            <div className="glass-panel-strong rounded-2xl px-12 py-8 inline-block shadow-xl border-2 border-accent-400">
+              <p className="text-5xl font-black text-ink mb-4">
+                クイズ終了！
+              </p>
+              <p className="text-2xl font-bold text-terra-clay">
+                結果発表 ✨
+              </p>
+            </div>
+          </motion.div>
+
+          <motion.div
+            className="flex-1 overflow-hidden"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+          >
+            <motion.div
+              className="space-y-3"
+              initial={{ y: 0 }}
+              animate={{ y: `-${top3.length * 100}px` }}
+              transition={{ duration: 3, ease: 'linear' }}
+            >
+              {[...top3].reverse().map((entry) => (
+                <motion.div
+                  key={entry.playerId}
+                  className="flex items-center justify-between rounded-xl glass-panel-strong px-8 py-5 shadow-xl border-2 border-white/40"
+                  initial={{ opacity: 0, x: -50 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <div className="flex items-center gap-4">
+                    <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-gradient-terracotta text-2xl font-black text-white shadow-lg">
+                      {entry.rank}
+                    </span>
+                    <div>
+                      <p className="text-3xl font-black text-ink">{entry.displayName}</p>
+                      {entry.tableNo && <p className="text-lg text-ink/70 font-bold">テーブル {entry.tableNo}</p>}
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-4xl font-black text-terra-clay">{entry.quizPoints}</p>
+                    <p className="text-base text-ink/80 font-bold">問正解</p>
+                  </div>
+                </motion.div>
+              ))}
+            </motion.div>
+          </motion.div>
+        </motion.section>
+      );
+    }
+
+    // 表彰台スタイル表示
+    if (top3.length >= 3) {
+      return (
+        <motion.section
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -30 }}
+          transition={{ duration: 0.5, ease: 'easeOut' }}
+          className="flex h-full flex-col gap-5"
+          role="region"
+          aria-label="クイズランキング"
+        >
+          <div className="text-center py-6">
+            <div className="glass-panel-strong rounded-2xl px-12 py-6 inline-block shadow-xl border-2 border-accent-400">
+              <p className="text-4xl font-black text-ink">
+                🏆 クイズランキング TOP3 🏆
+              </p>
+            </div>
+          </div>
+
+          <div className="flex-1 flex items-end justify-center gap-8 pb-12">
+            {/* 2位 - 左 */}
+            <motion.div
+              initial={{ y: 100, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.2, type: 'spring', bounce: 0.4 }}
+              className="flex flex-col items-center"
+            >
+              <motion.div
+                animate={{ rotate: [0, -10, 10, -10, 0] }}
+                transition={{ duration: 0.6, delay: 0.8 }}
+                className="mb-4 text-8xl"
+              >
+                🥈
+              </motion.div>
+              <div className="rounded-2xl glass-panel-strong p-8 shadow-2xl border-4 border-gray-400 ring-4 ring-gray-300/50 bg-gradient-to-br from-gray-50/30 to-slate-50/30">
+                <p className="text-3xl font-black text-ink text-center mb-2">{top3[1].displayName}</p>
+                {top3[1].tableNo && <p className="text-lg text-ink/70 font-bold text-center mb-4">テーブル {top3[1].tableNo}</p>}
+                <div className="rounded-full glass-panel px-8 py-4 shadow-lg border-2 border-white/40 text-center">
+                  <span className="text-4xl font-black text-terra-clay">{top3[1].quizPoints}</span>
+                  <span className="ml-2 text-xl text-ink/80 font-bold">問</span>
+                </div>
+              </div>
+              {/* 台座 */}
+              <div className="w-48 h-32 bg-gradient-to-b from-gray-300/80 to-gray-400/80 rounded-t-2xl shadow-xl mt-4 flex items-center justify-center border-4 border-gray-500">
+                <span className="text-6xl font-black text-white">2</span>
+              </div>
+            </motion.div>
+
+            {/* 1位 - 中央（高い位置） */}
+            <motion.div
+              initial={{ y: 100, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.4, type: 'spring', bounce: 0.4 }}
+              className="flex flex-col items-center -translate-y-12"
+            >
+              <motion.div
+                animate={{ rotate: [0, -15, 15, -15, 0], scale: [1, 1.2, 1] }}
+                transition={{ duration: 0.8, delay: 1 }}
+                className="mb-4 text-9xl"
+              >
+                🥇
+              </motion.div>
+              <div className="rounded-2xl glass-panel-strong p-10 shadow-2xl border-4 border-yellow-400 ring-4 ring-yellow-300/50 bg-gradient-to-br from-yellow-50/40 to-orange-50/40">
+                <p className="text-4xl font-black text-ink text-center mb-2">{top3[0].displayName}</p>
+                {top3[0].tableNo && <p className="text-xl text-ink/70 font-bold text-center mb-4">テーブル {top3[0].tableNo}</p>}
+                <div className="rounded-full glass-panel px-10 py-5 shadow-lg border-2 border-white/40 text-center">
+                  <span className="text-5xl font-black text-terra-clay">{top3[0].quizPoints}</span>
+                  <span className="ml-2 text-2xl text-ink/80 font-bold">問</span>
+                </div>
+              </div>
+              {/* 台座 */}
+              <div className="w-52 h-40 bg-gradient-to-b from-yellow-300/80 to-yellow-500/80 rounded-t-2xl shadow-2xl mt-4 flex items-center justify-center border-4 border-yellow-600">
+                <span className="text-7xl font-black text-white">1</span>
+              </div>
+            </motion.div>
+
+            {/* 3位 - 右 */}
+            <motion.div
+              initial={{ y: 100, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0, type: 'spring', bounce: 0.4 }}
+              className="flex flex-col items-center"
+            >
+              <motion.div
+                animate={{ rotate: [0, -10, 10, -10, 0] }}
+                transition={{ duration: 0.6, delay: 0.6 }}
+                className="mb-4 text-8xl"
+              >
+                🥉
+              </motion.div>
+              <div className="rounded-2xl glass-panel-strong p-8 shadow-2xl border-4 border-amber-600 ring-4 ring-amber-400/50 bg-gradient-to-br from-amber-50/30 to-orange-50/30">
+                <p className="text-3xl font-black text-ink text-center mb-2">{top3[2].displayName}</p>
+                {top3[2].tableNo && <p className="text-lg text-ink/70 font-bold text-center mb-4">テーブル {top3[2].tableNo}</p>}
+                <div className="rounded-full glass-panel px-8 py-4 shadow-lg border-2 border-white/40 text-center">
+                  <span className="text-4xl font-black text-terra-clay">{top3[2].quizPoints}</span>
+                  <span className="ml-2 text-xl text-ink/80 font-bold">問</span>
+                </div>
+              </div>
+              {/* 台座 */}
+              <div className="w-48 h-24 bg-gradient-to-b from-amber-500/80 to-amber-700/80 rounded-t-2xl shadow-xl mt-4 flex items-center justify-center border-4 border-amber-800">
+                <span className="text-6xl font-black text-white">3</span>
+              </div>
+            </motion.div>
+          </div>
+        </motion.section>
+      );
+    }
+  }
 
   // Show waiting screen when no active quiz
   if (!activeQuiz) {
