@@ -9,7 +9,8 @@ const createQuizSchema = z.object({
   choices: z.array(z.string().min(1).max(120)).length(4),
   answerIndex: z.number().int().min(0).max(3),
   ord: z.number().int().min(1).optional(),
-  imageUrl: z.string().url().optional().or(z.literal(''))
+  imageUrl: z.string().url().optional().or(z.literal('')),
+  isTemplate: z.boolean().optional().default(false)
 });
 
 export async function GET(_request: Request, { params }: { params: { roomId: string } }) {
@@ -25,17 +26,30 @@ export async function GET(_request: Request, { params }: { params: { roomId: str
   }
 
   const client = getSupabaseServiceRoleClient();
-  const { data, error } = await client
+
+  // Get both room-specific quizzes and templates
+  const { data: roomQuizzes, error: roomError } = await client
     .from('quizzes')
-    .select('id, question, ord')
+    .select('id, question, ord, is_template')
     .eq('room_id', params.roomId)
+    .eq('is_template', false)
     .order('ord', { ascending: true });
 
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  const { data: templates, error: templateError } = await client
+    .from('quizzes')
+    .select('id, question, ord, is_template')
+    .is('room_id', null)
+    .eq('is_template', true)
+    .order('ord', { ascending: true });
+
+  if (roomError || templateError) {
+    return NextResponse.json({ error: roomError?.message || templateError?.message }, { status: 500 });
   }
 
-  return NextResponse.json({ quizzes: data ?? [] });
+  return NextResponse.json({
+    quizzes: roomQuizzes ?? [],
+    templates: templates ?? []
+  });
 }
 
 export async function POST(request: Request, { params }: { params: { roomId: string } }) {
@@ -51,32 +65,40 @@ export async function POST(request: Request, { params }: { params: { roomId: str
   }
 
   const json = await request.json();
-  const { question, choices, answerIndex, ord, imageUrl } = createQuizSchema.parse(json);
+  const { question, choices, answerIndex, ord, imageUrl, isTemplate } = createQuizSchema.parse(json);
 
   const client = getSupabaseServiceRoleClient();
   let finalOrd = ord;
   if (!finalOrd) {
-    const { data: maxData } = await client
+    // For templates, get max ord from templates; for room quizzes, get max from room
+    const query = client
       .from('quizzes')
       .select('ord')
-      .eq('room_id', params.roomId)
       .order('ord', { ascending: false })
-      .limit(1)
-      .maybeSingle();
+      .limit(1);
+
+    if (isTemplate) {
+      query.is('room_id', null).eq('is_template', true);
+    } else {
+      query.eq('room_id', params.roomId).eq('is_template', false);
+    }
+
+    const { data: maxData } = await query.maybeSingle();
     finalOrd = (maxData?.ord ?? 0) + 1;
   }
 
   const { data, error } = await client
     .from('quizzes')
     .insert({
-      room_id: params.roomId,
+      room_id: isTemplate ? null : params.roomId,
       question,
       choices,
       answer_index: answerIndex,
       ord: finalOrd,
-      image_url: imageUrl || null
+      image_url: imageUrl || null,
+      is_template: isTemplate
     })
-    .select('id, question, ord')
+    .select('id, question, ord, is_template')
     .single();
 
   if (error || !data) {

@@ -32,6 +32,7 @@ type QuizSummary = {
   question: string;
   ord: number | null;
   created_at: string;
+  is_template?: boolean;
 };
 
 type LotteryCandidateSummary = {
@@ -60,13 +61,15 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
   const [manageLoading, setManageLoading] = useState(false);
   const [modeSwitching, setModeSwitching] = useState(false);
   const [quizzes, setQuizzes] = useState<QuizSummary[]>([]);
+  const [templates, setTemplates] = useState<QuizSummary[]>([]);
   const [lotteryCandidates, setLotteryCandidates] = useState<LotteryCandidateSummary[]>([]);
   const [quizForm, setQuizForm] = useState({
     question: '',
     choices: ['', '', '', ''],
     answerIndex: 0,
     ord: '',
-    imageUrl: ''
+    imageUrl: '',
+    isTemplate: false
   });
   const [editingQuizId, setEditingQuizId] = useState<string | null>(null);
   const quizFormRef = useRef<HTMLFormElement>(null);
@@ -305,8 +308,9 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
         }
       });
       if (response.ok) {
-        const json = (await response.json()) as { quizzes: QuizSummary[] };
+        const json = (await response.json()) as { quizzes: QuizSummary[]; templates: QuizSummary[] };
         setQuizzes(json.quizzes ?? []);
+        setTemplates(json.templates ?? []);
       }
     } catch (err) {
       console.error(err);
@@ -352,6 +356,7 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
       void fetchLotteryCandidates();
     } else {
       setQuizzes([]);
+      setTemplates([]);
       setLotteryCandidates([]);
     }
   };
@@ -377,7 +382,8 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
           choices: quizForm.choices.map((choice) => choice.trim()),
           answerIndex: quizForm.answerIndex,
           ord: quizForm.ord ? Number.parseInt(quizForm.ord, 10) : undefined,
-          imageUrl: quizForm.imageUrl.trim() || undefined
+          imageUrl: quizForm.imageUrl.trim() || undefined,
+          isTemplate: quizForm.isTemplate
         })
       });
 
@@ -387,9 +393,13 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
       }
 
       const json = (await response.json()) as { quiz: QuizSummary };
-      setQuizzes((prev) => [...prev, json.quiz].sort((a, b) => (a.ord ?? 0) - (b.ord ?? 0)));
-      setQuizForm({ question: '', choices: ['', '', '', ''], answerIndex: 0, ord: '', imageUrl: '' });
-      setManageMessage('クイズを追加しました');
+      if (quizForm.isTemplate) {
+        setTemplates((prev) => [...prev, json.quiz].sort((a, b) => (a.ord ?? 0) - (b.ord ?? 0)));
+      } else {
+        setQuizzes((prev) => [...prev, json.quiz].sort((a, b) => (a.ord ?? 0) - (b.ord ?? 0)));
+      }
+      setQuizForm({ question: '', choices: ['', '', '', ''], answerIndex: 0, ord: '', imageUrl: '', isTemplate: false });
+      setManageMessage(quizForm.isTemplate ? 'テンプレートを追加しました' : 'クイズを追加しました');
     } catch (err) {
       setManageMessage(err instanceof Error ? err.message : 'クイズの追加に失敗しました');
     } finally {
@@ -405,13 +415,14 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
     })
       .then((res) => res.json())
       .then((data) => {
-        const quizData = data as { quiz: { question: string; choices: string[]; answer_index: number; ord: number; image_url?: string } };
+        const quizData = data as { quiz: { question: string; choices: string[]; answer_index: number; ord: number; image_url?: string; is_template?: boolean } };
         setQuizForm({
           question: quizData.quiz.question,
           choices: quizData.quiz.choices,
           answerIndex: quizData.quiz.answer_index,
           ord: quizData.quiz.ord?.toString() ?? '',
-          imageUrl: quizData.quiz.image_url ?? ''
+          imageUrl: quizData.quiz.image_url ?? '',
+          isTemplate: quizData.quiz.is_template ?? false
         });
         // Scroll to form
         setTimeout(() => {
@@ -444,7 +455,8 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
           choices: quizForm.choices.map((choice) => choice.trim()),
           answerIndex: quizForm.answerIndex,
           ord: quizForm.ord ? Number.parseInt(quizForm.ord, 10) : undefined,
-          imageUrl: quizForm.imageUrl.trim() || undefined
+          imageUrl: quizForm.imageUrl.trim() || undefined,
+          isTemplate: quizForm.isTemplate
         })
       });
 
@@ -454,12 +466,18 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
       }
 
       const json = (await response.json()) as { quiz: QuizSummary };
-      setQuizzes((prev) =>
-        prev.map((q) => (q.id === editingQuizId ? json.quiz : q)).sort((a, b) => (a.ord ?? 0) - (b.ord ?? 0))
-      );
-      setQuizForm({ question: '', choices: ['', '', '', ''], answerIndex: 0, ord: '', imageUrl: '' });
+      if (quizForm.isTemplate) {
+        setTemplates((prev) =>
+          prev.map((q) => (q.id === editingQuizId ? json.quiz : q)).sort((a, b) => (a.ord ?? 0) - (b.ord ?? 0))
+        );
+      } else {
+        setQuizzes((prev) =>
+          prev.map((q) => (q.id === editingQuizId ? json.quiz : q)).sort((a, b) => (a.ord ?? 0) - (b.ord ?? 0))
+        );
+      }
+      setQuizForm({ question: '', choices: ['', '', '', ''], answerIndex: 0, ord: '', imageUrl: '', isTemplate: false });
       setEditingQuizId(null);
-      setManageMessage('クイズを更新しました');
+      setManageMessage(quizForm.isTemplate ? 'テンプレートを更新しました' : 'クイズを更新しました');
     } catch (err) {
       setManageMessage(err instanceof Error ? err.message : 'クイズの更新に失敗しました');
     } finally {
@@ -494,7 +512,37 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
 
   const handleCancelEdit = () => {
     setEditingQuizId(null);
-    setQuizForm({ question: '', choices: ['', '', '', ''], answerIndex: 0, ord: '', imageUrl: '' });
+    setQuizForm({ question: '', choices: ['', '', '', ''], answerIndex: 0, ord: '', imageUrl: '', isTemplate: false });
+  };
+
+  const handleCopyTemplate = async (templateId: string) => {
+    if (!isCloudMode || !adminToken) return;
+
+    setManageLoading(true);
+    setManageMessage(null);
+    try {
+      const response = await fetch(`/api/admin/rooms/${roomId}/manage/quizzes/copy-template`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${adminToken}`
+        },
+        body: JSON.stringify({ templateId })
+      });
+
+      if (!response.ok) {
+        const data = (await response.json().catch(() => ({}))) as { error?: string };
+        throw new Error(data.error ?? response.statusText);
+      }
+
+      const json = (await response.json()) as { quiz: QuizSummary };
+      setQuizzes((prev) => [...prev, json.quiz].sort((a, b) => (a.ord ?? 0) - (b.ord ?? 0)));
+      setManageMessage('テンプレートをコピーしました');
+    } catch (err) {
+      setManageMessage(err instanceof Error ? err.message : 'テンプレートのコピーに失敗しました');
+    } finally {
+      setManageLoading(false);
+    }
   };
 
   const handleAddCandidate = async () => {
@@ -1064,6 +1112,18 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
                         />
                         <p className="text-xs text-brand-blue-700/70">※投影画面のみに表示されます</p>
                       </div>
+                      <div className="space-y-2">
+                        <label className="flex items-center gap-2 text-sm font-medium text-brand-blue-700 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={quizForm.isTemplate}
+                            onChange={(e) => setQuizForm((prev) => ({ ...prev, isTemplate: e.target.checked }))}
+                            className="rounded border-brand-blue-200"
+                          />
+                          <span>共通テンプレートとして保存</span>
+                        </label>
+                        <p className="text-xs text-brand-blue-700/70">※全ルームで再利用可能なクイズとして保存されます</p>
+                      </div>
                       <div className="grid gap-3 md:grid-cols-2">
                         <div className="space-y-2">
                           <label className="text-sm font-medium text-brand-blue-700">表示順 (任意)</label>
@@ -1147,6 +1207,45 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
                                   title="削除"
                                 >
                                   <Trash2 className="h-4 w-4" />
+                                </button>
+                              </div>
+                            </div>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                  <div className="space-y-2">
+                    <h3 className="text-sm font-semibold text-brand-blue-700">共通テンプレート</h3>
+                    {templates.length === 0 ? (
+                      <p className="text-sm text-brand-blue-700/70">共通テンプレートはまだありません。</p>
+                    ) : (
+                      <ul className="space-y-2">
+                        {templates.map((template) => (
+                          <li key={template.id} className="rounded-xl bg-blue-50/85 px-4 py-3 text-sm shadow-brand border border-brand-blue-200">
+                            <div className="flex items-start justify-between gap-2">
+                              <div className="flex-1">
+                                <p className="font-semibold text-brand-blue-700">{template.question}</p>
+                                <p className="text-xs text-brand-blue-700/60">
+                                  表示順: {template.ord ?? '-'} / 登録日: {new Date(template.created_at).toLocaleString('ja-JP')}
+                                </p>
+                              </div>
+                              <div className="flex gap-1">
+                                <button
+                                  onClick={() => void handleCopyTemplate(template.id)}
+                                  className="rounded-lg bg-green-100 p-2 text-green-700 hover:bg-green-200 disabled:opacity-50"
+                                  disabled={manageLoading}
+                                  title="このルームにコピー"
+                                >
+                                  <Copy className="h-4 w-4" />
+                                </button>
+                                <button
+                                  onClick={() => handleEditQuiz(template)}
+                                  className="rounded-lg bg-brand-blue-100 p-2 text-brand-blue-700 hover:bg-brand-blue-200 disabled:opacity-50"
+                                  disabled={manageLoading || editingQuizId === template.id}
+                                  title="編集"
+                                >
+                                  <Edit className="h-4 w-4" />
                                 </button>
                               </div>
                             </div>

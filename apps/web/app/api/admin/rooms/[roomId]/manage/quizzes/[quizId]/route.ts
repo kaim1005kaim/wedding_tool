@@ -9,7 +9,8 @@ const updateQuizSchema = z.object({
   choices: z.array(z.string().min(1).max(120)).length(4).optional(),
   answerIndex: z.number().int().min(0).max(3).optional(),
   ord: z.number().int().min(1).optional(),
-  imageUrl: z.string().url().optional().or(z.literal(''))
+  imageUrl: z.string().url().optional().or(z.literal('')),
+  isTemplate: z.boolean().optional()
 });
 
 // GET individual quiz details
@@ -26,11 +27,13 @@ export async function GET(_request: Request, { params }: { params: { roomId: str
   }
 
   const client = getSupabaseServiceRoleClient();
+
+  // Allow fetching templates (room_id is null) or room-specific quizzes
   const { data, error } = await client
     .from('quizzes')
     .select('*')
     .eq('id', params.quizId)
-    .eq('room_id', params.roomId)
+    .or(`room_id.eq.${params.roomId},room_id.is.null`)
     .maybeSingle();
 
   if (error || !data) {
@@ -65,13 +68,18 @@ export async function PUT(request: Request, { params }: { params: { roomId: stri
   if (updates.answerIndex !== undefined) updateData.answer_index = updates.answerIndex;
   if (updates.ord !== undefined) updateData.ord = updates.ord;
   if (updates.imageUrl !== undefined) updateData.image_url = updates.imageUrl || null;
+  if (updates.isTemplate !== undefined) {
+    updateData.is_template = updates.isTemplate;
+    updateData.room_id = updates.isTemplate ? null : params.roomId;
+  }
 
+  // Allow updating templates (room_id is null) or room-specific quizzes
   const { data, error } = await client
     .from('quizzes')
     .update(updateData)
     .eq('id', params.quizId)
-    .eq('room_id', params.roomId)
-    .select('id, question, ord')
+    .or(`room_id.eq.${params.roomId},room_id.is.null`)
+    .select('id, question, ord, is_template')
     .single();
 
   if (error || !data) {
@@ -95,11 +103,14 @@ export async function DELETE(_request: Request, { params }: { params: { roomId: 
   }
 
   const client = getSupabaseServiceRoleClient();
+
+  // Only allow deleting room-specific quizzes, not templates
   const { error } = await client
     .from('quizzes')
     .delete()
     .eq('id', params.quizId)
-    .eq('room_id', params.roomId);
+    .eq('room_id', params.roomId)
+    .eq('is_template', false);
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
