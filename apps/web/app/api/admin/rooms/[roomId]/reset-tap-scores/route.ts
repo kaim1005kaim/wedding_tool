@@ -20,14 +20,41 @@ export async function POST(request: Request, props: { params: Promise<{ roomId: 
   const client = getSupabaseServiceRoleClient();
 
   try {
-    // Reset countup_tap_count for all scores in the room
-    const { error } = await client
+    // Get all scores for the room with current quiz_points
+    const { data: scores, error: fetchError } = await client
       .from('scores')
-      .update({ countup_tap_count: 0 })
+      .select('player_id, quiz_points')
       .eq('room_id', roomId);
 
-    if (error) {
-      throw error;
+    if (fetchError) {
+      throw fetchError;
+    }
+
+    // Reset countup_tap_count to 0 and total_points to quiz_points for each player
+    if (scores && scores.length > 0) {
+      for (const score of scores) {
+        const { error: updateError } = await client
+          .from('scores')
+          .update({
+            countup_tap_count: 0,
+            total_points: score.quiz_points
+          })
+          .eq('room_id', roomId)
+          .eq('player_id', score.player_id);
+
+        if (updateError) {
+          throw updateError;
+        }
+      }
+    }
+
+    // Refresh the leaderboard snapshot
+    const { error: refreshError } = await client.rpc('refresh_room_leaderboard', {
+      p_room_id: roomId
+    });
+
+    if (refreshError) {
+      throw refreshError;
     }
 
     return NextResponse.json({ ok: true });
