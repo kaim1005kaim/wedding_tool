@@ -1178,6 +1178,15 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
                 </AdminButton>
               </div>
               <AdminButton
+                variant="secondary"
+                icon={ListChecks}
+                disabled={mode !== 'countup' || phase !== 'idle'}
+                onClick={() => send({ type: 'game:stop', payload: undefined })}
+                className="w-full"
+              >
+                ランキング表示
+              </AdminButton>
+              <AdminButton
                 variant="danger"
                 disabled={mode !== 'countup' || phase === 'running'}
                 onClick={async () => {
