@@ -586,9 +586,9 @@ function CountupOverlay({ phase, countdownMs, leaderboard, onTap, registeredName
           // START!表示期間（1秒）: 10000msで固定
           setLocalCountdownMs(10000);
         } else {
-          // タップ時間カウントダウン開始
+          // タップ時間カウントダウン開始（9999msから開始）
           const tapTimeElapsed = elapsed - PREPARATION_TIME_MS - 1000;
-          const remaining = Math.max(0, 10100 - tapTimeElapsed);
+          const remaining = Math.max(0, 9999 - tapTimeElapsed);
           setLocalCountdownMs(remaining);
 
           if (remaining <= 0) {

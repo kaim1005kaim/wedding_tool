@@ -43,7 +43,7 @@ export default function ProjectorView({ roomId: _roomId }: { roomId: string }) {
         const elapsed = Date.now() - (countdownStartTimeRef.current ?? 0);
         const PREPARATION_TIME_MS = 3000; // 3秒の準備時間
 
-        // 準備期間中（3秒）は準備カウントダウン表示用に13100ms固定
+        // 準備期間中（3秒）は準備カウントダウン表示用
         if (elapsed < PREPARATION_TIME_MS) {
           // 13100, 12100, 11100 → 表示時に -10 して 3, 2, 1
           const prepRemaining = PREPARATION_TIME_MS - elapsed;
@@ -52,9 +52,9 @@ export default function ProjectorView({ roomId: _roomId }: { roomId: string }) {
           // START!表示期間（1秒）: 10000msで固定
           setLocalCountdownMs(10000);
         } else {
-          // タップ時間カウントダウン開始
+          // タップ時間カウントダウン開始（9999msから開始して10が表示されないようにする）
           const tapTimeElapsed = elapsed - PREPARATION_TIME_MS - 1000;
-          const remaining = Math.max(0, 10100 - tapTimeElapsed);
+          const remaining = Math.max(0, 9999 - tapTimeElapsed);
           setLocalCountdownMs(remaining);
 
           if (remaining <= 0) {
@@ -242,6 +242,7 @@ const CountupBoard = memo(function CountupBoard({
   // Top 3 highlighted, rest in compact grid
   const top3 = entries.slice(0, 3);
   const rest = entries.slice(3);
+  // Use localCountdownMs for accurate countdown display
   const timeLeftSeconds = Math.max(0, Math.ceil(countdownMs / 1000));
   const [showTOP3, setShowTOP3] = useState(false);
   const [showPodium, setShowPodium] = useState(false);
@@ -344,11 +345,10 @@ const CountupBoard = memo(function CountupBoard({
               transition={{ duration: 0.5, ease: 'easeOut' }}
               className="flex flex-col items-center justify-center gap-8"
             >
-              <p className="text-8xl">⏰</p>
               <p className="font-black text-terra-clay" style={{ fontSize: '12rem', lineHeight: 1 }}>
                 TIME UP!
               </p>
-              <p className="text-5xl font-bold text-ink/80">管理画面で「ゲーム終了」を押してください</p>
+              <p className="text-5xl font-bold text-ink/80">結果発表まで少々お待ちください</p>
             </motion.div>
           )}
         </div>
@@ -361,21 +361,7 @@ const CountupBoard = memo(function CountupBoard({
           animate={{ scale: 1, opacity: 1 }}
           transition={{ type: 'spring', bounce: 0.5 }}
         >
-          <motion.div
-            className="text-8xl mb-4"
-            animate={{ rotate: [0, 10, -10, 10, 0] }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-          >
-            🎉
-          </motion.div>
-          <div className="glass-panel-strong rounded-2xl px-12 py-8 inline-block shadow-xl border-2 border-accent-400 bg-gradient-to-br from-orange-50/50 to-yellow-50/50">
-            <p className="text-5xl font-black text-ink mb-4">
-              タップチャレンジ終了！
-            </p>
-            <p className="text-2xl font-bold text-terra-clay">
-              結果発表 ✨
-            </p>
-          </div>
+          <p className="font-bold text-terra-clay" style={{ fontSize: '8rem', lineHeight: 1 }}>結果発表！</p>
         </motion.div>
       )}
 
