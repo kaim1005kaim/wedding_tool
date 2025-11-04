@@ -91,7 +91,7 @@ export async function stopGame(roomId: string) {
 export async function showRanking(roomId: string) {
   await ensureRoomSnapshot(roomId);
 
-  // 現在の状態を取得
+  // 現在の状態を取得（最新の状態を確実に取得）
   const snapshot = await fetchRoomSnapshot(roomId);
   const isCurrentlyShowingRanking = snapshot?.show_ranking === true;
 
@@ -102,9 +102,10 @@ export async function showRanking(roomId: string) {
     willToggleTo: isCurrentlyShowingRanking ? 'idle' : 'ranking'
   });
 
+  const client = getSupabaseServiceRoleClient();
+
   if (isCurrentlyShowingRanking) {
     // OFFにする: 待機モード(idle)に遷移
-    const client = getSupabaseServiceRoleClient();
     await client.from('rooms').update({ mode: 'idle', phase: 'idle' }).eq('id', roomId);
     await upsertRoomSnapshot(roomId, {
       mode: 'idle',
@@ -115,24 +116,34 @@ export async function showRanking(roomId: string) {
     await appendAuditLog(roomId, 'game:hideRanking', {});
   } else {
     // ONにする: ランキングを表示
+    // modeとphaseはそのまま維持し、show_rankingのみ変更
     await upsertRoomSnapshot(roomId, { show_ranking: true, show_celebration: false });
     await appendAuditLog(roomId, 'game:showRanking', {});
 
     // Supabaseリアルタイムをトリガーするために、room_snapshotsのupdated_atを更新
     await recomputeLeaderboard(roomId);
   }
+
+  // 更新後の状態を返す
+  const updatedSnapshot = await fetchRoomSnapshot(roomId);
+  return {
+    showRanking: updatedSnapshot?.show_ranking ?? false,
+    mode: updatedSnapshot?.mode ?? 'idle',
+    phase: updatedSnapshot?.phase ?? 'idle'
+  };
 }
 
 export async function showCelebration(roomId: string) {
   await ensureRoomSnapshot(roomId);
 
-  // 現在の状態を取得
+  // 現在の状態を取得（最新の状態を確実に取得）
   const snapshot = await fetchRoomSnapshot(roomId);
   const isCurrentlyCelebrating = snapshot?.phase === 'celebrating' || snapshot?.show_celebration === true;
 
+  const client = getSupabaseServiceRoleClient();
+
   if (isCurrentlyCelebrating) {
     // OFFにする: 待機モード(idle)に遷移
-    const client = getSupabaseServiceRoleClient();
     await client.from('rooms').update({ mode: 'idle', phase: 'idle' }).eq('id', roomId);
     await upsertRoomSnapshot(roomId, {
       mode: 'idle',
@@ -146,6 +157,14 @@ export async function showCelebration(roomId: string) {
     await upsertRoomSnapshot(roomId, { phase: 'celebrating', show_celebration: true });
     await appendAuditLog(roomId, 'game:showCelebration', {});
   }
+
+  // 更新後の状態を返す
+  const updatedSnapshot = await fetchRoomSnapshot(roomId);
+  return {
+    showCelebration: updatedSnapshot?.show_celebration ?? false,
+    mode: updatedSnapshot?.mode ?? 'idle',
+    phase: updatedSnapshot?.phase ?? 'idle'
+  };
 }
 
 export async function applyTapDelta(roomId: string, playerId: string, delta: number) {

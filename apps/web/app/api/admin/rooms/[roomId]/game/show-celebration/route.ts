@@ -15,6 +15,6 @@ export async function POST(request: Request, { params }: { params: Promise<{ roo
     return NextResponse.json({ error: 'Invalid admin token' }, { status: 401 });
   }
 
-  await showCelebration(roomId);
-  return NextResponse.json({ ok: true });
+  const result = await showCelebration(roomId);
+  return NextResponse.json({ ok: true, ...result });
 }

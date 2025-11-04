@@ -62,6 +62,7 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
   const [representatives, setRepresentatives] = useState<Array<{ tableNo: string; name: string }>>([]);
   const [representativeForm, setRepresentativeForm] = useState({ tableNo: '', name: '' });
   const [modeSwitching, setModeSwitching] = useState(false);
+  const [rankingLoading, setRankingLoading] = useState(false);
   const [quizzes, setQuizzes] = useState<QuizSummary[]>([]);
   const [templates, setTemplates] = useState<QuizSummary[]>([]);
   const [lotteryCandidates, setLotteryCandidates] = useState<LotteryCandidateSummary[]>([]);
@@ -994,9 +995,12 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
                 <AdminButton
                   variant="secondary"
                   icon={ListChecks}
-                  disabled={mode !== 'quiz'}
+                  disabled={mode !== 'quiz' || rankingLoading}
                   onClick={async () => {
+                    if (rankingLoading) return;
+
                     console.log('[Admin] Quiz Ranking button clicked', { roomId, mode, phase, adminToken: !!adminToken });
+                    setRankingLoading(true);
                     try {
                       const response = await fetch(`/api/admin/rooms/${roomId}/game/show-ranking`, {
                         method: 'POST',
@@ -1016,11 +1020,13 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
                     } catch (err) {
                       console.error('[Admin] Quiz Ranking exception', err);
                       window.alert('ランキング表示の切り替えに失敗しました');
+                    } finally {
+                      setRankingLoading(false);
                     }
                   }}
                   className="w-full"
                 >
-                  ランキング表示
+                  {rankingLoading ? '処理中...' : 'ランキング表示'}
                 </AdminButton>
                 <AdminButton
                   variant="primary"
@@ -1199,9 +1205,12 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
               <AdminButton
                 variant="secondary"
                 icon={ListChecks}
-                disabled={mode !== 'countup'}
+                disabled={mode !== 'countup' || rankingLoading}
                 onClick={async () => {
+                  if (rankingLoading) return;
+
                   console.log('[Admin] Ranking button clicked', { roomId, mode, phase, adminToken: !!adminToken });
+                  setRankingLoading(true);
                   try {
                     const response = await fetch(`/api/admin/rooms/${roomId}/game/show-ranking`, {
                       method: 'POST',
@@ -1221,11 +1230,13 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
                   } catch (err) {
                     console.error('[Admin] Ranking exception', err);
                     window.alert('ランキング表示の切り替えに失敗しました');
+                  } finally {
+                    setRankingLoading(false);
                   }
                 }}
                 className="w-full"
               >
-                ランキング表示
+                {rankingLoading ? '処理中...' : 'ランキング表示'}
               </AdminButton>
               <AdminButton
                 variant="primary"
