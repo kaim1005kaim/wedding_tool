@@ -62,8 +62,8 @@ export async function upsertRoomSnapshot(
       partial.lottery_result !== undefined
         ? partial.lottery_result ?? null
         : existing?.lottery_result ?? null,
-    show_ranking: partial.show_ranking ?? existing?.show_ranking ?? false,
-    show_celebration: partial.show_celebration ?? existing?.show_celebration ?? false,
+    show_ranking: partial.show_ranking !== undefined ? partial.show_ranking : (existing?.show_ranking ?? false),
+    show_celebration: partial.show_celebration !== undefined ? partial.show_celebration : (existing?.show_celebration ?? false),
     updated_at: new Date().toISOString()
   };
 
