@@ -288,14 +288,28 @@ const CountupBoard = memo(function CountupBoard({
 
       {phase === 'running' && (
         <div className="flex flex-col items-center justify-center h-full">
-          <motion.p
-            className="font-black text-ink"
-            style={{ fontSize: '20rem', lineHeight: 1 }}
-            animate={{ scale: timeLeftSeconds <= 5 ? [1, 1.05, 1] : 1 }}
-            transition={{ duration: 0.5, repeat: timeLeftSeconds <= 5 ? Infinity : 0 }}
-          >
-            {timeLeftSeconds}
-          </motion.p>
+          {timeLeftSeconds >= 10 ? (
+            <motion.div
+              initial={{ scale: 0.5, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 1.2, opacity: 0 }}
+              transition={{ duration: 0.5, ease: 'easeOut' }}
+              className="flex items-center justify-center"
+            >
+              <p className="font-black text-terra-clay" style={{ fontSize: '20rem', lineHeight: 1 }}>
+                START!
+              </p>
+            </motion.div>
+          ) : (
+            <motion.p
+              className="font-black text-ink"
+              style={{ fontSize: '20rem', lineHeight: 1 }}
+              animate={{ scale: timeLeftSeconds <= 5 ? [1, 1.05, 1] : 1 }}
+              transition={{ duration: 0.5, repeat: timeLeftSeconds <= 5 ? Infinity : 0 }}
+            >
+              {timeLeftSeconds}
+            </motion.p>
+          )}
         </div>
       )}
 
