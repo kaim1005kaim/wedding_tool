@@ -307,15 +307,59 @@ export async function showNextQuiz(
 
 export async function revealQuiz(roomId: string, quizId: string, awardedPoints = 10) {
   const client = getSupabaseServiceRoleClient();
-  const { error } = await client.rpc('reveal_quiz', {
-    p_room_id: roomId,
-    p_quiz_id: quizId,
-    p_points: awardedPoints
-  });
 
-  if (error) {
-    throw error;
+  // Get the correct answer from hardcoded quizzes
+  const quiz = WEDDING_QUIZZES.find((q) => q.id === quizId);
+  if (!quiz) {
+    throw new Error('Quiz not found');
   }
+
+  // Get all answers for this quiz
+  const { data: answers, error: answersError } = await client
+    .from('answers')
+    .select('player_id, choice_index, answered_at')
+    .eq('room_id', roomId)
+    .eq('quiz_id', quizId);
+
+  if (answersError) {
+    throw answersError;
+  }
+
+  // Award points to correct answers
+  if (answers && answers.length > 0) {
+    for (const answer of answers) {
+      if (answer.choice_index === quiz.answerIndex) {
+        // Award points
+        const { error: updateError } = await client.rpc('increment_quiz_points', {
+          p_room_id: roomId,
+          p_player_id: answer.player_id,
+          p_delta: awardedPoints
+        });
+        if (updateError) {
+          console.error('Failed to award points:', updateError);
+        }
+      }
+    }
+  }
+
+  // Mark quiz as awarded
+  const { error: awardError } = await client
+    .from('awarded_quizzes')
+    .upsert({ room_id: roomId, quiz_id: quizId });
+
+  if (awardError) {
+    throw awardError;
+  }
+
+  // Update room snapshot with quiz result
+  await recomputeLeaderboard(roomId);
+  await upsertRoomSnapshot(roomId, {
+    quiz_result: {
+      quizId,
+      correctAnswerIndex: quiz.answerIndex,
+      revealedAt: Date.now()
+    }
+  });
 
   // Keep current_quiz visible - it will be cleared when next quiz starts
   // await upsertRoomSnapshot(roomId, { current_quiz: null });
