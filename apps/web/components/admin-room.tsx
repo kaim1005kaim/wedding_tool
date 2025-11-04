@@ -1392,14 +1392,26 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
                     </div>
                     <div className="space-y-3">
                       <div className="space-y-2">
-                        <label className="text-sm font-medium text-brand-blue-700">画像URL (任意)</label>
-                        <input
+                        <label className="text-sm font-medium text-brand-blue-700">クイズ画像 (任意)</label>
+                        <select
                           className="w-full rounded-xl border border-brand-blue-200 bg-white px-4 py-3 text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-blue-400"
                           value={quizForm.imageUrl}
                           onChange={(event) => setQuizForm((prev) => ({ ...prev, imageUrl: event.target.value }))}
-                          type="url"
-                          placeholder="https://example.com/image.jpg"
-                        />
+                        >
+                          <option value="">画像なし</option>
+                          <option value="/quiz-backgrounds/1.png">画像1</option>
+                          <option value="/quiz-backgrounds/2.png">画像2</option>
+                          <option value="/quiz-backgrounds/3.png">画像3</option>
+                        </select>
+                        {quizForm.imageUrl && (
+                          <div className="mt-2 rounded-lg border-2 border-brand-blue-200 p-2 bg-white">
+                            <img
+                              src={quizForm.imageUrl}
+                              alt="選択中の画像"
+                              className="w-full h-auto rounded-lg"
+                            />
+                          </div>
+                        )}
                         <p className="text-xs text-brand-blue-700/70">※投影画面のみに表示されます</p>
                       </div>
                       <div className="space-y-2">
