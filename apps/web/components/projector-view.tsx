@@ -26,12 +26,14 @@ export default function ProjectorView({ roomId: _roomId }: { roomId: string }) {
   const [lotteryKey, setLotteryKey] = useState(0);
   const [isSpinning, setIsSpinning] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [showFullscreenPrompt, setShowFullscreenPrompt] = useState(false);
   const [particleTrigger, setParticleTrigger] = useState<ParticleConfig | null>(null);
   const [localCountdownMs, setLocalCountdownMs] = useState(countdownMs);
   const containerRef = useRef<HTMLDivElement>(null);
   const prevModeRef = useRef<typeof mode>();
   const countdownStartTimeRef = useRef<number | null>(null);
   const initialCountdownRef = useRef<number>(0);
+  const hasPromptedRef = useRef(false);
 
   // クライアント側でカウントダウンを管理
   useEffect(() => {
@@ -172,6 +174,23 @@ export default function ProjectorView({ roomId: _roomId }: { roomId: string }) {
     return () => window.removeEventListener('keydown', handleKeyPress);
   }, [toggleFullscreen, isFullscreen]);
 
+  // Show fullscreen prompt on initial load
+  useEffect(() => {
+    if (!hasPromptedRef.current && !document.fullscreenElement) {
+      const timer = setTimeout(() => {
+        setShowFullscreenPrompt(true);
+        hasPromptedRef.current = true;
+      }, 2000);
+
+      return () => clearTimeout(timer);
+    }
+  }, []);
+
+  const handleFullscreenPromptAccept = async () => {
+    setShowFullscreenPrompt(false);
+    await toggleFullscreen();
+  };
+
   return (
     <main
       ref={containerRef}
@@ -185,8 +204,42 @@ export default function ProjectorView({ roomId: _roomId }: { roomId: string }) {
         </div>
       </div>
 
+      {/* Fullscreen prompt modal - show on initial load */}
+      {showFullscreenPrompt && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 backdrop-blur-sm">
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="glass-panel-strong rounded-2xl p-12 shadow-2xl border-2 border-white/40 max-w-2xl mx-4"
+          >
+            <h2 className="text-4xl font-black text-ink mb-6 text-center">
+              プロジェクター投影準備
+            </h2>
+            <p className="text-xl text-ink/80 mb-8 text-center leading-relaxed">
+              最適な投影のため、全画面表示を推奨します。
+              <br />
+              <span className="text-sm text-ink/60 mt-2 block">推奨解像度: WXGA 1280×800</span>
+            </p>
+            <div className="flex gap-4 justify-center">
+              <button
+                onClick={handleFullscreenPromptAccept}
+                className="px-8 py-4 bg-terra-clay text-white font-bold rounded-xl hover:bg-terra-clay/90 transition-colors text-lg shadow-lg"
+              >
+                全画面表示にする
+              </button>
+              <button
+                onClick={() => setShowFullscreenPrompt(false)}
+                className="px-8 py-4 glass-panel text-ink font-bold rounded-xl hover:bg-white/60 transition-colors text-lg"
+              >
+                後で
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
       {/* Fullscreen hint - only show when not in fullscreen */}
-      {!isFullscreen && (
+      {!isFullscreen && !showFullscreenPrompt && (
         <div className="fixed bottom-8 right-8 z-50 rounded-xl glass-panel-strong shadow-lg px-4 py-3 slide-up border border-white/30" role="complementary" aria-label="全画面表示のヒント">
           <button
             onClick={toggleFullscreen}

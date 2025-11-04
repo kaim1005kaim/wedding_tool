@@ -806,7 +806,7 @@ function medalForRank(rank: number) {
 }
 
 type QuizOverlayProps = {
-  phase: 'idle' | 'running' | 'ended';
+  phase: 'idle' | 'running' | 'ended' | 'celebrating';
   countdownMs: number;
   roomId: string | null;
   playerToken: string | null;

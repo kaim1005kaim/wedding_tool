@@ -210,3 +210,40 @@ body {
 .text-warning {
   color: var(--color-warning-600);
 }
+
+/* ========== Projector Optimization (WXGA 1280×800) ========== */
+@media (min-width: 1280px) and (max-height: 900px) {
+  /* プロジェクター投影用の最適化 */
+  body {
+    overflow: hidden;
+  }
+
+  /* フォントサイズの調整 - 1280×800で最適な可読性 */
+  .projector-optimized {
+    font-size: clamp(1rem, 1.2vw, 1.5rem);
+  }
+
+  /* 大きなタイトル・カウントダウンの調整 */
+  .projector-title-large {
+    font-size: clamp(8rem, 12vw, 15rem);
+  }
+
+  .projector-title-medium {
+    font-size: clamp(4rem, 6vw, 8rem);
+  }
+
+  .projector-text-large {
+    font-size: clamp(2.5rem, 4vw, 5rem);
+  }
+
+  /* クイズ選択肢のサイズ調整 */
+  .projector-choice-text {
+    font-size: clamp(1.5rem, 2.5vw, 3rem);
+  }
+
+  /* スペーシングの調整 */
+  .projector-spacing {
+    padding: clamp(1rem, 2vw, 3rem);
+    gap: clamp(0.5rem, 1vw, 2rem);
+  }
+}
