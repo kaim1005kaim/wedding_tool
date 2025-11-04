@@ -6,12 +6,42 @@ const PREPARATION_TIME_MS = 3_000; // 3秒の準備カウントダウン
 
 export async function resetQuizProgress(roomId: string) {
   const client = getSupabaseServiceRoleClient();
+
+  // Delete quiz-related records
   await client.from('awarded_quizzes').delete().eq('room_id', roomId);
   await client.from('answers').delete().eq('room_id', roomId);
+
+  // Get all scores with current countup_tap_count
+  const { data: scores } = await client
+    .from('scores')
+    .select('player_id, countup_tap_count')
+    .eq('room_id', roomId);
+
+  // Reset quiz_points to 0 and total_points to countup_tap_count for each player
+  if (scores && scores.length > 0) {
+    for (const score of scores) {
+      await client
+        .from('scores')
+        .update({
+          quiz_points: 0,
+          total_points: score.countup_tap_count
+        })
+        .eq('room_id', roomId)
+        .eq('player_id', score.player_id);
+    }
+  }
+
+  // Refresh leaderboard snapshot
+  await client.rpc('refresh_room_leaderboard', {
+    p_room_id: roomId
+  });
+
+  // Clear quiz state in snapshot
   await upsertRoomSnapshot(roomId, {
     current_quiz: null,
     quiz_result: null
   });
+
   await appendAuditLog(roomId, 'quiz:reset', {});
 }
 
