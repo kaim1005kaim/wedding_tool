@@ -183,7 +183,9 @@ class SupabaseRealtimeClient implements RealtimeClient {
                   seat_no: snapshot.lottery_result.player.seat_no ?? null
                 }
               }
-            : null
+            : null,
+          showRanking: snapshot.show_ranking ?? false,
+          showCelebration: snapshot.show_celebration ?? false
         });
       }
     );

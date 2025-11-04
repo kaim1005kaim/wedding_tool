@@ -1,5 +1,5 @@
 import { getSupabaseServiceRoleClient, upsertRoomSnapshot, fetchRoomSnapshot } from '@/lib/supabase/server';
-import { appendAuditLog, ensureRoomSnapshot, updateSnapshotLeaderboard } from '@/lib/server/rooms';
+import { appendAuditLog, ensureRoomSnapshot, updateSnapshotLeaderboard, recomputeLeaderboard } from '@/lib/server/rooms';
 
 const DEFAULT_COUNTDOWN_MS = 10_000;
 const PREPARATION_TIME_MS = 3_000; // 3秒の準備カウントダウン
@@ -119,7 +119,7 @@ export async function showRanking(roomId: string) {
     await appendAuditLog(roomId, 'game:showRanking', {});
 
     // Supabaseリアルタイムをトリガーするために、room_snapshotsのupdated_atを更新
-    await updateSnapshotLeaderboard(roomId);
+    await recomputeLeaderboard(roomId);
   }
 }
 
