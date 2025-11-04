@@ -651,9 +651,13 @@ function CountupOverlay({ phase, countdownMs, leaderboard, onTap, registeredName
     }, START_BANNER_DURATION_MS);
   }, [phase, localCountdown, isFinished, isTimerRunning, clearStartDelay]);
 
-  const disabled = phase !== 'running' || localCountdown !== null || !isTimerRunning || banner === 'stop';
+  // 準備カウントダウン中（countdownMs > 10000）はタップ無効
+  const timeLeftSeconds = Math.max(0, Math.ceil(localCountdownMs / 1000));
+  const isPreparation = timeLeftSeconds > 10;
+  const isStartMoment = timeLeftSeconds === 10;
+  const disabled = phase !== 'running' || isPreparation || isStartMoment || banner === 'stop';
   const showPad = phase === 'running';
-  const displaySeconds = isTimerRunning && banner !== 'stop' ? Math.max(0, Math.ceil(localCountdownMs / 1000)) : '';
+  const displaySeconds = !isPreparation && !isStartMoment && banner !== 'stop' && timeLeftSeconds > 0 ? timeLeftSeconds : '';
 
   const handleTap = (e: React.PointerEvent) => {
     if (disabled) return;
@@ -694,8 +698,8 @@ function CountupOverlay({ phase, countdownMs, leaderboard, onTap, registeredName
         </div>
       )}
 
-      {/* Countdown Timer - Top Right - Only show when timer is actually running (not during 3-2-1 or START banner) */}
-      {showPad && displaySeconds !== '' && isTimerRunning && banner !== 'start' && localCountdown === null && (
+      {/* Countdown Timer - Top Right - Only show when timer is actually running (not during preparation or START moment) */}
+      {showPad && displaySeconds !== '' && !isPreparation && !isStartMoment && (
         <div className="fixed top-4 right-4 z-[70] pointer-events-none">
           <div className="rounded-2xl glass-panel-strong px-5 py-3 shadow-xl border border-white/30">
             <span className="text-4xl font-bold text-terra-clay drop-shadow">{displaySeconds}</span>
@@ -704,7 +708,7 @@ function CountupOverlay({ phase, countdownMs, leaderboard, onTap, registeredName
       )}
 
       {/* Rank and Tap Count - Top Left - Show during active tapping */}
-      {showPad && isTimerRunning && banner !== 'start' && localCountdown === null && myRank > 0 && (
+      {showPad && !isPreparation && !isStartMoment && myRank > 0 && (
         <div className="fixed top-4 left-4 z-[70] pointer-events-none">
           <div className="rounded-2xl glass-panel-strong px-5 py-3 shadow-xl border border-white/30 space-y-1">
             <div className="text-sm font-bold text-ink/70">現在の順位</div>
@@ -732,23 +736,23 @@ function CountupOverlay({ phase, countdownMs, leaderboard, onTap, registeredName
 
       {showPad && (
         <div className="mx-auto w-full max-w-3xl mt-8 space-y-6 relative z-10">
-          {localCountdown !== null ? (
+          {isPreparation ? (
             <div className="flex flex-col items-center gap-6 bounce-in">
               <div className="rounded-full glass-panel-strong p-16 shadow-xl border border-white/30">
                 <span className="text-[min(40vw,18rem)] font-bold leading-none text-terra-clay">
-                  {localCountdown}
+                  {timeLeftSeconds - 10}
                 </span>
               </div>
               <p className="text-3xl font-bold text-ink glass-panel-strong px-6 py-3 rounded-xl border border-white/30">準備してください！</p>
             </div>
-          ) : banner === 'start' ? (
+          ) : isStartMoment ? (
             <div className="flex flex-col items-center gap-6 bounce-in">
               <div className="text-6xl animate-bounce">🚀</div>
               <span className="text-[min(20vw,8rem)] font-bold uppercase tracking-wider text-white bg-gradient-terracotta px-8 py-4 rounded-xl shadow-xl">
                 START!
               </span>
             </div>
-          ) : isTimerRunning ? (
+          ) : timeLeftSeconds > 0 ? (
             <div className="relative">
               <button
                 type="button"

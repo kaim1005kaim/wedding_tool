@@ -288,7 +288,21 @@ const CountupBoard = memo(function CountupBoard({
 
       {phase === 'running' && (
         <div className="flex flex-col items-center justify-center h-full">
-          {timeLeftSeconds >= 10 ? (
+          {timeLeftSeconds > 10 ? (
+            // 準備カウントダウン: 3-2-1
+            <motion.p
+              key={timeLeftSeconds}
+              initial={{ scale: 0.5, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 1.5, opacity: 0 }}
+              transition={{ duration: 0.5, ease: 'easeOut' }}
+              className="font-black text-ink"
+              style={{ fontSize: '20rem', lineHeight: 1 }}
+            >
+              {timeLeftSeconds - 10}
+            </motion.p>
+          ) : timeLeftSeconds === 10 ? (
+            // START!表示
             <motion.div
               initial={{ scale: 0.5, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
@@ -301,6 +315,7 @@ const CountupBoard = memo(function CountupBoard({
               </p>
             </motion.div>
           ) : (
+            // タップ時間カウントダウン: 10-9-8-...-1
             <motion.p
               className="font-black text-ink"
               style={{ fontSize: '20rem', lineHeight: 1 }}

@@ -2,6 +2,7 @@ import { getSupabaseServiceRoleClient, upsertRoomSnapshot } from '@/lib/supabase
 import { appendAuditLog, ensureRoomSnapshot, updateSnapshotLeaderboard } from '@/lib/server/rooms';
 
 const DEFAULT_COUNTDOWN_MS = 10_000;
+const PREPARATION_TIME_MS = 3_000; // 3秒の準備カウントダウン
 
 export async function resetQuizProgress(roomId: string) {
   const client = getSupabaseServiceRoleClient();
@@ -39,7 +40,8 @@ export async function startGame(roomId: string, countdownMs = DEFAULT_COUNTDOWN_
     .eq('id', roomId);
 
   await ensureRoomSnapshot(roomId);
-  await upsertRoomSnapshot(roomId, { phase: 'running', countdown_ms: countdownMs });
+  // 準備時間を追加（3-2-1カウントダウン用）
+  await upsertRoomSnapshot(roomId, { phase: 'running', countdown_ms: countdownMs + PREPARATION_TIME_MS });
   await appendAuditLog(roomId, 'game:start', { countdownMs });
 }
 
