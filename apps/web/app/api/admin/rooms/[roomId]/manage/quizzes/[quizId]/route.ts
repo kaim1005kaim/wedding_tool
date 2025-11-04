@@ -14,7 +14,8 @@ const updateQuizSchema = z.object({
 });
 
 // GET individual quiz details
-export async function GET(_request: Request, { params }: { params: { roomId: string; quizId: string } }) {
+export async function GET(_request: Request, { params }: { params: Promise<{ roomId: string; quizId: string }> }) {
+  const { roomId, quizId } = await params;
   const authHeader = _request.headers.get('authorization');
   const token = extractBearerToken(authHeader);
   if (!token) {
@@ -22,7 +23,7 @@ export async function GET(_request: Request, { params }: { params: { roomId: str
   }
 
   const payload = await verifyAdminToken(token).catch(() => null);
-  if (!payload || payload.roomId !== params.roomId) {
+  if (!payload || payload.roomId !== roomId) {
     return NextResponse.json({ error: 'Invalid admin token' }, { status: 401 });
   }
 
@@ -32,8 +33,8 @@ export async function GET(_request: Request, { params }: { params: { roomId: str
   const { data, error } = await client
     .from('quizzes')
     .select('*')
-    .eq('id', params.quizId)
-    .or(`room_id.eq.${params.roomId},room_id.is.null`)
+    .eq('id', quizId)
+    .or(`room_id.eq.${roomId},room_id.is.null`)
     .maybeSingle();
 
   if (error || !data) {
@@ -44,7 +45,8 @@ export async function GET(_request: Request, { params }: { params: { roomId: str
 }
 
 // PUT update quiz
-export async function PUT(request: Request, { params }: { params: { roomId: string; quizId: string } }) {
+export async function PUT(request: Request, { params }: { params: Promise<{ roomId: string; quizId: string }> }) {
+  const { roomId, quizId } = await params;
   const authHeader = request.headers.get('authorization');
   const token = extractBearerToken(authHeader);
   if (!token) {
@@ -52,7 +54,7 @@ export async function PUT(request: Request, { params }: { params: { roomId: stri
   }
 
   const payload = await verifyAdminToken(token).catch(() => null);
-  if (!payload || payload.roomId !== params.roomId) {
+  if (!payload || payload.roomId !== roomId) {
     return NextResponse.json({ error: 'Invalid admin token' }, { status: 401 });
   }
 
@@ -70,15 +72,15 @@ export async function PUT(request: Request, { params }: { params: { roomId: stri
   if (updates.imageUrl !== undefined) updateData.image_url = updates.imageUrl || null;
   if (updates.isTemplate !== undefined) {
     updateData.is_template = updates.isTemplate;
-    updateData.room_id = updates.isTemplate ? null : params.roomId;
+    updateData.room_id = updates.isTemplate ? null : roomId;
   }
 
   // Allow updating templates (room_id is null) or room-specific quizzes
   const { data, error } = await client
     .from('quizzes')
     .update(updateData)
-    .eq('id', params.quizId)
-    .or(`room_id.eq.${params.roomId},room_id.is.null`)
+    .eq('id', quizId)
+    .or(`room_id.eq.${roomId},room_id.is.null`)
     .select('id, question, ord, is_template')
     .single();
 
@@ -90,7 +92,8 @@ export async function PUT(request: Request, { params }: { params: { roomId: stri
 }
 
 // DELETE quiz
-export async function DELETE(_request: Request, { params }: { params: { roomId: string; quizId: string } }) {
+export async function DELETE(_request: Request, { params }: { params: Promise<{ roomId: string; quizId: string }> }) {
+  const { roomId, quizId } = await params;
   const authHeader = _request.headers.get('authorization');
   const token = extractBearerToken(authHeader);
   if (!token) {
@@ -98,7 +101,7 @@ export async function DELETE(_request: Request, { params }: { params: { roomId: 
   }
 
   const payload = await verifyAdminToken(token).catch(() => null);
-  if (!payload || payload.roomId !== params.roomId) {
+  if (!payload || payload.roomId !== roomId) {
     return NextResponse.json({ error: 'Invalid admin token' }, { status: 401 });
   }
 
@@ -108,8 +111,8 @@ export async function DELETE(_request: Request, { params }: { params: { roomId: 
   const { error } = await client
     .from('quizzes')
     .delete()
-    .eq('id', params.quizId)
-    .eq('room_id', params.roomId)
+    .eq('id', quizId)
+    .eq('room_id', roomId)
     .eq('is_template', false);
 
   if (error) {

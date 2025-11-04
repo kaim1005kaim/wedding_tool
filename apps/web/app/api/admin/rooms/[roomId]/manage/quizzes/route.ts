@@ -13,7 +13,8 @@ const createQuizSchema = z.object({
   isTemplate: z.boolean().optional().default(false)
 });
 
-export async function GET(_request: Request, { params }: { params: { roomId: string } }) {
+export async function GET(_request: Request, { params }: { params: Promise<{ roomId: string }> }) {
+  const { roomId } = await params;
   const authHeader = _request.headers.get('authorization');
   const token = extractBearerToken(authHeader);
   if (!token) {
@@ -21,7 +22,7 @@ export async function GET(_request: Request, { params }: { params: { roomId: str
   }
 
   const payload = await verifyAdminToken(token).catch(() => null);
-  if (!payload || payload.roomId !== params.roomId) {
+  if (!payload || payload.roomId !== roomId) {
     return NextResponse.json({ error: 'Invalid admin token' }, { status: 401 });
   }
 
@@ -31,7 +32,7 @@ export async function GET(_request: Request, { params }: { params: { roomId: str
   const { data: roomQuizzes, error: roomError } = await client
     .from('quizzes')
     .select('id, question, ord, is_template')
-    .eq('room_id', params.roomId)
+    .eq('room_id', roomId)
     .eq('is_template', false)
     .order('ord', { ascending: true });
 
@@ -52,7 +53,8 @@ export async function GET(_request: Request, { params }: { params: { roomId: str
   });
 }
 
-export async function POST(request: Request, { params }: { params: { roomId: string } }) {
+export async function POST(request: Request, { params }: { params: Promise<{ roomId: string }> }) {
+  const { roomId } = await params;
   const authHeader = request.headers.get('authorization');
   const token = extractBearerToken(authHeader);
   if (!token) {
@@ -60,7 +62,7 @@ export async function POST(request: Request, { params }: { params: { roomId: str
   }
 
   const payload = await verifyAdminToken(token).catch(() => null);
-  if (!payload || payload.roomId !== params.roomId) {
+  if (!payload || payload.roomId !== roomId) {
     return NextResponse.json({ error: 'Invalid admin token' }, { status: 401 });
   }
 
@@ -80,7 +82,7 @@ export async function POST(request: Request, { params }: { params: { roomId: str
     if (isTemplate) {
       query.is('room_id', null).eq('is_template', true);
     } else {
-      query.eq('room_id', params.roomId).eq('is_template', false);
+      query.eq('room_id', roomId).eq('is_template', false);
     }
 
     const { data: maxData } = await query.maybeSingle();
@@ -90,7 +92,7 @@ export async function POST(request: Request, { params }: { params: { roomId: str
   const { data, error } = await client
     .from('quizzes')
     .insert({
-      room_id: isTemplate ? null : params.roomId,
+      room_id: isTemplate ? null : roomId,
       question,
       choices,
       answer_index: answerIndex,

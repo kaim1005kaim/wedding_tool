@@ -9,7 +9,8 @@ const copyTemplateSchema = z.object({
 });
 
 // POST copy template quiz to room
-export async function POST(request: Request, { params }: { params: { roomId: string } }) {
+export async function POST(request: Request, { params }: { params: Promise<{ roomId: string }> }) {
+  const { roomId } = await params;
   const authHeader = request.headers.get('authorization');
   const token = extractBearerToken(authHeader);
   if (!token) {
@@ -17,7 +18,7 @@ export async function POST(request: Request, { params }: { params: { roomId: str
   }
 
   const payload = await verifyAdminToken(token).catch(() => null);
-  if (!payload || payload.roomId !== params.roomId) {
+  if (!payload || payload.roomId !== roomId) {
     return NextResponse.json({ error: 'Invalid admin token' }, { status: 401 });
   }
 
@@ -43,7 +44,7 @@ export async function POST(request: Request, { params }: { params: { roomId: str
   const { data: maxData } = await client
     .from('quizzes')
     .select('ord')
-    .eq('room_id', params.roomId)
+    .eq('room_id', roomId)
     .eq('is_template', false)
     .order('ord', { ascending: false })
     .limit(1)
@@ -55,7 +56,7 @@ export async function POST(request: Request, { params }: { params: { roomId: str
   const { data, error } = await client
     .from('quizzes')
     .insert({
-      room_id: params.roomId,
+      room_id: roomId,
       question: template.question,
       choices: template.choices,
       answer_index: template.answer_index,
