@@ -996,6 +996,7 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
                   icon={ListChecks}
                   disabled={mode !== 'quiz'}
                   onClick={async () => {
+                    console.log('[Admin] Quiz Ranking button clicked', { roomId, mode, phase, adminToken: !!adminToken });
                     try {
                       const response = await fetch(`/api/admin/rooms/${roomId}/game/show-ranking`, {
                         method: 'POST',
@@ -1004,8 +1005,16 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
                           Authorization: `Bearer ${adminToken}`
                         }
                       });
-                      if (!response.ok) throw new Error('Failed to toggle ranking');
+                      console.log('[Admin] Quiz Ranking response', { status: response.status, ok: response.ok });
+                      if (!response.ok) {
+                        const errorText = await response.text();
+                        console.error('[Admin] Quiz Ranking error', errorText);
+                        throw new Error('Failed to toggle ranking');
+                      }
+                      const data = await response.json();
+                      console.log('[Admin] Quiz Ranking success', data);
                     } catch (err) {
+                      console.error('[Admin] Quiz Ranking exception', err);
                       window.alert('ランキング表示の切り替えに失敗しました');
                     }
                   }}
@@ -1192,6 +1201,7 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
                 icon={ListChecks}
                 disabled={mode !== 'countup'}
                 onClick={async () => {
+                  console.log('[Admin] Ranking button clicked', { roomId, mode, phase, adminToken: !!adminToken });
                   try {
                     const response = await fetch(`/api/admin/rooms/${roomId}/game/show-ranking`, {
                       method: 'POST',
@@ -1200,8 +1210,16 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
                         Authorization: `Bearer ${adminToken}`
                       }
                     });
-                    if (!response.ok) throw new Error('Failed to toggle ranking');
+                    console.log('[Admin] Ranking response', { status: response.status, ok: response.ok });
+                    if (!response.ok) {
+                      const errorText = await response.text();
+                      console.error('[Admin] Ranking error', errorText);
+                      throw new Error('Failed to toggle ranking');
+                    }
+                    const data = await response.json();
+                    console.log('[Admin] Ranking success', data);
                   } catch (err) {
+                    console.error('[Admin] Ranking exception', err);
                     window.alert('ランキング表示の切り替えに失敗しました');
                   }
                 }}
