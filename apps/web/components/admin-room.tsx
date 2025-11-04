@@ -711,29 +711,29 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
               </div>
             </div>
             <div className="space-y-3">
-              <div className="grid grid-cols-2 gap-3">
-                <AdminButton
-                  icon={ListChecks}
-                  disabled={mode !== 'quiz' || activeQuiz !== null}
-                  onClick={() => {
-                    const deadlineMs = quizSettings.enableTimeLimit ? quizSettings.quizDurationSeconds * 1000 : undefined;
-                    void send({ type: 'quiz:next', payload: undefined }, {
-                      deadlineMs,
-                      representativeByTable: quizSettings.representativeByTable
-                    });
-                  }}
-                >
-                  クイズ表示
-                </AdminButton>
-                <AdminButton
-                  variant="danger"
-                  icon={Eye}
-                  disabled={!activeQuiz}
-                  onClick={handleReveal}
-                >
-                  正解を公開
-                </AdminButton>
-              </div>
+              <AdminButton
+                icon={ListChecks}
+                disabled={mode !== 'quiz' || activeQuiz !== null}
+                onClick={() => {
+                  const deadlineMs = quizSettings.enableTimeLimit ? quizSettings.quizDurationSeconds * 1000 : undefined;
+                  void send({ type: 'quiz:next', payload: undefined }, {
+                    deadlineMs,
+                    representativeByTable: quizSettings.representativeByTable
+                  });
+                }}
+                className="w-full"
+              >
+                クイズ表示（押すたびに次のクイズが表示されます）
+              </AdminButton>
+              <AdminButton
+                variant="danger"
+                icon={Eye}
+                disabled={!activeQuiz}
+                onClick={handleReveal}
+                className="w-full"
+              >
+                正解を公開
+              </AdminButton>
               <AdminButton
                 variant="primary"
                 icon={Gauge}

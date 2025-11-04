@@ -1,5 +1,6 @@
 import { getSupabaseServiceRoleClient, upsertRoomSnapshot, fetchRoomSnapshot } from '@/lib/supabase/server';
 import { appendAuditLog, ensureRoomSnapshot, updateSnapshotLeaderboard, recomputeLeaderboard } from '@/lib/server/rooms';
+import { WEDDING_QUIZZES } from '@/lib/hardcoded-quizzes';
 
 const DEFAULT_COUNTDOWN_MS = 10_000;
 const PREPARATION_TIME_MS = 3_000; // 3秒の準備カウントダウン
@@ -244,14 +245,10 @@ export async function showQuiz(
   suddenDeath: { enabled: boolean; by: 'table' | 'player'; topK: number } | null = null
 ) {
   const client = getSupabaseServiceRoleClient();
-  const { data, error } = await client
-    .from('quizzes')
-    .select('*')
-    .eq('id', quizId)
-    .eq('room_id', roomId)
-    .maybeSingle();
 
-  if (error || !data) {
+  // Use hardcoded quizzes
+  const quiz = WEDDING_QUIZZES.find((q) => q.id === quizId);
+  if (!quiz) {
     throw new Error('Quiz not found');
   }
 
@@ -267,11 +264,11 @@ export async function showQuiz(
     countdown_ms: Math.max(0, deadlineTs - startTs),
     current_quiz: {
       quizId,
-      question: data.question,
-      choices: data.choices ?? [],
+      question: quiz.question,
+      choices: quiz.choices,
       deadlineTs,
-      ord: data.ord ?? null,
-      imageUrl: data.image_url ?? null,
+      ord: quiz.ord,
+      imageUrl: quiz.imageUrl ?? null,
       startTs,
       representativeByTable,
       ...(suddenDeath && { suddenDeath })
@@ -289,24 +286,15 @@ export async function showNextQuiz(
   suddenDeath: { enabled: boolean; by: 'table' | 'player'; topK: number } | null = null
 ) {
   const client = getSupabaseServiceRoleClient();
-  const { data, error } = await client
-    .from('quizzes')
-    .select('id, ord')
-    .eq('room_id', roomId)
-    .order('ord', { ascending: true })
-    
 
-  if (error || !data || data.length === 0) {
-    throw new Error('No quizzes available');
-  }
-
+  // Use hardcoded quizzes
   const awarded = await client
     .from('awarded_quizzes')
     .select('quiz_id')
     .eq('room_id', roomId);
 
   const awardedSet = new Set((awarded.data ?? []).map((row) => row.quiz_id));
-  const next = data.find((row) => !awardedSet.has(row.id));
+  const next = WEDDING_QUIZZES.find((quiz) => !awardedSet.has(quiz.id));
 
   if (!next) {
     throw new Error('All quizzes have been revealed');
