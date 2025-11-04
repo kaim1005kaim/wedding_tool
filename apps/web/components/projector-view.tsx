@@ -1081,7 +1081,7 @@ const QuizBoard = memo(function QuizBoard({ activeQuiz, quizResult, leaderboard,
       {/* Question */}
       {activeQuiz && (
         <>
-          <div className="text-center space-y-4">
+          <div className="text-center space-y-6">
             <p className="text-3xl font-bold leading-relaxed text-ink glass-panel-strong px-8 py-6 rounded-2xl border border-white/30 shadow-lg inline-block max-w-5xl">
               {activeQuiz.question}
             </p>
@@ -1091,19 +1091,19 @@ const QuizBoard = memo(function QuizBoard({ activeQuiz, quizResult, leaderboard,
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: 0.3 }}
-                className="flex justify-center"
+                className="flex justify-center mb-6"
               >
                 <img
                   src={activeQuiz.imageUrl}
                   alt="Quiz visual"
-                  className="max-w-2xl max-h-64 rounded-2xl shadow-xl border-4 border-white/30 object-contain"
+                  className="max-w-3xl max-h-80 rounded-2xl shadow-xl border-4 border-white/30 object-contain"
                 />
               </motion.div>
             )}
           </div>
 
           {/* 2x2 Grid Layout for Choices */}
-          <div className="flex-1 grid grid-cols-2 gap-5">
+          <div className="grid grid-cols-2 gap-5 mt-6">
             {activeQuiz.choices.map((choice, index) => {
               const isCorrect = quizResult && index === correctIndex;
               const count = counts[index];
@@ -1117,7 +1117,7 @@ const QuizBoard = memo(function QuizBoard({ activeQuiz, quizResult, leaderboard,
                   className="relative"
                 >
                   <div
-                    className={`h-full rounded-2xl px-8 py-6 shadow-lg border-2 transition-all flex items-center ${
+                    className={`rounded-2xl px-8 py-4 shadow-lg border-2 transition-all flex items-center ${
                       isCorrect
                         ? 'bg-gradient-to-br from-red-500 to-red-600 border-red-700 ring-4 ring-red-300'
                         : 'glass-panel-strong border-white/30'
