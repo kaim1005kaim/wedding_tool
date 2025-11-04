@@ -84,8 +84,20 @@ export async function stopGame(roomId: string) {
     .eq('id', roomId);
 
   await ensureRoomSnapshot(roomId);
-  await upsertRoomSnapshot(roomId, { phase: 'ended', countdown_ms: 0 });
+  await upsertRoomSnapshot(roomId, { phase: 'ended', countdown_ms: 0, show_ranking: false, show_celebration: false });
   await appendAuditLog(roomId, 'game:stop', {});
+}
+
+export async function showRanking(roomId: string) {
+  await ensureRoomSnapshot(roomId);
+  await upsertRoomSnapshot(roomId, { show_ranking: true, show_celebration: false });
+  await appendAuditLog(roomId, 'game:showRanking', {});
+}
+
+export async function showCelebration(roomId: string) {
+  await ensureRoomSnapshot(roomId);
+  await upsertRoomSnapshot(roomId, { phase: 'celebrating', show_celebration: true });
+  await appendAuditLog(roomId, 'game:showCelebration', {});
 }
 
 export async function applyTapDelta(roomId: string, playerId: string, delta: number) {

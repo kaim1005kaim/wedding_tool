@@ -27,7 +27,7 @@ export type TableRepresentative = {
 export type RoomStoreState = {
   roomId: string | null;
   mode: RoomView;
-  phase: 'idle' | 'running' | 'ended';
+  phase: 'idle' | 'running' | 'ended' | 'celebrating';
   serverTime: number;
   countdownMs: number;
   leaderboard: LeaderboardEntry[];
@@ -35,6 +35,8 @@ export type RoomStoreState = {
   quizResult: QuizResultPayload | null;
   lotteryResult: LotteryResultPayload | null;
   representatives: TableRepresentative[];
+  showRanking: boolean;
+  showCelebration: boolean;
   playerId: string | null;
   playerToken: string | null;
 };
@@ -61,6 +63,8 @@ const initialState: RoomStoreState = {
   quizResult: null,
   lotteryResult: null,
   representatives: [],
+  showRanking: false,
+  showCelebration: false,
   playerId: null,
   playerToken: null
 };
@@ -87,7 +91,9 @@ export const useRoomStore = create<RoomStoreState & RoomStoreActions>((set) => (
       activeQuiz: payload.activeQuiz ?? null,
       quizResult: payload.quizResult ?? null,
       lotteryResult: payload.lotteryResult ?? null,
-      representatives: payload.representatives ?? []
+      representatives: payload.representatives ?? [],
+      showRanking: payload.showRanking ?? false,
+      showCelebration: payload.showCelebration ?? false
     }),
   setActiveQuiz: (payload) => set({ activeQuiz: payload, quizResult: null }),
   setQuizResult: (payload) => set({ quizResult: payload }),

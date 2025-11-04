@@ -19,6 +19,8 @@ export default function ProjectorView({ roomId: _roomId }: { roomId: string }) {
   const quizResult = useRoomStore((state) => state.quizResult);
   const lotteryResult = useRoomStore((state) => state.lotteryResult);
   const representatives = useRoomStore((state) => state.representatives);
+  const showRanking = useRoomStore((state) => state.showRanking);
+  const showCelebration = useRoomStore((state) => state.showCelebration);
 
   const topTen = useMemo(() => leaderboard.slice(0, 10), [leaderboard]);
   const [lotteryKey, setLotteryKey] = useState(0);
@@ -52,9 +54,9 @@ export default function ProjectorView({ roomId: _roomId }: { roomId: string }) {
           // START!表示期間（1秒）: 10000msで固定
           setLocalCountdownMs(10000);
         } else {
-          // タップ時間カウントダウン開始（9999msから開始して10が表示されないようにする）
+          // タップ時間カウントダウン開始（10999msから開始して確実に10が表示される）
           const tapTimeElapsed = elapsed - PREPARATION_TIME_MS - 1000;
-          const remaining = Math.max(0, 9999 - tapTimeElapsed);
+          const remaining = Math.max(0, 10999 - tapTimeElapsed);
           setLocalCountdownMs(remaining);
 
           if (remaining <= 0) {
@@ -179,7 +181,7 @@ export default function ProjectorView({ roomId: _roomId }: { roomId: string }) {
     >
       <div className="relative w-full h-screen flex flex-col z-10" role="region" aria-label="ゲーム表示エリア">
         <div className="flex-1 overflow-hidden">
-          <AnimatePresence mode="wait">{renderSection(mode, phase, localCountdownMs, topTen, activeQuiz, quizResult, lotteryResult, isSpinning, lotteryKey, representatives)}</AnimatePresence>
+          <AnimatePresence mode="wait">{renderSection(mode, phase, localCountdownMs, topTen, activeQuiz, quizResult, lotteryResult, isSpinning, lotteryKey, representatives, showRanking, showCelebration)}</AnimatePresence>
         </div>
       </div>
 
@@ -206,7 +208,7 @@ export default function ProjectorView({ roomId: _roomId }: { roomId: string }) {
 
 function renderSection(
   mode: string,
-  phase: 'idle' | 'running' | 'ended',
+  phase: 'idle' | 'running' | 'ended' | 'celebrating',
   countdownMs: number,
   leaderboard: LeaderboardEntry[],
   activeQuiz: RoomStoreState['activeQuiz'],
@@ -214,13 +216,20 @@ function renderSection(
   lotteryResult: RoomStoreState['lotteryResult'],
   isSpinning: boolean,
   lotteryKey: number,
-  representatives: RoomStoreState['representatives']
+  representatives: RoomStoreState['representatives'],
+  showRanking: boolean,
+  showCelebration: boolean
 ) {
+  // 表彰中画面を最優先で表示
+  if (phase === 'celebrating' || showCelebration) {
+    return <CelebrationBoard key="celebration" />;
+  }
+
   switch (mode) {
     case 'countup':
-      return <CountupBoard key="countup" entries={leaderboard} phase={phase} countdownMs={countdownMs} />;
+      return <CountupBoard key="countup" entries={leaderboard} phase={phase} countdownMs={countdownMs} showRanking={showRanking} />;
     case 'quiz':
-      return <QuizBoard key={`quiz-${quizResult?.quizId ?? activeQuiz?.quizId ?? 'waiting'}`} activeQuiz={activeQuiz} quizResult={quizResult} leaderboard={leaderboard} phase={phase} representatives={representatives} />;
+      return <QuizBoard key={`quiz-${quizResult?.quizId ?? activeQuiz?.quizId ?? 'waiting'}`} activeQuiz={activeQuiz} quizResult={quizResult} leaderboard={leaderboard} phase={phase} representatives={representatives} showRanking={showRanking} />;
     /* 抽選モード非表示
     case 'lottery':
       return <LotteryBoard key={lotteryKey} lotteryResult={lotteryResult} isSpinning={isSpinning} leaderboard={leaderboard} />;
@@ -233,37 +242,44 @@ function renderSection(
 const CountupBoard = memo(function CountupBoard({
   entries,
   phase,
-  countdownMs
+  countdownMs,
+  showRanking
 }: {
   entries: LeaderboardEntry[];
-  phase: 'idle' | 'running' | 'ended';
+  phase: 'idle' | 'running' | 'ended' | 'celebrating';
   countdownMs: number;
+  showRanking: boolean;
 }) {
   // Top 3 highlighted, rest in compact grid
   const top3 = entries.slice(0, 3);
   const rest = entries.slice(3);
   // Use localCountdownMs for accurate countdown display
   const timeLeftSeconds = Math.max(0, Math.ceil(countdownMs / 1000));
-  const [showTOP3, setShowTOP3] = useState(false);
+  const [showScrollRanking, setShowScrollRanking] = useState(false);
   const [showPodium, setShowPodium] = useState(false);
 
-  // 終了時の演出フロー
+  // showRankingフラグでランキング表示を制御
   useEffect(() => {
-    if (phase === 'ended' && entries.length > 0) {
-      // 3秒後に表彰台表示に切り替え（スクロール後）
-      const timer = setTimeout(() => {
-        setShowTOP3(true);
-        setShowPodium(true);
-      }, 3000);
+    if (showRanking && phase === 'ended' && entries.length > 0) {
+      // まず全員スクロール表示
+      setShowScrollRanking(true);
+      setShowPodium(false);
 
-      return () => {
-        clearTimeout(timer);
-      };
+      // スクロール時間を全員分に応じて調整（1人あたり0.5秒程度）
+      const scrollDuration = Math.max(5000, entries.length * 500);
+
+      // スクロール終了後に表彰台表示
+      const timer = setTimeout(() => {
+        setShowScrollRanking(false);
+        setShowPodium(true);
+      }, scrollDuration);
+
+      return () => clearTimeout(timer);
     } else {
-      setShowTOP3(false);
+      setShowScrollRanking(false);
       setShowPodium(false);
     }
-  }, [phase, entries.length]);
+  }, [showRanking, phase, entries.length]);
 
   return (
     <motion.section
@@ -354,8 +370,8 @@ const CountupBoard = memo(function CountupBoard({
         </div>
       )}
 
-      {/* 終了時のタイトルと演出 */}
-      {phase === 'ended' && !showPodium && (
+      {/* 終了時のタイトル */}
+      {phase === 'ended' && !showScrollRanking && !showPodium && (
         <motion.div
           className="text-center py-8"
           initial={{ scale: 0.8, opacity: 0 }}
@@ -367,43 +383,53 @@ const CountupBoard = memo(function CountupBoard({
         </motion.div>
       )}
 
-      {/* 終了時の演出: スクロール（下から上へ、下位から上位）- TOP3のみ */}
-      {phase === 'ended' && top3.length > 0 && !showTOP3 && (
+      {/* 全員ランキングスクロール（下から上へ） */}
+      {phase === 'ended' && showScrollRanking && entries.length > 0 && (
         <motion.div
-          className="flex-1 overflow-hidden"
+          className="flex h-full flex-col"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
         >
-          <motion.div
-            className="space-y-3"
-            initial={{ y: 0 }}
-            animate={{ y: `-${top3.length * 100}px` }}
-            transition={{ duration: 3, ease: 'linear' }}
-          >
-            {[...top3].reverse().map((entry) => (
-              <motion.div
-                key={entry.playerId}
-                className="flex items-center justify-between rounded-xl glass-panel-strong px-8 py-5 shadow-xl border-2 border-white/40"
-                initial={{ opacity: 0, x: -50 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.3 }}
-              >
-                <div className="flex items-center gap-4">
-                  <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-gradient-terracotta text-2xl font-black text-white shadow-lg">
-                    {entry.rank}
-                  </span>
-                  <div>
-                    <p className="text-3xl font-black text-ink">{entry.displayName}</p>
-                    {entry.tableNo && <p className="text-lg text-ink/70 font-bold">テーブル {entry.tableNo}</p>}
+          {/* タイトル */}
+          <div className="text-center py-6">
+            <p className="font-bold text-terra-clay text-6xl">全体ランキング</p>
+          </div>
+
+          {/* スクロールエリア */}
+          <div className="flex-1 overflow-hidden relative">
+            <motion.div
+              className="absolute bottom-0 left-0 right-0 space-y-3 px-8"
+              initial={{ y: '100%' }}
+              animate={{ y: `-${entries.length * 120}px` }}
+              transition={{
+                duration: entries.length * 0.5,
+                ease: 'linear'
+              }}
+            >
+              {/* 下位から上位へ（逆順） */}
+              {[...entries].reverse().map((entry) => (
+                <motion.div
+                  key={entry.playerId}
+                  className="flex items-center justify-between rounded-xl glass-panel-strong px-8 py-5 shadow-xl border-2 border-white/40"
+                >
+                  <div className="flex items-center gap-4">
+                    <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-gradient-terracotta text-2xl font-black text-white shadow-lg">
+                      {entry.rank}
+                    </span>
+                    <div>
+                      <p className="text-3xl font-black text-ink">{entry.displayName}</p>
+                      {entry.tableNo && <p className="text-lg text-ink/70 font-bold">テーブル {entry.tableNo}</p>}
+                    </div>
                   </div>
-                </div>
-                <div className="text-right">
-                  <p className="text-4xl font-black text-terra-clay">{entry.totalPoints}</p>
-                  <p className="text-base text-ink/80 font-bold">タップ</p>
-                </div>
-              </motion.div>
-            ))}
-          </motion.div>
+                  <div className="text-right">
+                    <p className="text-4xl font-black text-terra-clay">{entry.totalPoints}</p>
+                    <p className="text-base text-ink/80 font-bold">タップ</p>
+                  </div>
+                </motion.div>
+              ))}
+            </motion.div>
+          </div>
         </motion.div>
       )}
 
@@ -577,11 +603,12 @@ type QuizPanelProps = {
   activeQuiz: RoomStoreState['activeQuiz'];
   quizResult: RoomStoreState['quizResult'];
   leaderboard: LeaderboardEntry[];
-  phase: 'idle' | 'running' | 'ended';
+  phase: 'idle' | 'running' | 'ended' | 'celebrating';
   representatives: RoomStoreState['representatives'];
+  showRanking: boolean;
 };
 
-const QuizBoard = memo(function QuizBoard({ activeQuiz, quizResult, leaderboard, phase, representatives }: QuizPanelProps) {
+const QuizBoard = memo(function QuizBoard({ activeQuiz, quizResult, leaderboard, phase, representatives, showRanking }: QuizPanelProps) {
   const counts = quizResult?.perChoiceCounts ?? [0, 0, 0, 0];
   const correctIndex = quizResult?.correctIndex ?? -1;
   const [showPodium, setShowPodium] = useState(false);
@@ -603,24 +630,42 @@ const QuizBoard = memo(function QuizBoard({ activeQuiz, quizResult, leaderboard,
       quizPoints: entry.quizPoints
     }));
 
-  // 終了時の演出フロー
+  // showRankingフラグでランキング表示を制御（クイズも同様）
   useEffect(() => {
-    if (phase === 'ended' && quizLeaderboard.length > 0) {
-      // 3秒後に表彰台表示に切り替え
-      const timer = setTimeout(() => {
-        setShowPodium(true);
-      }, 3000);
-
-      return () => {
-        clearTimeout(timer);
-      };
+    if (showRanking && phase === 'ended' && quizLeaderboard.length > 0) {
+      // ボタンが押されたら即座に表彰台表示
+      setShowPodium(true);
     } else {
       setShowPodium(false);
     }
-  }, [phase, quizLeaderboard.length]);
+  }, [showRanking, phase, quizLeaderboard.length]);
 
   // Show ranking when phase is ended
   if (phase === 'ended' && quizLeaderboard.length > 0) {
+    // showRankingがfalseの場合は結果発表タイトルのみ表示
+    if (!showRanking) {
+      return (
+        <motion.section
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -30 }}
+          transition={{ duration: 0.5, ease: 'easeOut' }}
+          className="flex h-full flex-col items-center justify-center gap-5"
+          role="region"
+          aria-label="クイズ結果"
+        >
+          <motion.div
+            className="text-center py-8"
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ type: 'spring', bounce: 0.5 }}
+          >
+            <p className="font-bold text-terra-clay" style={{ fontSize: '8rem', lineHeight: 1 }}>結果発表！</p>
+          </motion.div>
+        </motion.section>
+      );
+    }
+
     // スクロール演出: TOP3のみ
     if (!showPodium) {
       return (
@@ -1139,6 +1184,63 @@ function labelForMode(mode: string) {
       return '待機中';
   }
 }
+
+const CelebrationBoard = memo(function CelebrationBoard() {
+  return (
+    <motion.section
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="flex h-full items-center justify-center relative overflow-hidden"
+    >
+      {/* 紙吹雪エフェクト */}
+      <div className="absolute inset-0 pointer-events-none">
+        {Array.from({ length: 50 }).map((_, i) => (
+          <motion.div
+            key={i}
+            className="absolute"
+            initial={{
+              top: -20,
+              left: `${Math.random() * 100}%`,
+              rotate: Math.random() * 360
+            }}
+            animate={{
+              top: '110%',
+              rotate: Math.random() * 720 + 360
+            }}
+            transition={{
+              duration: Math.random() * 3 + 2,
+              repeat: Infinity,
+              ease: 'linear',
+              delay: Math.random() * 2
+            }}
+          >
+            <div
+              className="w-3 h-3 rounded-full"
+              style={{
+                backgroundColor: ['#FF6B6B', '#4ECDC4', '#FFE66D', '#A8E6CF', '#FF8B94'][
+                  Math.floor(Math.random() * 5)
+                ]
+              }}
+            />
+          </motion.div>
+        ))}
+      </div>
+
+      {/* 祝！優勝！！ */}
+      <motion.div
+        initial={{ scale: 0.5, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={{ type: 'spring', bounce: 0.5, duration: 1 }}
+        className="relative z-10"
+      >
+        <p className="font-black text-terra-clay text-center" style={{ fontSize: '15rem', lineHeight: 1 }}>
+          祝！優勝！！
+        </p>
+      </motion.div>
+    </motion.section>
+  );
+});
 
 function labelForLotteryKind(kind: string | undefined) {
   switch (kind) {

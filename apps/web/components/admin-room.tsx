@@ -1019,11 +1019,46 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
                 <AdminButton
                   variant="secondary"
                   icon={ListChecks}
-                  disabled={mode !== 'quiz' || phase !== 'idle'}
-                  onClick={() => send({ type: 'game:stop', payload: undefined })}
+                  disabled={mode !== 'quiz' || phase !== 'ended'}
+                  onClick={async () => {
+                    try {
+                      const response = await fetch(`/api/admin/rooms/${roomId}/game/show-ranking`, {
+                        method: 'POST',
+                        headers: {
+                          'Content-Type': 'application/json',
+                          Authorization: `Bearer ${adminToken}`
+                        }
+                      });
+                      if (!response.ok) throw new Error('Failed to show ranking');
+                    } catch (err) {
+                      window.alert('ランキング表示に失敗しました');
+                    }
+                  }}
                   className="w-full"
                 >
                   ランキング表示
+                </AdminButton>
+                <AdminButton
+                  variant="primary"
+                  icon={Eye}
+                  disabled={mode !== 'quiz' || phase !== 'ended'}
+                  onClick={async () => {
+                    try {
+                      const response = await fetch(`/api/admin/rooms/${roomId}/game/show-celebration`, {
+                        method: 'POST',
+                        headers: {
+                          'Content-Type': 'application/json',
+                          Authorization: `Bearer ${adminToken}`
+                        }
+                      });
+                      if (!response.ok) throw new Error('Failed to show celebration');
+                    } catch (err) {
+                      window.alert('表彰中画面の表示に失敗しました');
+                    }
+                  }}
+                  className="w-full"
+                >
+                  表彰中画面表示
                 </AdminButton>
                 <AdminButton
                   variant="secondary"
@@ -1180,11 +1215,46 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
               <AdminButton
                 variant="secondary"
                 icon={ListChecks}
-                disabled={mode !== 'countup' || phase !== 'idle'}
-                onClick={() => send({ type: 'game:stop', payload: undefined })}
+                disabled={mode !== 'countup' || phase !== 'ended'}
+                onClick={async () => {
+                  try {
+                    const response = await fetch(`/api/admin/rooms/${roomId}/game/show-ranking`, {
+                      method: 'POST',
+                      headers: {
+                        'Content-Type': 'application/json',
+                        Authorization: `Bearer ${adminToken}`
+                      }
+                    });
+                    if (!response.ok) throw new Error('Failed to show ranking');
+                  } catch (err) {
+                    window.alert('ランキング表示に失敗しました');
+                  }
+                }}
                 className="w-full"
               >
                 ランキング表示
+              </AdminButton>
+              <AdminButton
+                variant="primary"
+                icon={Eye}
+                disabled={mode !== 'countup' || phase !== 'ended'}
+                onClick={async () => {
+                  try {
+                    const response = await fetch(`/api/admin/rooms/${roomId}/game/show-celebration`, {
+                      method: 'POST',
+                      headers: {
+                        'Content-Type': 'application/json',
+                        Authorization: `Bearer ${adminToken}`
+                      }
+                    });
+                    if (!response.ok) throw new Error('Failed to show celebration');
+                  } catch (err) {
+                    window.alert('表彰中画面の表示に失敗しました');
+                  }
+                }}
+                className="w-full"
+              >
+                表彰中画面表示
               </AdminButton>
               <AdminButton
                 variant="danger"

@@ -61,7 +61,7 @@ export const lotteryResultBroadcastSchema = z.object({
 
 export const stateUpdateBroadcastSchema = z.object({
   mode: z.enum(['countup', 'quiz', 'buzzer', 'lottery', 'idle']),
-  phase: z.enum(['idle', 'running', 'ended']),
+  phase: z.enum(['idle', 'running', 'ended', 'celebrating']),
   serverTime: z.number(),
   countdownMs: z.number().nonnegative(),
   leaderboard: z.array(
@@ -84,7 +84,9 @@ export const stateUpdateBroadcastSchema = z.object({
       tableNo: z.string(),
       name: z.string()
     })
-  ).optional()
+  ).optional(),
+  showRanking: z.boolean().optional(),
+  showCelebration: z.boolean().optional()
 });
 
 export const realtimePayloads = {
@@ -97,6 +99,8 @@ export const realtimePayloads = {
     modeSwitch: modeSwitchEventSchema,
     gameStart: z.undefined(),
     gameStop: z.undefined(),
+    showRanking: z.undefined(),
+    showCelebration: z.undefined(),
     quizNext: z.undefined(),
     quizReveal: z.undefined(),
     lotteryDraw: lotteryDrawEventSchema
