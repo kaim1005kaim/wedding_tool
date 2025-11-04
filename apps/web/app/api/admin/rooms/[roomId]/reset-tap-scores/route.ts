@@ -20,9 +20,9 @@ export async function POST(request: Request, props: { params: Promise<{ roomId: 
   const client = getSupabaseServiceRoleClient();
 
   try {
-    // Reset countup_tap_count for all players in the room
+    // Reset countup_tap_count for all scores in the room
     const { error } = await client
-      .from('players')
+      .from('scores')
       .update({ countup_tap_count: 0 })
       .eq('room_id', roomId);
 
