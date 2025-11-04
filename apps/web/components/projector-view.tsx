@@ -309,8 +309,8 @@ const CountupBoard = memo(function CountupBoard({
       setShowScrollRanking(true);
       setShowPodium(false);
 
-      // スクロール時間を全員分に応じて調整（1人あたり0.5秒程度）
-      const scrollDuration = Math.max(5000, entries.length * 500);
+      // スクロール時間を全員分に応じて調整（1人あたり1秒程度）
+      const scrollDuration = Math.max(5000, entries.length * 1000);
 
       // スクロール終了後に表彰台表示
       const timer = setTimeout(() => {
@@ -447,7 +447,7 @@ const CountupBoard = memo(function CountupBoard({
               initial={{ y: '100%' }}
               animate={{ y: `-${entries.length * 120}px` }}
               transition={{
-                duration: entries.length * 0.5,
+                duration: entries.length * 1.0,
                 ease: 'linear'
               }}
             >
@@ -479,7 +479,19 @@ const CountupBoard = memo(function CountupBoard({
 
       {/* 表彰台スタイル表示 */}
       {phase === 'ended' && showPodium && top3.length >= 3 && (
-        <div className="flex-1 flex items-end justify-center gap-8 pb-12">
+        <div className="flex-1 flex flex-col">
+          {/* TOP3発表タイトル */}
+          <motion.div
+            initial={{ y: -50, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ duration: 0.6, ease: 'easeOut' }}
+            className="text-center py-8"
+          >
+            <p className="font-black text-terra-clay text-7xl">TOP3発表</p>
+          </motion.div>
+
+          {/* 表彰台 */}
+          <div className="flex-1 flex items-end justify-center gap-8 pb-12">
           {/* 2位 - 左 */}
           <motion.div
             initial={{ y: 100, opacity: 0 }}
@@ -563,6 +575,7 @@ const CountupBoard = memo(function CountupBoard({
               <span className="text-6xl font-black text-white">3</span>
             </div>
           </motion.div>
+          </div>
         </div>
       )}
     </motion.section>
