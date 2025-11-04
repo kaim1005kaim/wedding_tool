@@ -1015,12 +1015,13 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
                   正解を公開
                 </AdminButton>
               </div>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="flex flex-col gap-3">
                 <AdminButton
                   variant="secondary"
                   icon={ListChecks}
                   disabled={mode !== 'quiz' || phase !== 'idle'}
                   onClick={() => send({ type: 'game:stop', payload: undefined })}
+                  className="w-full"
                 >
                   ランキング表示
                 </AdminButton>
@@ -1028,6 +1029,7 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
                   variant="secondary"
                   icon={Trash2}
                   disabled={mode !== 'quiz'}
+                  className="w-full"
                   onClick={() => {
                     openConfirm({
                       title: 'クイズ進行をリセット',
@@ -1179,7 +1181,7 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
                 variant="danger"
                 disabled={mode !== 'countup' || phase === 'running'}
                 onClick={async () => {
-                  if (!window.confirm('タップチャレンジのスコアをリセットしますか？（練習→本番の切り替え時に使用）')) return;
+                  if (!window.confirm('タップチャレンジのスコアをリセットしますか？')) return;
                   try {
                     const response = await fetch(`/api/admin/rooms/${roomId}/reset-tap-scores`, {
                       method: 'POST',
@@ -1196,7 +1198,7 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
                 }}
                 className="w-full"
               >
-                スコアリセット（練習→本番）
+                スコアリセット
               </AdminButton>
             </div>
           </AdminCard>

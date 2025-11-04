@@ -578,11 +578,20 @@ function CountupOverlay({ phase, countdownMs, leaderboard, onTap, registeredName
 
       const interval = setInterval(() => {
         const elapsed = Date.now() - (countdownStartTimeRef.current ?? 0);
-        const remaining = Math.max(0, initialCountdownRef.current - elapsed);
-        setLocalCountdownMs(remaining);
+        const PREPARATION_TIME_MS = 3000;
 
-        if (remaining <= 0) {
-          clearInterval(interval);
+        // 準備期間中（最初の3秒）は10秒で固定
+        if (elapsed < PREPARATION_TIME_MS) {
+          setLocalCountdownMs(10000);
+        } else {
+          // 準備期間後、10秒からカウントダウン開始
+          const tapTimeElapsed = elapsed - PREPARATION_TIME_MS;
+          const remaining = Math.max(0, 10000 - tapTimeElapsed);
+          setLocalCountdownMs(remaining);
+
+          if (remaining <= 0) {
+            clearInterval(interval);
+          }
         }
       }, 100); // 100msごとに更新
 
