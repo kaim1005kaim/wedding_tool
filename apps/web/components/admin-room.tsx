@@ -287,6 +287,12 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
 
   const buildPayload = (type: Parameters<typeof client.emit>[0]['type'], payload: Record<string, unknown>) => {
     switch (type) {
+      case 'mode:switch':
+        // mode:switch requires 'to' field
+        if (!payload.to) {
+          throw new Error('モード切替にはtoパラメータが必要です');
+        }
+        return payload;
       case 'quiz:next':
         return {
           representativeByTable: quizSettings.representativeByTable,
