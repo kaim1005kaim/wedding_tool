@@ -240,6 +240,7 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
         }
         const url = resolveAdminEndpoint(roomId, event);
         const payload = overrideBody ?? buildPayload(event.type, event.payload ?? {});
+        console.log('[Admin] Sending request:', { url, type: event.type, payload, eventPayload: event.payload });
         const hasBody = Object.keys(payload).length > 0;
         const response = await fetch(url, {
           method: 'POST',
@@ -250,14 +251,24 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
           ...(hasBody ? { body: JSON.stringify(payload) } : {})
         });
         if (!response.ok) {
-          const data = (await response.json().catch(() => ({}))) as { error?: string };
-          throw new Error(data.error ?? response.statusText);
+          const errorText = await response.text();
+          console.error('[Admin] Request failed:', { status: response.status, errorText });
+          let errorMessage = response.statusText;
+          try {
+            const data = JSON.parse(errorText) as { error?: string };
+            errorMessage = data.error ?? errorMessage;
+          } catch {
+            // errorText is not JSON, use as is
+            errorMessage = errorText || errorMessage;
+          }
+          throw new Error(errorMessage);
         }
         await loadLogs();
       } else {
         await client.emit(event);
       }
     } catch (err) {
+      console.error('[Admin] Send error:', err);
       setError(err instanceof Error ? err.message : '操作に失敗しました');
     } finally {
       if (isModeSwitch) {
