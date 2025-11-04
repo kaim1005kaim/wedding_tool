@@ -45,13 +45,20 @@ async function main() {
     disabled: false
   });
 
-  const players = Array.from({ length: 12 }, (_, index) => ({
-    id: randomUUID(),
-    room_id: roomId,
-    display_name: `Guest ${index + 1}`,
-    table_no: `${['A', 'A', 'B', 'B', 'C', 'C', 'D', 'D', 'E', 'E', 'F', 'F'][index]}-${(index % 2) + 1}`,
-    seat_no: null
-  }));
+  const players = Array.from({ length: 66 }, (_, index) => {
+    // 11テーブル × 6人 = 66人
+    const tableIndex = Math.floor(index / 6); // 0-10
+    const seatIndex = (index % 6) + 1; // 1-6
+    const tableLetter = String.fromCharCode(65 + tableIndex); // A-K
+
+    return {
+      id: randomUUID(),
+      room_id: roomId,
+      display_name: `テストユーザー${index + 1}`,
+      table_no: `${tableLetter}-${seatIndex}`,
+      seat_no: null
+    };
+  });
 
   await client.from('players').insert(players).onConflict('id').ignore();
 

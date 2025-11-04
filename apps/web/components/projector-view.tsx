@@ -451,8 +451,8 @@ const CountupBoard = memo(function CountupBoard({
                 ease: 'linear'
               }}
             >
-              {/* 下位から上位へ（逆順） */}
-              {[...entries].reverse().map((entry) => (
+              {/* 上位から下位へ（1位から表示） */}
+              {entries.map((entry) => (
                 <motion.div
                   key={entry.playerId}
                   className="flex items-center justify-between rounded-xl glass-panel-strong px-8 py-5 shadow-xl border-2 border-white/40"
