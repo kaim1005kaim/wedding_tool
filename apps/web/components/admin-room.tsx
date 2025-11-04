@@ -723,7 +723,7 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
                 }}
                 className="w-full"
               >
-                クイズ表示（押すたびに次のクイズが表示されます）
+                クイズ表示
               </AdminButton>
               <AdminButton
                 variant="danger"

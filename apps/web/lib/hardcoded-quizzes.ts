@@ -18,38 +18,38 @@ export type HardcodedQuiz = {
  */
 export const WEDDING_QUIZZES: HardcodedQuiz[] = [
   {
-    id: 'quiz-1',
+    id: '00000000-0000-0000-0000-000000000001',
     ord: 1,
     question: '渋谷駅にあるハチ公像、実際は何の犬？',
     choices: ['柴犬', '秋田犬', '豆柴', 'コーギー'],
-    answerIndex: 1, // B.秋田犬
-    imageUrl: '/quiz-images/quiz1.jpg'
+    answerIndex: 1 // B.秋田犬
+    // TODO: imageUrl: '/quiz-images/quiz1.jpg'
   },
   {
-    id: 'quiz-2',
+    id: '00000000-0000-0000-0000-000000000002',
     ord: 2,
     question: '新婦が長年推しているflumpool。\n今年でファン歴何年目でしょう？',
     choices: ['3年目', '7年目', '14年目', '20年目'],
-    answerIndex: 2, // C.14年目
-    imageUrl: '/quiz-images/quiz2.jpg'
+    answerIndex: 2 // C.14年目
+    // TODO: imageUrl: '/quiz-images/quiz2.jpg'
   },
   {
-    id: 'quiz-3',
+    id: '00000000-0000-0000-0000-000000000003',
     ord: 3,
     question: '普段、新郎が新婦を呼んでいる名前は？',
     choices: ['みずき', 'えっちゃん', 'とりとり', 'とりっぴー'],
-    answerIndex: 2, // C.とりとり
-    imageUrl: '/quiz-images/quiz3.jpg'
+    answerIndex: 2 // C.とりとり
+    // TODO: imageUrl: '/quiz-images/quiz3.jpg'
   },
   {
-    id: 'quiz-4',
+    id: '00000000-0000-0000-0000-000000000004',
     ord: 4,
     question: '新郎はダイエットして最大何キロ減量した？',
     choices: ['5kg', '15kg', '25kg', '減らしてない'],
     answerIndex: 2 // C.25kg
   },
   {
-    id: 'quiz-5',
+    id: '00000000-0000-0000-0000-000000000005',
     ord: 5,
     question: '普段サプライズをしたことがない新郎が、プロポーズのとき\n"いつもと違って"してくれたことは何だったでしょう？',
     choices: [
@@ -61,7 +61,7 @@ export const WEDDING_QUIZZES: HardcodedQuiz[] = [
     answerIndex: 0 // A.初めて手紙を書いて気持ちを伝えてくれた
   },
   {
-    id: 'quiz-buzzer',
+    id: '00000000-0000-0000-0000-000000000006',
     ord: 6,
     question: '今日（11月23日）は何の日？',
     choices: ['勤労感謝の日', 'いい夫婦の日', '文化の日', '体育の日'],
