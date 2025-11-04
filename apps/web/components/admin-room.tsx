@@ -871,15 +871,6 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
                 {modeSwitching && mode !== 'idle' ? '切替中...' : '待機モード'}
               </AdminButton>
               <AdminButton
-                variant={mode === 'countup' ? 'primary' : 'secondary'}
-                icon={Shuffle}
-                onClick={() => send({ type: 'mode:switch', payload: { to: 'countup' } })}
-                disabled={modeSwitching}
-                className="flex-1"
-              >
-                {modeSwitching && mode !== 'countup' ? '切替中...' : 'タップチャレンジ'}
-              </AdminButton>
-              <AdminButton
                 variant={mode === 'quiz' ? 'primary' : 'secondary'}
                 icon={Eye}
                 onClick={() => send({ type: 'mode:switch', payload: { to: 'quiz' } })}
@@ -887,6 +878,15 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
                 className="flex-1"
               >
                 {modeSwitching && mode !== 'quiz' ? '切替中...' : 'クイズ'}
+              </AdminButton>
+              <AdminButton
+                variant={mode === 'countup' ? 'primary' : 'secondary'}
+                icon={Shuffle}
+                onClick={() => send({ type: 'mode:switch', payload: { to: 'countup' } })}
+                disabled={modeSwitching}
+                className="flex-1"
+              >
+                {modeSwitching && mode !== 'countup' ? '切替中...' : 'タップチャレンジ'}
               </AdminButton>
               {/* 抽選モード非表示
               <AdminButton
@@ -994,7 +994,7 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
                 <AdminButton
                   variant="secondary"
                   icon={ListChecks}
-                  disabled={mode !== 'quiz' || phase !== 'ended'}
+                  disabled={mode !== 'quiz'}
                   onClick={async () => {
                     try {
                       const response = await fetch(`/api/admin/rooms/${roomId}/game/show-ranking`, {
@@ -1004,9 +1004,9 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
                           Authorization: `Bearer ${adminToken}`
                         }
                       });
-                      if (!response.ok) throw new Error('Failed to show ranking');
+                      if (!response.ok) throw new Error('Failed to toggle ranking');
                     } catch (err) {
-                      window.alert('ランキング表示に失敗しました');
+                      window.alert('ランキング表示の切り替えに失敗しました');
                     }
                   }}
                   className="w-full"
@@ -1016,7 +1016,7 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
                 <AdminButton
                   variant="primary"
                   icon={Eye}
-                  disabled={mode !== 'quiz' || phase !== 'ended'}
+                  disabled={mode !== 'quiz'}
                   onClick={async () => {
                     try {
                       const response = await fetch(`/api/admin/rooms/${roomId}/game/show-celebration`, {
@@ -1026,9 +1026,9 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
                           Authorization: `Bearer ${adminToken}`
                         }
                       });
-                      if (!response.ok) throw new Error('Failed to show celebration');
+                      if (!response.ok) throw new Error('Failed to toggle celebration');
                     } catch (err) {
-                      window.alert('表彰中画面の表示に失敗しました');
+                      window.alert('表彰中画面の切り替えに失敗しました');
                     }
                   }}
                   className="w-full"
@@ -1190,7 +1190,7 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
               <AdminButton
                 variant="secondary"
                 icon={ListChecks}
-                disabled={mode !== 'countup' || phase !== 'ended'}
+                disabled={mode !== 'countup'}
                 onClick={async () => {
                   try {
                     const response = await fetch(`/api/admin/rooms/${roomId}/game/show-ranking`, {
@@ -1200,9 +1200,9 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
                         Authorization: `Bearer ${adminToken}`
                       }
                     });
-                    if (!response.ok) throw new Error('Failed to show ranking');
+                    if (!response.ok) throw new Error('Failed to toggle ranking');
                   } catch (err) {
-                    window.alert('ランキング表示に失敗しました');
+                    window.alert('ランキング表示の切り替えに失敗しました');
                   }
                 }}
                 className="w-full"
@@ -1212,7 +1212,7 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
               <AdminButton
                 variant="primary"
                 icon={Eye}
-                disabled={mode !== 'countup' || phase !== 'ended'}
+                disabled={mode !== 'countup'}
                 onClick={async () => {
                   try {
                     const response = await fetch(`/api/admin/rooms/${roomId}/game/show-celebration`, {
@@ -1222,9 +1222,9 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
                         Authorization: `Bearer ${adminToken}`
                       }
                     });
-                    if (!response.ok) throw new Error('Failed to show celebration');
+                    if (!response.ok) throw new Error('Failed to toggle celebration');
                   } catch (err) {
-                    window.alert('表彰中画面の表示に失敗しました');
+                    window.alert('表彰中画面の切り替えに失敗しました');
                   }
                 }}
                 className="w-full"

@@ -41,29 +41,15 @@ export default function ProjectorView({ roomId: _roomId }: { roomId: string }) {
       // 新しいカウントダウン開始時にリセット
       countdownStartTimeRef.current = Date.now();
       initialCountdownRef.current = countdownMs;
-      setLocalCountdownMs(10100); // 10.1秒から開始して、確実に10が表示されるようにする
+      setLocalCountdownMs(13999); // 準備カウントダウン3秒 + START! 1秒 + タップ時間10秒 = 14秒から開始
 
       const interval = setInterval(() => {
         const elapsed = Date.now() - (countdownStartTimeRef.current ?? 0);
-        const PREPARATION_TIME_MS = 3000; // 3秒の準備時間
+        const remaining = Math.max(0, 13999 - elapsed);
+        setLocalCountdownMs(remaining);
 
-        // 準備期間中（3秒）は準備カウントダウン表示用
-        if (elapsed < PREPARATION_TIME_MS) {
-          // 13100, 12100, 11100 → 表示時に -10 して 3, 2, 1
-          const prepRemaining = PREPARATION_TIME_MS - elapsed;
-          setLocalCountdownMs(10000 + prepRemaining + 100);
-        } else if (elapsed < PREPARATION_TIME_MS + 1000) {
-          // START!表示期間（1秒）: 10000msで固定
-          setLocalCountdownMs(10000);
-        } else {
-          // タップ時間カウントダウン開始（10999msから開始して確実に10が表示される）
-          const tapTimeElapsed = elapsed - PREPARATION_TIME_MS - 1000;
-          const remaining = Math.max(0, 10999 - tapTimeElapsed);
-          setLocalCountdownMs(remaining);
-
-          if (remaining <= 0) {
-            clearInterval(interval);
-          }
+        if (remaining <= 0) {
+          clearInterval(interval);
         }
       }, 100); // 100msごとに更新
 
@@ -370,10 +356,10 @@ const CountupBoard = memo(function CountupBoard({
 
       {phase === 'running' && (
         <div className="flex flex-col items-center justify-center h-full">
-          {timeLeftSeconds > 10 ? (
-            // 準備カウントダウン: 3-2-1
+          {timeLeftSeconds > 11 ? (
+            // 準備カウントダウン: 3-2-1 (14秒→12秒の間に3,2,1を表示)
             <motion.p
-              key={timeLeftSeconds - 10}
+              key={timeLeftSeconds - 11}
               initial={{ scale: 0.5, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 1.5, opacity: 0 }}
@@ -381,10 +367,10 @@ const CountupBoard = memo(function CountupBoard({
               className="font-black text-ink"
               style={{ fontSize: '20rem', lineHeight: 1 }}
             >
-              {timeLeftSeconds - 10}
+              {timeLeftSeconds - 11}
             </motion.p>
-          ) : timeLeftSeconds === 10 ? (
-            // START!表示（1秒間）
+          ) : timeLeftSeconds === 11 ? (
+            // START!表示（1秒間: 11秒の時）
             <motion.div
               initial={{ scale: 0.5, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
@@ -396,7 +382,7 @@ const CountupBoard = memo(function CountupBoard({
                 START!
               </p>
             </motion.div>
-          ) : timeLeftSeconds > 0 ? (
+          ) : (
             // タップ時間カウントダウン: 10-9-8-...-1
             <motion.p
               className="font-black text-ink"
@@ -406,33 +392,22 @@ const CountupBoard = memo(function CountupBoard({
             >
               {timeLeftSeconds}
             </motion.p>
-          ) : (
-            // 0秒: タイムアップ表示（ゲーム終了ボタンを押すまで表示）
-            <motion.div
-              initial={{ scale: 0.5, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ duration: 0.5, ease: 'easeOut' }}
-              className="flex flex-col items-center justify-center gap-8"
-            >
-              <p className="font-black text-terra-clay" style={{ fontSize: '12rem', lineHeight: 1 }}>
-                TIME UP!
-              </p>
-              <p className="text-5xl font-bold text-ink/80">結果発表まで少々お待ちください</p>
-            </motion.div>
           )}
         </div>
       )}
 
-      {/* 終了時のタイトル */}
+      {/* TIME UP!表示（ゲーム終了直後、ランキング表示前） */}
       {phase === 'ended' && !showScrollRanking && !showPodium && (
         <motion.div
-          className="text-center py-8"
-          initial={{ scale: 0.8, opacity: 0 }}
+          initial={{ scale: 0.5, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
-          exit={{ scale: 0.8, opacity: 0 }}
-          transition={{ type: 'spring', bounce: 0.5 }}
+          transition={{ duration: 0.5, ease: 'easeOut' }}
+          className="flex flex-col items-center justify-center h-full gap-8"
         >
-          <p className="font-bold text-terra-clay" style={{ fontSize: '8rem', lineHeight: 1 }}>結果発表！</p>
+          <p className="font-black text-terra-clay" style={{ fontSize: '12rem', lineHeight: 1 }}>
+            TIME UP!
+          </p>
+          <p className="text-5xl font-bold text-ink/80">結果発表まで少々お待ちください</p>
         </motion.div>
       )}
 
@@ -579,6 +554,23 @@ const CountupBoard = memo(function CountupBoard({
 });
 
 const IdleBoard = memo(function IdleBoard({ leaderboard }: { leaderboard: LeaderboardEntry[] }) {
+  return (
+    <motion.section
+      initial={{ opacity: 0, scale: 0.95 }}
+      animate={{ opacity: 1, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.95 }}
+      transition={{ duration: 0.5, ease: 'easeOut' }}
+      className="flex h-full items-center justify-center"
+    >
+      <div className="text-center">
+        <h2 className="text-6xl font-bold text-ink mb-8">まもなくゲームが始まります</h2>
+        <p className="text-4xl text-ink/80 font-bold">スマホの画面を確認してください。</p>
+      </div>
+    </motion.section>
+  );
+});
+
+const IdleBoardOld = memo(function IdleBoardOld({ leaderboard }: { leaderboard: LeaderboardEntry[] }) {
   const top3 = leaderboard.slice(0, 3);
   const rest = leaderboard.slice(3);
 
@@ -1358,12 +1350,12 @@ const CelebrationBoard = memo(function CelebrationBoard() {
         ))}
       </div>
 
-      {/* 祝！優勝！！ */}
+      {/* 祝！優勝！！ - センター揃え */}
       <motion.div
         initial={{ scale: 0.5, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         transition={{ type: 'spring', bounce: 0.5, duration: 1 }}
-        className="relative z-10"
+        className="relative z-10 flex items-center justify-center"
       >
         <p className="font-black text-terra-clay text-center" style={{ fontSize: '15rem', lineHeight: 1 }}>
           祝！優勝！！

@@ -1,4 +1,4 @@
-import { getSupabaseServiceRoleClient, upsertRoomSnapshot } from '@/lib/supabase/server';
+import { getSupabaseServiceRoleClient, upsertRoomSnapshot, fetchRoomSnapshot } from '@/lib/supabase/server';
 import { appendAuditLog, ensureRoomSnapshot, updateSnapshotLeaderboard } from '@/lib/server/rooms';
 
 const DEFAULT_COUNTDOWN_MS = 10_000;
@@ -90,14 +90,52 @@ export async function stopGame(roomId: string) {
 
 export async function showRanking(roomId: string) {
   await ensureRoomSnapshot(roomId);
-  await upsertRoomSnapshot(roomId, { show_ranking: true, show_celebration: false });
-  await appendAuditLog(roomId, 'game:showRanking', {});
+
+  // 現在の状態を取得
+  const snapshot = await fetchRoomSnapshot(roomId);
+  const isCurrentlyShowingRanking = snapshot?.show_ranking === true;
+
+  if (isCurrentlyShowingRanking) {
+    // OFFにする: 待機モード(idle)に遷移
+    const client = getSupabaseServiceRoleClient();
+    await client.from('rooms').update({ mode: 'idle', phase: 'idle' }).eq('id', roomId);
+    await upsertRoomSnapshot(roomId, {
+      mode: 'idle',
+      phase: 'idle',
+      show_ranking: false,
+      show_celebration: false
+    });
+    await appendAuditLog(roomId, 'game:hideRanking', {});
+  } else {
+    // ONにする: ランキングを表示
+    await upsertRoomSnapshot(roomId, { show_ranking: true, show_celebration: false });
+    await appendAuditLog(roomId, 'game:showRanking', {});
+  }
 }
 
 export async function showCelebration(roomId: string) {
   await ensureRoomSnapshot(roomId);
-  await upsertRoomSnapshot(roomId, { phase: 'celebrating', show_celebration: true });
-  await appendAuditLog(roomId, 'game:showCelebration', {});
+
+  // 現在の状態を取得
+  const snapshot = await fetchRoomSnapshot(roomId);
+  const isCurrentlyCelebrating = snapshot?.phase === 'celebrating' || snapshot?.show_celebration === true;
+
+  if (isCurrentlyCelebrating) {
+    // OFFにする: 待機モード(idle)に遷移
+    const client = getSupabaseServiceRoleClient();
+    await client.from('rooms').update({ mode: 'idle', phase: 'idle' }).eq('id', roomId);
+    await upsertRoomSnapshot(roomId, {
+      mode: 'idle',
+      phase: 'idle',
+      show_celebration: false,
+      show_ranking: false
+    });
+    await appendAuditLog(roomId, 'game:hideCelebration', {});
+  } else {
+    // ONにする: 表彰中画面を表示
+    await upsertRoomSnapshot(roomId, { phase: 'celebrating', show_celebration: true });
+    await appendAuditLog(roomId, 'game:showCelebration', {});
+  }
 }
 
 export async function applyTapDelta(roomId: string, playerId: string, delta: number) {
