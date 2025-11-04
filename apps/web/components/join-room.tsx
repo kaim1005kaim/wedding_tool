@@ -14,6 +14,8 @@ type ConnectionStatus = 'good' | 'warn' | 'bad';
 
 const START_BANNER_DURATION_MS = 800;
 const STOP_BANNER_DURATION_MS = 3000;
+const TAP_BATCH_INTERVAL_MS = 100; // Batch taps every 100ms for better responsiveness
+const MAX_TAPS_PER_SECOND = 20; // Physical limit: max 20 taps per second
 
 export default function JoinRoom({ code }: { code: string }) {
   const [tableNo, setTableNo] = useState('');
@@ -27,6 +29,9 @@ export default function JoinRoom({ code }: { code: string }) {
   const [connection, setConnection] = useState<ConnectionStatus>('good');
   const [showModal, setShowModal] = useState(true);
   const [isJoining, setIsJoining] = useState(false);
+  const tapBatchRef = useRef(0);
+  const tapBatchTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const tapTimestampsRef = useRef<number[]>([]);
   const client = useRealtimeClient();
   const mode = useRoomStore((state) => state.mode);
   const leaderboard = useRoomStore((state) => state.leaderboard);
@@ -197,7 +202,7 @@ export default function JoinRoom({ code }: { code: string }) {
     }
   };
 
-  const handleTap = async () => {
+  const sendTapBatch = useCallback(async (delta: number) => {
     try {
       if (isCloudMode) {
         const activeRoomId = runtimeRoomId ?? roomId;
@@ -210,7 +215,7 @@ export default function JoinRoom({ code }: { code: string }) {
             'Content-Type': 'application/json',
             Authorization: `Bearer ${playerToken}`
           },
-          body: JSON.stringify({ delta: 1 })
+          body: JSON.stringify({ delta })
         });
         if (!response.ok) {
           const data = (await response.json().catch(() => ({}))) as { error?: string };
@@ -219,13 +224,48 @@ export default function JoinRoom({ code }: { code: string }) {
       } else {
         await client.emit({
           type: 'tap:delta',
-          payload: { delta: 1 }
+          payload: { delta }
         });
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : '送信に失敗しました');
     }
-  };
+  }, [isCloudMode, runtimeRoomId, roomId, playerToken, client]);
+
+  const handleTap = useCallback(() => {
+    const now = Date.now();
+
+    // Remove timestamps older than 1 second
+    tapTimestampsRef.current = tapTimestampsRef.current.filter(ts => now - ts < 1000);
+
+    // Check if we've exceeded the physical limit
+    if (tapTimestampsRef.current.length >= MAX_TAPS_PER_SECOND) {
+      return; // Ignore this tap
+    }
+
+    // Record this tap
+    tapTimestampsRef.current.push(now);
+    tapBatchRef.current += 1;
+
+    // If no timer is running, start one
+    if (tapBatchTimerRef.current === null) {
+      tapBatchTimerRef.current = setTimeout(() => {
+        const delta = tapBatchRef.current;
+        tapBatchRef.current = 0;
+        tapBatchTimerRef.current = null;
+        void sendTapBatch(delta);
+      }, TAP_BATCH_INTERVAL_MS);
+    }
+  }, [sendTapBatch]);
+
+  // Cleanup tap batch timer on unmount
+  useEffect(() => {
+    return () => {
+      if (tapBatchTimerRef.current) {
+        clearTimeout(tapBatchTimerRef.current);
+      }
+    };
+  }, []);
 
   useEffect(() => {
     if (registered) {
@@ -924,16 +964,30 @@ function QuizOverlay({ phase, countdownMs, roomId, playerToken }: QuizOverlayPro
       )}
 
       <div className="flex-1 flex flex-col items-center justify-center p-6">
-        {/* Already Answered Message */}
-        {hasAnswered && !quizResult && (
+        {/* Answer Feedback Message */}
+        {hasAnswered && (
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             className="w-full max-w-2xl mb-4"
           >
-            <div className="rounded-2xl bg-blue-500 text-white px-6 py-3 text-center shadow-lg">
-              <p className="text-lg font-bold">回答済みです。正解発表までお待ちください</p>
-            </div>
+            {!quizResult ? (
+              <div className="rounded-2xl bg-blue-500 text-white px-6 py-3 text-center shadow-lg space-y-1">
+                <p className="text-2xl font-black">あなたの回答: {CHOICE_LABELS[selectedChoice]}</p>
+                <p className="text-base font-medium">正解発表までお待ちください</p>
+              </div>
+            ) : selectedChoice === correctIndex ? (
+              <div className="rounded-2xl bg-gradient-to-br from-green-500 to-green-600 text-white px-6 py-4 text-center shadow-xl border-2 border-green-700 space-y-1">
+                <p className="text-3xl font-black">⭕ 正解！</p>
+                <p className="text-xl font-bold">あなたの回答: {CHOICE_LABELS[selectedChoice]}</p>
+              </div>
+            ) : (
+              <div className="rounded-2xl bg-gradient-denim text-white px-6 py-4 text-center shadow-xl border-2 border-denim-deep space-y-1">
+                <p className="text-3xl font-black">残念...</p>
+                <p className="text-xl font-bold">あなたの回答: {CHOICE_LABELS[selectedChoice]}</p>
+                <p className="text-lg font-medium">正解は {CHOICE_LABELS[correctIndex]} でした</p>
+              </div>
+            )}
           </motion.div>
         )}
 

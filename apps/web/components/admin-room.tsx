@@ -56,9 +56,11 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
   const [confirm, setConfirm] = useState<ConfirmState | null>(null);
   const [activeLogTab, setActiveLogTab] = useState<'logs' | 'lottery'>('logs');
   const [manageOpen, setManageOpen] = useState(false);
-  const [manageTab, setManageTab] = useState<'quiz' | 'lottery'>('quiz');
+  const [manageTab, setManageTab] = useState<'quiz' | 'lottery' | 'representatives'>('quiz');
   const [manageMessage, setManageMessage] = useState<string | null>(null);
   const [manageLoading, setManageLoading] = useState(false);
+  const [representatives, setRepresentatives] = useState<Array<{ tableNo: string; name: string }>>([]);
+  const [representativeForm, setRepresentativeForm] = useState({ tableNo: '', name: '' });
   const [modeSwitching, setModeSwitching] = useState(false);
   const [quizzes, setQuizzes] = useState<QuizSummary[]>([]);
   const [templates, setTemplates] = useState<QuizSummary[]>([]);
@@ -87,6 +89,7 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
     countdownSeconds: 3,
     durationSeconds: 10
   });
+  const [quizAnswerStats, setQuizAnswerStats] = useState<{ answered: number; total: number } | null>(null);
   const autoStopRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
@@ -154,6 +157,39 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
   useEffect(() => {
     void loadLogs();
   }, [loadLogs]);
+
+  useEffect(() => {
+    if (!activeQuiz || !isCloudMode || !adminToken) {
+      setQuizAnswerStats(null);
+      return;
+    }
+
+    const loadAnswerStats = async () => {
+      try {
+        const response = await fetch(
+          `/api/admin/rooms/${roomId}/quiz/answer-stats?quizId=${activeQuiz.quizId}`,
+          {
+            headers: {
+              Authorization: `Bearer ${adminToken}`
+            }
+          }
+        );
+        if (response.ok) {
+          const data = (await response.json()) as { answered: number; total: number };
+          setQuizAnswerStats(data);
+        }
+      } catch (err) {
+        console.error('Failed to load answer stats:', err);
+      }
+    };
+
+    void loadAnswerStats();
+    const interval = setInterval(() => {
+      void loadAnswerStats();
+    }, 2000); // Poll every 2 seconds
+
+    return () => clearInterval(interval);
+  }, [activeQuiz, isCloudMode, adminToken, roomId]);
 
   useEffect(() => {
     const loadRoomCode = async () => {
@@ -335,14 +371,33 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
     }
   }, [adminToken, isCloudMode, roomId]);
 
+  const fetchRepresentatives = useCallback(async () => {
+    if (!isCloudMode || !adminToken) return;
+    try {
+      const response = await fetch(`/api/admin/rooms/${roomId}/representatives`, {
+        headers: {
+          Authorization: `Bearer ${adminToken}`
+        }
+      });
+      if (response.ok) {
+        const json = (await response.json()) as { representatives: Array<{ table_no: string; representative_name: string }> };
+        setRepresentatives((json.representatives ?? []).map(r => ({ tableNo: r.table_no, name: r.representative_name })));
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  }, [adminToken, isCloudMode, roomId]);
+
   useEffect(() => {
     if (!manageOpen || !isCloudMode) return;
     if (manageTab === 'quiz') {
       void fetchQuizzes();
-    } else {
+    } else if (manageTab === 'lottery') {
       void fetchLotteryCandidates();
+    } else if (manageTab === 'representatives') {
+      void fetchRepresentatives();
     }
-  }, [manageOpen, manageTab, isCloudMode, fetchQuizzes, fetchLotteryCandidates]);
+  }, [manageOpen, manageTab, isCloudMode, fetchQuizzes, fetchLotteryCandidates, fetchRepresentatives]);
 
   const openManagement = () => {
     if (isCloudMode && !adminToken) {
@@ -514,6 +569,52 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
   const handleCancelEdit = () => {
     setEditingQuizId(null);
     setQuizForm({ question: '', choices: ['', '', '', ''], answerIndex: 0, ord: '', imageUrl: '', isTemplate: false });
+  };
+
+  const handleAddRepresentative = () => {
+    if (!representativeForm.tableNo.trim() || !representativeForm.name.trim()) {
+      setManageMessage('テーブル番号と名前を入力してください');
+      return;
+    }
+    if (representatives.some(r => r.tableNo === representativeForm.tableNo.trim())) {
+      setManageMessage('このテーブル番号は既に登録されています');
+      return;
+    }
+    setRepresentatives([...representatives, { tableNo: representativeForm.tableNo.trim(), name: representativeForm.name.trim() }]);
+    setRepresentativeForm({ tableNo: '', name: '' });
+    setManageMessage(null);
+  };
+
+  const handleRemoveRepresentative = (tableNo: string) => {
+    setRepresentatives(representatives.filter(r => r.tableNo !== tableNo));
+  };
+
+  const handleSaveRepresentatives = async () => {
+    if (!isCloudMode || !adminToken) return;
+
+    setManageLoading(true);
+    setManageMessage(null);
+    try {
+      const response = await fetch(`/api/admin/rooms/${roomId}/representatives`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${adminToken}`
+        },
+        body: JSON.stringify({ representatives })
+      });
+
+      if (!response.ok) {
+        const data = (await response.json().catch(() => ({}))) as { error?: string };
+        throw new Error(data.error ?? response.statusText);
+      }
+
+      setManageMessage('代表者を保存しました');
+    } catch (err) {
+      setManageMessage(err instanceof Error ? err.message : '代表者の保存に失敗しました');
+    } finally {
+      setManageLoading(false);
+    }
   };
 
   const handleCopyTemplate = async (templateId: string) => {
@@ -914,19 +1015,70 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
                   正解を公開
                 </AdminButton>
               </div>
-              <AdminButton
-                variant="secondary"
-                icon={ListChecks}
-                disabled={mode !== 'quiz' || phase !== 'idle'}
-                onClick={() => send({ type: 'game:stop', payload: undefined })}
-                className="w-full"
-              >
-                ランキング表示
-              </AdminButton>
+              <div className="grid grid-cols-2 gap-3">
+                <AdminButton
+                  variant="secondary"
+                  icon={ListChecks}
+                  disabled={mode !== 'quiz' || phase !== 'idle'}
+                  onClick={() => send({ type: 'game:stop', payload: undefined })}
+                >
+                  ランキング表示
+                </AdminButton>
+                <AdminButton
+                  variant="secondary"
+                  icon={Trash2}
+                  disabled={mode !== 'quiz'}
+                  onClick={() => {
+                    openConfirm({
+                      title: 'クイズ進行をリセット',
+                      description: '全ての回答履歴と進行状態がリセットされ、1問目から再開できます。よろしいですか？',
+                      variant: 'danger',
+                      onConfirm: async () => {
+                        if (!isCloudMode) return;
+                        if (!adminToken) {
+                          setError('管理トークンがありません');
+                          return;
+                        }
+                        try {
+                          const response = await fetch(`/api/admin/rooms/${roomId}/quiz/reset`, {
+                            method: 'POST',
+                            headers: {
+                              Authorization: `Bearer ${adminToken}`
+                            }
+                          });
+                          if (!response.ok) {
+                            const data = (await response.json().catch(() => ({}))) as { error?: string };
+                            throw new Error(data.error ?? response.statusText);
+                          }
+                          await loadLogs();
+                        } catch (err) {
+                          setError(err instanceof Error ? err.message : 'リセットに失敗しました');
+                        }
+                      }
+                    });
+                  }}
+                >
+                  クイズリセット
+                </AdminButton>
+              </div>
             </div>
             {activeQuiz ? (
-              <div className="mt-4 rounded-lg bg-green-50 border border-green-200 p-3">
-                <p className="text-sm font-bold text-green-800">✓ 表示中: {activeQuiz.question}</p>
+              <div className="mt-4 space-y-2">
+                <div className="rounded-lg bg-green-50 border border-green-200 p-3">
+                  <p className="text-sm font-bold text-green-800">✓ 表示中: {activeQuiz.question}</p>
+                </div>
+                {quizAnswerStats && (
+                  <div className="rounded-lg bg-blue-50 border border-blue-200 p-3">
+                    <p className="text-sm font-bold text-blue-800">
+                      回答状況: {quizAnswerStats.answered} / {quizAnswerStats.total}人
+                      {quizAnswerStats.total > 0 && (
+                        <span className="ml-2 text-xs">
+                          ({Math.round((quizAnswerStats.answered / quizAnswerStats.total) * 100)}%)
+                        </span>
+                      )}
+                    </p>
+                  </div>
+                )}
               </div>
             ) : (
               <div className="mt-4 rounded-lg bg-gray-50 border border-gray-200 p-3">
@@ -1082,18 +1234,29 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
                   閉じる
                 </button>
               </div>
-              {/* 抽選タブ非表示
               <div className="mt-4 inline-flex rounded-full bg-brand-blue-50 p-1 text-sm">
-                <TabButton label="クイズ作成" active={manageTab === 'quiz'} onClick={() => setManageTab('quiz')} />
-                <TabButton label="抽選リスト" active={manageTab === 'lottery'} onClick={() => setManageTab('lottery')} />
+                <button
+                  className={`rounded-full px-4 py-2 font-semibold transition-colors ${
+                    manageTab === 'quiz' ? 'bg-white text-brand-blue-700 shadow-sm' : 'text-brand-blue-600 hover:text-brand-blue-700'
+                  }`}
+                  onClick={() => setManageTab('quiz')}
+                >
+                  クイズ作成
+                </button>
+                <button
+                  className={`rounded-full px-4 py-2 font-semibold transition-colors ${
+                    manageTab === 'representatives' ? 'bg-white text-brand-blue-700 shadow-sm' : 'text-brand-blue-600 hover:text-brand-blue-700'
+                  }`}
+                  onClick={() => setManageTab('representatives')}
+                >
+                  代表者設定
+                </button>
               </div>
-              */}
               {!isCloudMode && (
                 <p className="mt-4 text-sm text-brand-blue-700/70">LANモードでは設定を閲覧のみ利用できます。クラウドモードで編集してください。</p>
               )}
               {manageMessage && <p className="mt-4 text-sm text-brand-terra-600">{manageMessage}</p>}
-              {/* 常にクイズ作成タブを表示 */}
-              {true ? (
+              {manageTab === 'quiz' ? (
                 <div className="mt-6 space-y-6">
                   <form
                     ref={quizFormRef}
@@ -1355,7 +1518,73 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
                     )}
                   </div>
                 </div>
-              )}
+              ) : manageTab === 'representatives' ? (
+                <div className="mt-6 space-y-6">
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium text-brand-blue-700">テーブル番号</label>
+                        <input
+                          className="w-full rounded-xl border border-brand-blue-200 bg-white px-4 py-3 text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-blue-400"
+                          value={representativeForm.tableNo}
+                          onChange={(event) => setRepresentativeForm((prev) => ({ ...prev, tableNo: event.target.value }))}
+                          placeholder="例：A"
+                          disabled={!isCloudMode}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium text-brand-blue-700">代表者名</label>
+                        <input
+                          className="w-full rounded-xl border border-brand-blue-200 bg-white px-4 py-3 text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-blue-400"
+                          value={representativeForm.name}
+                          onChange={(event) => setRepresentativeForm((prev) => ({ ...prev, name: event.target.value }))}
+                          placeholder="例：山田太郎"
+                          disabled={!isCloudMode}
+                        />
+                      </div>
+                    </div>
+                    <PrimaryButton type="button" onClick={handleAddRepresentative} disabled={manageLoading || !isCloudMode}>
+                      追加
+                    </PrimaryButton>
+                  </div>
+
+                  <div className="space-y-2">
+                    <h3 className="text-sm font-semibold text-brand-blue-700">登録済み代表者</h3>
+                    {representatives.length === 0 ? (
+                      <p className="text-sm text-brand-blue-700/70">登録された代表者はまだありません。</p>
+                    ) : (
+                      <ul className="space-y-2">
+                        {representatives.map((rep) => (
+                          <li key={rep.tableNo} className="rounded-xl bg-white/85 px-4 py-3 text-sm shadow-brand flex items-center justify-between">
+                            <div>
+                              <p className="font-semibold text-brand-terra-600">{rep.tableNo}: {rep.name}さん</p>
+                            </div>
+                            <button
+                              onClick={() => handleRemoveRepresentative(rep.tableNo)}
+                              className="rounded-lg bg-red-100 p-2 text-red-700 hover:bg-red-200 disabled:opacity-50"
+                              disabled={manageLoading || !isCloudMode}
+                              title="削除"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+
+                  <PrimaryButton type="button" onClick={handleSaveRepresentatives} disabled={manageLoading || !isCloudMode}>
+                    保存して投影画面に表示
+                  </PrimaryButton>
+
+                  <div className="rounded-xl bg-blue-50 p-4 border border-blue-200">
+                    <p className="text-sm text-blue-800 font-medium">💡 代表者設定について</p>
+                    <p className="text-xs text-blue-700 mt-2">
+                      保存すると、投影画面に「各テーブルの回答代表者」として表示されます。代表者制度をONにしている場合、ここで設定した代表者のみがクイズに回答できます。
+                    </p>
+                  </div>
+                </div>
+              ) : null}
             </div>
           </div>
         )}

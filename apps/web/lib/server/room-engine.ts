@@ -1,9 +1,18 @@
 import { getSupabaseServiceRoleClient, upsertRoomSnapshot } from '@/lib/supabase/server';
 import { appendAuditLog, ensureRoomSnapshot, updateSnapshotLeaderboard } from '@/lib/server/rooms';
 
-type SupabaseRow<T> = T extends { data: infer U } ? U : never;
-
 const DEFAULT_COUNTDOWN_MS = 10_000;
+
+export async function resetQuizProgress(roomId: string) {
+  const client = getSupabaseServiceRoleClient();
+  await client.from('awarded_quizzes').delete().eq('room_id', roomId);
+  await client.from('answers').delete().eq('room_id', roomId);
+  await upsertRoomSnapshot(roomId, {
+    current_quiz: null,
+    quiz_result: null
+  });
+  await appendAuditLog(roomId, 'quiz:reset', {});
+}
 
 export async function switchRoomMode(roomId: string, to: 'countup' | 'quiz' | 'lottery' | 'idle') {
   const client = getSupabaseServiceRoleClient();
@@ -17,12 +26,6 @@ export async function switchRoomMode(roomId: string, to: 'countup' | 'quiz' | 'l
     quiz_result: null,
     lottery_result: null
   });
-
-  // クイズモードに切り替えたときは進行状態をリセット
-  if (to === 'quiz') {
-    await client.from('awarded_quizzes').delete().eq('room_id', roomId);
-    await client.from('answers').delete().eq('room_id', roomId);
-  }
 
   await appendAuditLog(roomId, 'mode:switch', { to });
 }

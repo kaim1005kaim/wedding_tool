@@ -19,6 +19,11 @@ export type LeaderboardEntry = {
   countupTapCount: number;
 };
 
+export type TableRepresentative = {
+  tableNo: string;
+  name: string;
+};
+
 export type RoomStoreState = {
   roomId: string | null;
   mode: RoomView;
@@ -29,6 +34,7 @@ export type RoomStoreState = {
   activeQuiz: QuizShowPayload | null;
   quizResult: QuizResultPayload | null;
   lotteryResult: LotteryResultPayload | null;
+  representatives: TableRepresentative[];
   playerId: string | null;
   playerToken: string | null;
 };
@@ -54,6 +60,7 @@ const initialState: RoomStoreState = {
   activeQuiz: null,
   quizResult: null,
   lotteryResult: null,
+  representatives: [],
   playerId: null,
   playerToken: null
 };

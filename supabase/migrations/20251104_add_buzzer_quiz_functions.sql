@@ -22,12 +22,12 @@ begin
     raise exception 'Quiz already revealed';
   end if;
 
-  -- Find fastest correct answer
+  -- Find fastest correct answer (answered_at first, then created_at as tiebreaker)
   select player_id, answered_at into fastest_winner_id, fastest_answered_at
   from answers
   where quiz_id = p_quiz_id
     and choice_index = quiz_data.answer_index
-  order by answered_at asc
+  order by answered_at asc, created_at asc
   limit 1;
 
   -- Count all answers by choice

@@ -18,6 +18,7 @@ export default function ProjectorView({ roomId: _roomId }: { roomId: string }) {
   const activeQuiz = useRoomStore((state) => state.activeQuiz);
   const quizResult = useRoomStore((state) => state.quizResult);
   const lotteryResult = useRoomStore((state) => state.lotteryResult);
+  const representatives = useRoomStore((state) => state.representatives);
 
   const topTen = useMemo(() => leaderboard.slice(0, 10), [leaderboard]);
   const [lotteryKey, setLotteryKey] = useState(0);
@@ -763,11 +764,11 @@ const QuizBoard = memo(function QuizBoard({ activeQuiz, quizResult, leaderboard,
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: -30 }}
         transition={{ duration: 0.5, ease: 'easeOut' }}
-        className="flex h-full items-center justify-center"
+        className="flex h-full items-center justify-center px-12"
         role="region"
         aria-label="クイズ待機中"
       >
-        <div className="flex flex-col items-center justify-center space-y-12">
+        <div className="flex flex-col items-center justify-center space-y-12 w-full max-w-7xl">
           {/* SVG Title */}
           <motion.div
             initial={{ scale: 0.9, opacity: 0 }}
@@ -786,6 +787,33 @@ const QuizBoard = memo(function QuizBoard({ activeQuiz, quizResult, leaderboard,
           >
             開始まで少々お待ちください
           </motion.p>
+
+          {/* Representatives List */}
+          {representatives.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.5, duration: 0.5 }}
+              className="w-full"
+            >
+              <h3 className="text-4xl font-bold text-ink mb-8 text-center">各テーブルの回答代表者</h3>
+              <div className="grid grid-cols-3 gap-8 w-full">
+                {representatives.map((rep) => (
+                  <motion.div
+                    key={rep.tableNo}
+                    initial={{ scale: 0.8, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ duration: 0.4 }}
+                    className="rounded-2xl glass-panel-strong p-6 border border-white/30 shadow-xl"
+                  >
+                    <p className="text-3xl font-black text-ink text-center">
+                      {rep.tableNo}: {rep.name}さん
+                    </p>
+                  </motion.div>
+                ))}
+              </div>
+            </motion.div>
+          )}
         </div>
       </motion.section>
     );
