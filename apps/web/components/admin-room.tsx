@@ -8,16 +8,12 @@ import {
   Square,
   ListChecks,
   Eye,
-  Dice1,
-  Dice2,
-  Dice3,
   Shuffle,
   PauseCircle,
   Settings,
   Copy,
   QrCode,
   Check,
-  Edit,
   Trash2
 } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
@@ -28,22 +24,12 @@ import { Section, PrimaryButton } from './brand';
 import type { LucideIcon } from 'lucide-react';
 import { WEDDING_QUIZZES } from '../lib/hardcoded-quizzes';
 
-type QuizSummary = {
-  id: string;
-  question: string;
-  ord: number | null;
-  created_at: string;
-  is_template?: boolean;
-};
-
 type LotteryCandidateSummary = {
   id: string;
   display_name: string;
   group_tag: string | null;
   created_at: string;
 };
-
-const CHOICE_LABELS = ['A', 'B', 'C', 'D'];
 
 export default function AdminRoom({ roomId }: { roomId: string }) {
   const [pin, setPin] = useState('');
@@ -55,7 +41,6 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
   const [lotteries, setLotteries] = useState<Array<{ kind: string; created_at: string; players?: { display_name: string; table_no?: string | null; seat_no?: string | null } }>>([]);
   const [adminToken, setAdminTokenState] = useState<string | null>(null);
   const [confirm, setConfirm] = useState<ConfirmState | null>(null);
-  const [activeLogTab, setActiveLogTab] = useState<'logs' | 'lottery'>('logs');
   const [manageOpen, setManageOpen] = useState(false);
   const [manageTab, setManageTab] = useState<'quiz' | 'lottery' | 'representatives'>('quiz');
   const [manageMessage, setManageMessage] = useState<string | null>(null);
@@ -64,19 +49,7 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
   const [representativeForm, setRepresentativeForm] = useState({ tableNo: '', name: '' });
   const [modeSwitching, setModeSwitching] = useState(false);
   const [rankingLoading, setRankingLoading] = useState(false);
-  const [quizzes, setQuizzes] = useState<QuizSummary[]>([]);
-  const [templates, setTemplates] = useState<QuizSummary[]>([]);
   const [lotteryCandidates, setLotteryCandidates] = useState<LotteryCandidateSummary[]>([]);
-  const [quizForm, setQuizForm] = useState({
-    question: '',
-    choices: ['', '', '', ''],
-    answerIndex: 0,
-    ord: '',
-    imageUrl: '',
-    isTemplate: false
-  });
-  const [editingQuizId, setEditingQuizId] = useState<string | null>(null);
-  const quizFormRef = useRef<HTMLFormElement>(null);
   const [candidateForm, setCandidateForm] = useState({
     displayName: '',
     groupTag: 'all' as 'all' | 'groom' | 'bride'
@@ -337,23 +310,6 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
     setConfirm(state);
   };
 
-  const fetchQuizzes = useCallback(async () => {
-    if (!isCloudMode || !adminToken) return;
-    try {
-      const response = await fetch(`/api/admin/rooms/${roomId}/manage/quizzes`, {
-        headers: {
-          Authorization: `Bearer ${adminToken}`
-        }
-      });
-      if (response.ok) {
-        const json = (await response.json()) as { quizzes: QuizSummary[]; templates: QuizSummary[] };
-        setQuizzes(json.quizzes ?? []);
-        setTemplates(json.templates ?? []);
-      }
-    } catch (err) {
-      console.error(err);
-    }
-  }, [adminToken, isCloudMode, roomId]);
 
   const fetchLotteryCandidates = useCallback(async () => {
     if (!isCloudMode || !adminToken) return;
@@ -391,14 +347,12 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
 
   useEffect(() => {
     if (!manageOpen || !isCloudMode) return;
-    if (manageTab === 'quiz') {
-      void fetchQuizzes();
-    } else if (manageTab === 'lottery') {
+    if (manageTab === 'lottery') {
       void fetchLotteryCandidates();
     } else if (manageTab === 'representatives') {
       void fetchRepresentatives();
     }
-  }, [manageOpen, manageTab, isCloudMode, fetchQuizzes, fetchLotteryCandidates, fetchRepresentatives]);
+  }, [manageOpen, manageTab, isCloudMode, fetchLotteryCandidates, fetchRepresentatives]);
 
   const openManagement = () => {
     if (isCloudMode && !adminToken) {
@@ -409,168 +363,12 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
     setManageTab('quiz');
     setManageOpen(true);
     if (isCloudMode) {
-      void fetchQuizzes();
       void fetchLotteryCandidates();
     } else {
-      setQuizzes([]);
-      setTemplates([]);
       setLotteryCandidates([]);
     }
   };
 
-  const handleCreateQuiz = async () => {
-    if (!isCloudMode || !adminToken) return;
-    if (!quizForm.question.trim() || quizForm.choices.some((choice) => !choice.trim())) {
-      setManageMessage('全ての項目を入力してください');
-      return;
-    }
-
-    setManageLoading(true);
-    setManageMessage(null);
-    try {
-      const response = await fetch(`/api/admin/rooms/${roomId}/manage/quizzes`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${adminToken}`
-        },
-        body: JSON.stringify({
-          question: quizForm.question.trim(),
-          choices: quizForm.choices.map((choice) => choice.trim()),
-          answerIndex: quizForm.answerIndex,
-          ord: quizForm.ord ? Number.parseInt(quizForm.ord, 10) : undefined,
-          imageUrl: quizForm.imageUrl.trim() || undefined,
-          isTemplate: quizForm.isTemplate
-        })
-      });
-
-      if (!response.ok) {
-        const data = (await response.json().catch(() => ({}))) as { error?: string };
-        throw new Error(data.error ?? response.statusText);
-      }
-
-      const json = (await response.json()) as { quiz: QuizSummary };
-      if (quizForm.isTemplate) {
-        setTemplates((prev) => [...prev, json.quiz].sort((a, b) => (a.ord ?? 0) - (b.ord ?? 0)));
-      } else {
-        setQuizzes((prev) => [...prev, json.quiz].sort((a, b) => (a.ord ?? 0) - (b.ord ?? 0)));
-      }
-      setQuizForm({ question: '', choices: ['', '', '', ''], answerIndex: 0, ord: '', imageUrl: '', isTemplate: false });
-      setManageMessage(quizForm.isTemplate ? 'テンプレートを追加しました' : 'クイズを追加しました');
-    } catch (err) {
-      setManageMessage(err instanceof Error ? err.message : 'クイズの追加に失敗しました');
-    } finally {
-      setManageLoading(false);
-    }
-  };
-
-  const handleEditQuiz = (quiz: QuizSummary) => {
-    setEditingQuizId(quiz.id);
-    // Fetch full quiz details
-    fetch(`/api/admin/rooms/${roomId}/manage/quizzes/${quiz.id}`, {
-      headers: { Authorization: `Bearer ${adminToken}` }
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        const quizData = data as { quiz: { question: string; choices: string[]; answer_index: number; ord: number; image_url?: string; is_template?: boolean } };
-        setQuizForm({
-          question: quizData.quiz.question,
-          choices: quizData.quiz.choices,
-          answerIndex: quizData.quiz.answer_index,
-          ord: quizData.quiz.ord?.toString() ?? '',
-          imageUrl: quizData.quiz.image_url ?? '',
-          isTemplate: quizData.quiz.is_template ?? false
-        });
-        // Scroll to form
-        setTimeout(() => {
-          quizFormRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }, 100);
-      })
-      .catch(() => {
-        setManageMessage('クイズの読み込みに失敗しました');
-      });
-  };
-
-  const handleUpdateQuiz = async () => {
-    if (!isCloudMode || !adminToken || !editingQuizId) return;
-    if (!quizForm.question.trim() || quizForm.choices.some((choice) => !choice.trim())) {
-      setManageMessage('全ての項目を入力してください');
-      return;
-    }
-
-    setManageLoading(true);
-    setManageMessage(null);
-    try {
-      const response = await fetch(`/api/admin/rooms/${roomId}/manage/quizzes/${editingQuizId}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${adminToken}`
-        },
-        body: JSON.stringify({
-          question: quizForm.question.trim(),
-          choices: quizForm.choices.map((choice) => choice.trim()),
-          answerIndex: quizForm.answerIndex,
-          ord: quizForm.ord ? Number.parseInt(quizForm.ord, 10) : undefined,
-          imageUrl: quizForm.imageUrl.trim() || undefined,
-          isTemplate: quizForm.isTemplate
-        })
-      });
-
-      if (!response.ok) {
-        const data = (await response.json().catch(() => ({}))) as { error?: string };
-        throw new Error(data.error ?? response.statusText);
-      }
-
-      const json = (await response.json()) as { quiz: QuizSummary };
-      if (quizForm.isTemplate) {
-        setTemplates((prev) =>
-          prev.map((q) => (q.id === editingQuizId ? json.quiz : q)).sort((a, b) => (a.ord ?? 0) - (b.ord ?? 0))
-        );
-      } else {
-        setQuizzes((prev) =>
-          prev.map((q) => (q.id === editingQuizId ? json.quiz : q)).sort((a, b) => (a.ord ?? 0) - (b.ord ?? 0))
-        );
-      }
-      setQuizForm({ question: '', choices: ['', '', '', ''], answerIndex: 0, ord: '', imageUrl: '', isTemplate: false });
-      setEditingQuizId(null);
-      setManageMessage(quizForm.isTemplate ? 'テンプレートを更新しました' : 'クイズを更新しました');
-    } catch (err) {
-      setManageMessage(err instanceof Error ? err.message : 'クイズの更新に失敗しました');
-    } finally {
-      setManageLoading(false);
-    }
-  };
-
-  const handleDeleteQuiz = async (quizId: string) => {
-    if (!isCloudMode || !adminToken) return;
-
-    setManageLoading(true);
-    setManageMessage(null);
-    try {
-      const response = await fetch(`/api/admin/rooms/${roomId}/manage/quizzes/${quizId}`, {
-        method: 'DELETE',
-        headers: { Authorization: `Bearer ${adminToken}` }
-      });
-
-      if (!response.ok) {
-        const data = (await response.json().catch(() => ({}))) as { error?: string };
-        throw new Error(data.error ?? response.statusText);
-      }
-
-      setQuizzes((prev) => prev.filter((q) => q.id !== quizId));
-      setManageMessage('クイズを削除しました');
-    } catch (err) {
-      setManageMessage(err instanceof Error ? err.message : 'クイズの削除に失敗しました');
-    } finally {
-      setManageLoading(false);
-    }
-  };
-
-  const handleCancelEdit = () => {
-    setEditingQuizId(null);
-    setQuizForm({ question: '', choices: ['', '', '', ''], answerIndex: 0, ord: '', imageUrl: '', isTemplate: false });
-  };
 
   const handleAddRepresentative = () => {
     if (!representativeForm.tableNo.trim() || !representativeForm.name.trim()) {
@@ -618,35 +416,6 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
     }
   };
 
-  const handleCopyTemplate = async (templateId: string) => {
-    if (!isCloudMode || !adminToken) return;
-
-    setManageLoading(true);
-    setManageMessage(null);
-    try {
-      const response = await fetch(`/api/admin/rooms/${roomId}/manage/quizzes/copy-template`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${adminToken}`
-        },
-        body: JSON.stringify({ templateId })
-      });
-
-      if (!response.ok) {
-        const data = (await response.json().catch(() => ({}))) as { error?: string };
-        throw new Error(data.error ?? response.statusText);
-      }
-
-      const json = (await response.json()) as { quiz: QuizSummary };
-      setQuizzes((prev) => [...prev, json.quiz].sort((a, b) => (a.ord ?? 0) - (b.ord ?? 0)));
-      setManageMessage('テンプレートをコピーしました');
-    } catch (err) {
-      setManageMessage(err instanceof Error ? err.message : 'テンプレートのコピーに失敗しました');
-    } finally {
-      setManageLoading(false);
-    }
-  };
 
   const handleAddCandidate = async () => {
     if (!isCloudMode || !adminToken) return;
@@ -703,17 +472,6 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
     });
   };
 
-  const handleLottery = (kind: 'all' | 'groom' | 'bride') => {
-    openConfirm({
-      title: '抽選を実行しますか？',
-      description: '抽選はやり直しできません。',
-      confirmLabel: '抽選する',
-      variant: 'danger',
-      onConfirm: () => {
-        void send({ type: 'lottery:draw', payload: { kind } });
-      }
-    });
-  };
 
   if (!isAuthenticated) {
     return (
@@ -1327,7 +1085,7 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
                   }`}
                   onClick={() => setManageTab('quiz')}
                 >
-                  クイズ作成
+                  クイズ一覧
                 </button>
                 <button
                   className={`rounded-full px-4 py-2 font-semibold transition-colors ${
@@ -1343,219 +1101,50 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
               )}
               {manageMessage && <p className="mt-4 text-sm text-brand-terra-600">{manageMessage}</p>}
               {manageTab === 'quiz' ? (
-                <div className="mt-6 space-y-6">
-                  <form
-                    ref={quizFormRef}
-                    className="space-y-4"
-                    onSubmit={(event) => {
-                      event.preventDefault();
-                      void handleCreateQuiz();
-                    }}
-                  >
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium text-brand-blue-700">問題文</label>
-                      <textarea
-                        className="w-full rounded-xl border border-brand-blue-200 bg-white px-4 py-3 text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-blue-400"
-                        value={quizForm.question}
-                        onChange={(event) => setQuizForm((prev) => ({ ...prev, question: event.target.value }))}
-                        rows={3}
-                        required
-                      />
-                    </div>
-                    <div className="grid gap-3 md:grid-cols-2">
-                      {quizForm.choices.map((choice, index) => (
-                        <div key={index} className="space-y-2">
-                          <label className="flex items-center justify-between text-sm font-medium text-brand-blue-700">
-                            <span>{`選択肢 ${CHOICE_LABELS[index]}`}</span>
-                            <span className="flex items-center gap-2 text-xs text-brand-blue-700/70">
-                              <input
-                                type="radio"
-                                name="quiz-answer"
-                                checked={quizForm.answerIndex === index}
-                                onChange={() => setQuizForm((prev) => ({ ...prev, answerIndex: index }))}
-                              />
-                              正解
-                            </span>
-                          </label>
-                          <input
-                            className="w-full rounded-xl border border-brand-blue-200 bg-white px-4 py-3 text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-blue-400"
-                            value={choice}
-                            onChange={(event) =>
-                              setQuizForm((prev) => ({
-                                ...prev,
-                                choices: prev.choices.map((item, itemIndex) => (itemIndex === index ? event.target.value : item))
-                              }))
-                            }
-                            required
-                          />
-                        </div>
-                      ))}
-                    </div>
-                    <div className="space-y-3">
-                      <div className="space-y-2">
-                        <label className="text-sm font-medium text-brand-blue-700">クイズ画像 (任意)</label>
-                        <select
-                          className="w-full rounded-xl border border-brand-blue-200 bg-white px-4 py-3 text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-blue-400"
-                          value={quizForm.imageUrl}
-                          onChange={(event) => setQuizForm((prev) => ({ ...prev, imageUrl: event.target.value }))}
-                        >
-                          <option value="">画像なし</option>
-                          <option value="/quiz-backgrounds/1.png">画像1</option>
-                          <option value="/quiz-backgrounds/2.png">画像2</option>
-                          <option value="/quiz-backgrounds/3.png">画像3</option>
-                        </select>
-                        {quizForm.imageUrl && (
-                          <div className="mt-2 rounded-lg border-2 border-brand-blue-200 p-2 bg-white">
-                            <img
-                              src={quizForm.imageUrl}
-                              alt="選択中の画像"
-                              className="w-full h-auto rounded-lg"
-                            />
-                          </div>
-                        )}
-                        <p className="text-xs text-brand-blue-700/70">※投影画面のみに表示されます</p>
-                      </div>
-                      <div className="space-y-2">
-                        <label className="flex items-center gap-2 text-sm font-medium text-brand-blue-700 cursor-pointer">
-                          <input
-                            type="checkbox"
-                            checked={quizForm.isTemplate}
-                            onChange={(e) => setQuizForm((prev) => ({ ...prev, isTemplate: e.target.checked }))}
-                            className="rounded border-brand-blue-200"
-                          />
-                          <span>共通テンプレートとして保存</span>
-                        </label>
-                        <p className="text-xs text-brand-blue-700/70">※全ルームで再利用可能なクイズとして保存されます</p>
-                      </div>
-                      <div className="grid gap-3 md:grid-cols-2">
-                        <div className="space-y-2">
-                          <label className="text-sm font-medium text-brand-blue-700">表示順 (任意)</label>
-                          <input
-                            className="w-full rounded-xl border border-brand-blue-200 bg-white px-4 py-3 text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-blue-400"
-                            value={quizForm.ord}
-                            onChange={(event) => setQuizForm((prev) => ({ ...prev, ord: event.target.value }))}
-                            type="number"
-                            min={1}
-                            placeholder="自動採番"
-                          />
-                        </div>
-                        <div className="flex items-end gap-2">
-                      {editingQuizId ? (
-                        <>
-                          <PrimaryButton type="button" onClick={handleUpdateQuiz} disabled={manageLoading || !isCloudMode}>
-                            更新する
-                          </PrimaryButton>
-                          <button
-                            type="button"
-                            onClick={handleCancelEdit}
-                            className="rounded-xl border border-brand-blue-300 bg-white px-6 py-3 text-sm font-semibold text-brand-blue-700 hover:bg-brand-blue-50 disabled:opacity-50"
-                            disabled={manageLoading}
-                          >
-                            キャンセル
-                          </button>
-                        </>
-                      ) : (
-                        <button
-                          type="submit"
-                          disabled={manageLoading || !isCloudMode}
-                          className="rounded-xl bg-white px-6 py-3 text-sm font-bold text-ink border border-brand-blue-200 hover:bg-brand-blue-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                        >
-                          クイズを追加
-                        </button>
-                      )}
-                        </div>
-                      </div>
-                    </div>
-                  </form>
-                  <div className="space-y-2">
-                    <h3 className="text-sm font-semibold text-brand-blue-700">登録済みクイズ</h3>
-                    {quizzes.length === 0 ? (
-                      <p className="text-sm text-brand-blue-700/70">登録されたクイズはまだありません。</p>
-                    ) : (
-                      <ul className="space-y-2">
-                        {quizzes.map((quiz) => (
-                          <li key={quiz.id} className="rounded-xl bg-white/85 px-4 py-3 text-sm shadow-brand">
-                            <div className="flex items-start justify-between gap-2">
-                              <button
-                                onClick={() => handleEditQuiz(quiz)}
-                                className="flex-1 text-left hover:opacity-80 transition-opacity"
-                                disabled={manageLoading}
-                              >
-                                <p className="font-semibold text-brand-blue-700">{quiz.question}</p>
-                                <p className="text-xs text-brand-blue-700/60">
-                                  表示順: {quiz.ord ?? '-'} / 登録日: {new Date(quiz.created_at).toLocaleString('ja-JP')}
-                                </p>
-                              </button>
-                              <div className="flex gap-1">
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleEditQuiz(quiz);
-                                  }}
-                                  className="rounded-lg bg-brand-blue-100 p-2 text-brand-blue-700 hover:bg-brand-blue-200 disabled:opacity-50"
-                                  disabled={manageLoading || editingQuizId === quiz.id}
-                                  title="編集"
-                                >
-                                  <Edit className="h-4 w-4" />
-                                </button>
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    if (window.confirm('このクイズを削除しますか?')) {
-                                      void handleDeleteQuiz(quiz.id);
-                                    }
-                                  }}
-                                  className="rounded-lg bg-red-100 p-2 text-red-700 hover:bg-red-200 disabled:opacity-50"
-                                  disabled={manageLoading}
-                                  title="削除"
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                </button>
-                              </div>
-                            </div>
-                          </li>
-                        ))}
-                      </ul>
-                    )}
+                <div className="mt-6 space-y-4">
+                  <div className="rounded-xl bg-blue-50 p-4 border border-blue-200">
+                    <p className="text-sm text-blue-800 font-medium">📝 クイズ情報</p>
+                    <p className="text-xs text-blue-700 mt-2">
+                      結婚式で使用するクイズは固定されています。以下の順番で出題されます。
+                    </p>
                   </div>
+
                   <div className="space-y-2">
-                    <h3 className="text-sm font-semibold text-brand-blue-700">共通テンプレート</h3>
-                    {templates.length === 0 ? (
-                      <p className="text-sm text-brand-blue-700/70">共通テンプレートはまだありません。</p>
-                    ) : (
-                      <ul className="space-y-2">
-                        {templates.map((template) => (
-                          <li key={template.id} className="rounded-xl bg-blue-50/85 px-4 py-3 text-sm shadow-brand border border-brand-blue-200">
-                            <div className="flex items-start justify-between gap-2">
-                              <div className="flex-1">
-                                <p className="font-semibold text-brand-blue-700">{template.question}</p>
-                                <p className="text-xs text-brand-blue-700/60">
-                                  表示順: {template.ord ?? '-'} / 登録日: {new Date(template.created_at).toLocaleString('ja-JP')}
-                                </p>
+                    <h3 className="text-sm font-semibold text-brand-blue-700">クイズ一覧</h3>
+                    <ul className="space-y-2">
+                      {WEDDING_QUIZZES.map((quiz) => (
+                        <li key={quiz.id} className="rounded-xl bg-white/85 px-4 py-3 shadow-sm border border-brand-blue-200">
+                          <div className="flex items-start gap-3">
+                            <span className="flex-shrink-0 flex h-8 w-8 items-center justify-center rounded-full bg-brand-blue-100 text-sm font-bold text-brand-blue-700">
+                              {quiz.ord}
+                            </span>
+                            <div className="flex-1">
+                              <p className="font-semibold text-brand-blue-700 text-sm">{quiz.question}</p>
+                              <div className="mt-2 grid grid-cols-2 gap-2 text-xs">
+                                {quiz.choices.map((choice, idx) => (
+                                  <div
+                                    key={idx}
+                                    className={`px-2 py-1 rounded ${
+                                      idx === quiz.answerIndex
+                                        ? 'bg-green-100 text-green-800 font-semibold'
+                                        : 'bg-gray-50 text-gray-700'
+                                    }`}
+                                  >
+                                    {String.fromCharCode(65 + idx)}. {choice}
+                                  </div>
+                                ))}
                               </div>
-                              <div className="flex gap-1">
-                                <button
-                                  onClick={() => void handleCopyTemplate(template.id)}
-                                  className="rounded-lg bg-green-100 p-2 text-green-700 hover:bg-green-200 disabled:opacity-50"
-                                  disabled={manageLoading}
-                                  title="このルームにコピー"
-                                >
-                                  <Copy className="h-4 w-4" />
-                                </button>
-                                <button
-                                  onClick={() => handleEditQuiz(template)}
-                                  className="rounded-lg bg-brand-blue-100 p-2 text-brand-blue-700 hover:bg-brand-blue-200 disabled:opacity-50"
-                                  disabled={manageLoading || editingQuizId === template.id}
-                                  title="編集"
-                                >
-                                  <Edit className="h-4 w-4" />
-                                </button>
-                              </div>
+                              {quiz.imageUrl && (
+                                <p className="text-xs text-brand-blue-600 mt-2">🖼️ 画像: {quiz.imageUrl}</p>
+                              )}
+                              {quiz.isBuzzer && (
+                                <p className="text-xs text-terra-clay font-semibold mt-1">⚡ 早押しクイズ</p>
+                              )}
                             </div>
-                          </li>
-                        ))}
-                      </ul>
-                    )}
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
                   </div>
                 </div>
               ) : manageTab === 'lottery' ? (
@@ -1702,20 +1291,6 @@ type ConfirmState = {
   onConfirm: () => void;
 };
 
-function StatusItem({ label, value, icon: Icon }: { label: string; value: string; icon: LucideIcon }) {
-  return (
-    <div className="flex items-center gap-4 rounded-xl glass-panel p-4 border border-slate-200">
-      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-blue-500 shadow-md">
-        <Icon className="h-6 w-6 text-white" />
-      </div>
-      <div className="min-w-0">
-        <p className="text-xs font-semibold uppercase tracking-wider text-ink/70">{label}</p>
-        <p className="mt-1 text-xl font-bold text-ink">{value}</p>
-      </div>
-    </div>
-  );
-}
-
 type AdminCardProps = {
   title: string;
   description?: string;
@@ -1762,18 +1337,6 @@ function AdminButton({ variant = 'primary', icon: Icon, className = '', children
   );
 }
 
-function TabButton({ label, active, onClick }: { label: string; active: boolean; onClick: () => void }) {
-  return (
-    <button
-      type="button"
-      className={`rounded-lg px-6 py-2.5 text-sm font-semibold transition-all ${active ? 'bg-white shadow-md text-ink' : 'text-ink/80 hover:text-ink'}`}
-      onClick={onClick}
-    >
-      {label}
-    </button>
-  );
-}
-
 function LogsList({ logs }: { logs: Array<{ id: number; action: string; created_at: string; payload?: Record<string, unknown> }> }) {
   if (logs.length === 0) {
     return <p className="text-sm text-brand-blue-700/80">ログはまだありません。</p>;
@@ -1791,29 +1354,6 @@ function LogsList({ logs }: { logs: Array<{ id: number; action: string; created_
               {JSON.stringify(log.payload, null, 2)}
             </pre>
           )}
-        </li>
-      ))}
-    </ul>
-  );
-}
-
-function LotteryList({
-  entries
-}: {
-  entries: Array<{ kind: string; created_at: string; players?: { display_name: string; table_no?: string | null; seat_no?: string | null } }>;
-}) {
-  if (entries.length === 0) {
-    return <p className="text-sm text-brand-blue-700/80">抽選はまだ行われていません。</p>;
-  }
-  return (
-    <ul className="space-y-3 text-sm text-brand-blue-700">
-      {entries.map((entry, index) => (
-        <li key={`${entry.kind}-${index}`} className="rounded-xl bg-brand-terra-50 p-4 shadow-brand">
-          <div className="flex items-center justify-between">
-            <span className="font-semibold text-brand-terra-600">{lotteryKindLabel(entry.kind)}</span>
-            <span className="text-xs text-brand-blue-700/60">{new Date(entry.created_at).toLocaleString()}</span>
-          </div>
-          <p className="mt-2 text-lg font-semibold text-ink">{entry.players?.display_name ?? '未登録'}</p>
         </li>
       ))}
     </ul>
