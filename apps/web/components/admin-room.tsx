@@ -1460,7 +1460,7 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
                     )}
                   </div>
                 </div>
-              ) : (
+              ) : manageTab === 'lottery' ? (
                 <div className="mt-6 space-y-6">
                   <form
                     className="space-y-4"

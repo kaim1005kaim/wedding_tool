@@ -12,9 +12,16 @@ export async function GET(req: NextRequest, props: { params: Promise<{ roomId: s
   }
 
   const token = authHeader.replace('Bearer ', '');
-  const valid = await verifyAdminToken(token, roomId);
-  if (!valid) {
+
+  let payload;
+  try {
+    payload = await verifyAdminToken(token);
+  } catch (error) {
     return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
+  }
+
+  if (payload.roomId !== roomId) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
 
   try {
@@ -46,9 +53,16 @@ export async function POST(req: NextRequest, props: { params: Promise<{ roomId: 
   }
 
   const token = authHeader.replace('Bearer ', '');
-  const valid = await verifyAdminToken(token, roomId);
-  if (!valid) {
+
+  let payload;
+  try {
+    payload = await verifyAdminToken(token);
+  } catch (error) {
     return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
+  }
+
+  if (payload.roomId !== roomId) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
 
   try {

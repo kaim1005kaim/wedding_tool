@@ -167,7 +167,7 @@ export default function ProjectorView({ roomId: _roomId }: { roomId: string }) {
     >
       <div className="relative w-full h-screen flex flex-col z-10" role="region" aria-label="ゲーム表示エリア">
         <div className="flex-1 overflow-hidden">
-          <AnimatePresence mode="wait">{renderSection(mode, phase, localCountdownMs, topTen, activeQuiz, quizResult, lotteryResult, isSpinning, lotteryKey)}</AnimatePresence>
+          <AnimatePresence mode="wait">{renderSection(mode, phase, localCountdownMs, topTen, activeQuiz, quizResult, lotteryResult, isSpinning, lotteryKey, representatives)}</AnimatePresence>
         </div>
       </div>
 
@@ -201,13 +201,14 @@ function renderSection(
   quizResult: RoomStoreState['quizResult'],
   lotteryResult: RoomStoreState['lotteryResult'],
   isSpinning: boolean,
-  lotteryKey: number
+  lotteryKey: number,
+  representatives: RoomStoreState['representatives']
 ) {
   switch (mode) {
     case 'countup':
       return <CountupBoard key="countup" entries={leaderboard} phase={phase} countdownMs={countdownMs} />;
     case 'quiz':
-      return <QuizBoard key={`quiz-${quizResult?.quizId ?? activeQuiz?.quizId ?? 'waiting'}`} activeQuiz={activeQuiz} quizResult={quizResult} leaderboard={leaderboard} phase={phase} />;
+      return <QuizBoard key={`quiz-${quizResult?.quizId ?? activeQuiz?.quizId ?? 'waiting'}`} activeQuiz={activeQuiz} quizResult={quizResult} leaderboard={leaderboard} phase={phase} representatives={representatives} />;
     /* 抽選モード非表示
     case 'lottery':
       return <LotteryBoard key={lotteryKey} lotteryResult={lotteryResult} isSpinning={isSpinning} leaderboard={leaderboard} />;
@@ -536,9 +537,10 @@ type QuizPanelProps = {
   quizResult: RoomStoreState['quizResult'];
   leaderboard: LeaderboardEntry[];
   phase: 'idle' | 'running' | 'ended';
+  representatives: RoomStoreState['representatives'];
 };
 
-const QuizBoard = memo(function QuizBoard({ activeQuiz, quizResult, leaderboard, phase }: QuizPanelProps) {
+const QuizBoard = memo(function QuizBoard({ activeQuiz, quizResult, leaderboard, phase, representatives }: QuizPanelProps) {
   const counts = quizResult?.perChoiceCounts ?? [0, 0, 0, 0];
   const correctIndex = quizResult?.correctIndex ?? -1;
   const [showPodium, setShowPodium] = useState(false);

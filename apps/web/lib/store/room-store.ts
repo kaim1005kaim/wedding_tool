@@ -86,7 +86,8 @@ export const useRoomStore = create<RoomStoreState & RoomStoreActions>((set) => (
       })),
       activeQuiz: payload.activeQuiz ?? null,
       quizResult: payload.quizResult ?? null,
-      lotteryResult: payload.lotteryResult ?? null
+      lotteryResult: payload.lotteryResult ?? null,
+      representatives: payload.representatives ?? []
     }),
   setActiveQuiz: (payload) => set({ activeQuiz: payload, quizResult: null }),
   setQuizResult: (payload) => set({ quizResult: payload }),

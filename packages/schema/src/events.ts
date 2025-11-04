@@ -78,7 +78,13 @@ export const stateUpdateBroadcastSchema = z.object({
   ),
   activeQuiz: quizShowBroadcastSchema.nullable().optional(),
   quizResult: quizResultBroadcastSchema.nullable().optional(),
-  lotteryResult: lotteryResultBroadcastSchema.nullable().optional()
+  lotteryResult: lotteryResultBroadcastSchema.nullable().optional(),
+  representatives: z.array(
+    z.object({
+      tableNo: z.string(),
+      name: z.string()
+    })
+  ).optional()
 });
 
 export const realtimePayloads = {
