@@ -354,18 +354,18 @@ const CountupBoard = memo(function CountupBoard({
         </div>
       )}
 
-      {phase === 'ended' && (
+      {/* 終了時のタイトルと演出 */}
+      {phase === 'ended' && !showPodium && (
         <motion.div
-          className="text-center py-6"
+          className="text-center py-8"
           initial={{ scale: 0.8, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
+          exit={{ scale: 0.8, opacity: 0 }}
           transition={{ type: 'spring', bounce: 0.5 }}
         >
           <p className="font-bold text-terra-clay" style={{ fontSize: '8rem', lineHeight: 1 }}>結果発表！</p>
         </motion.div>
       )}
-
-      {/* Running時はランキング非表示（盛り上げに集中） */}
 
       {/* 終了時の演出: スクロール（下から上へ、下位から上位）- TOP3のみ */}
       {phase === 'ended' && top3.length > 0 && !showTOP3 && (
