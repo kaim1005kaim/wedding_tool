@@ -569,24 +569,22 @@ function CountupOverlay({ phase, countdownMs, leaderboard, onTap, registeredName
   // クライアント側でカウントダウンを管理
   useEffect(() => {
     if (phase === 'running' && isTimerRunning && localCountdown === null) {
-      // 新しいカウントダウン開始
-      if (countdownStartTimeRef.current === null) {
-        countdownStartTimeRef.current = Date.now();
-        initialCountdownRef.current = countdownMs;
-        setLocalCountdownMs(countdownMs);
-      }
+      // 新しいカウントダウン開始時にリセット
+      countdownStartTimeRef.current = Date.now();
+      initialCountdownRef.current = countdownMs;
+      setLocalCountdownMs(10100); // 10.1秒から開始して、確実に10が表示されるようにする
 
       const interval = setInterval(() => {
         const elapsed = Date.now() - (countdownStartTimeRef.current ?? 0);
         const PREPARATION_TIME_MS = 3000;
 
-        // 準備期間中（最初の3秒）は10秒で固定
+        // 準備期間中（最初の3秒）は10.1秒で固定
         if (elapsed < PREPARATION_TIME_MS) {
-          setLocalCountdownMs(10000);
+          setLocalCountdownMs(10100);
         } else {
           // 準備期間後、10秒からカウントダウン開始
           const tapTimeElapsed = elapsed - PREPARATION_TIME_MS;
-          const remaining = Math.max(0, 10000 - tapTimeElapsed);
+          const remaining = Math.max(0, 10100 - tapTimeElapsed);
           setLocalCountdownMs(remaining);
 
           if (remaining <= 0) {

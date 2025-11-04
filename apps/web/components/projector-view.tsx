@@ -34,24 +34,22 @@ export default function ProjectorView({ roomId: _roomId }: { roomId: string }) {
   // クライアント側でカウントダウンを管理
   useEffect(() => {
     if (phase === 'running' && mode === 'countup') {
-      // 新しいカウントダウン開始
-      if (countdownStartTimeRef.current === null) {
-        countdownStartTimeRef.current = Date.now();
-        initialCountdownRef.current = countdownMs;
-        setLocalCountdownMs(countdownMs);
-      }
+      // 新しいカウントダウン開始時にリセット
+      countdownStartTimeRef.current = Date.now();
+      initialCountdownRef.current = countdownMs;
+      setLocalCountdownMs(10100); // 10.1秒から開始して、確実に10が表示されるようにする
 
       const interval = setInterval(() => {
         const elapsed = Date.now() - (countdownStartTimeRef.current ?? 0);
         const PREPARATION_TIME_MS = 3000;
 
-        // 準備期間中（最初の3秒）は10秒で固定
+        // 準備期間中（最初の3秒）は10.1秒で固定
         if (elapsed < PREPARATION_TIME_MS) {
-          setLocalCountdownMs(10000);
+          setLocalCountdownMs(10100);
         } else {
           // 準備期間後、10秒からカウントダウン開始
           const tapTimeElapsed = elapsed - PREPARATION_TIME_MS;
-          const remaining = Math.max(0, 10000 - tapTimeElapsed);
+          const remaining = Math.max(0, 10100 - tapTimeElapsed);
           setLocalCountdownMs(remaining);
 
           if (remaining <= 0) {
@@ -323,7 +321,7 @@ const CountupBoard = memo(function CountupBoard({
                 START!
               </p>
             </motion.div>
-          ) : (
+          ) : timeLeftSeconds > 0 ? (
             // タップ時間カウントダウン: 10-9-8-...-1
             <motion.p
               className="font-black text-ink"
@@ -333,6 +331,20 @@ const CountupBoard = memo(function CountupBoard({
             >
               {timeLeftSeconds}
             </motion.p>
+          ) : (
+            // 0秒: タイムアップ表示
+            <motion.div
+              initial={{ scale: 0.5, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ duration: 0.5, ease: 'easeOut' }}
+              className="flex flex-col items-center justify-center gap-8"
+            >
+              <p className="text-8xl">⏰</p>
+              <p className="font-black text-terra-clay" style={{ fontSize: '12rem', lineHeight: 1 }}>
+                TIME UP!
+              </p>
+              <p className="text-5xl font-bold text-ink/80">結果発表 ✨</p>
+            </motion.div>
           )}
         </div>
       )}
