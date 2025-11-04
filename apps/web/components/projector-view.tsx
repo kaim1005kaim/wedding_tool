@@ -612,6 +612,7 @@ const QuizBoard = memo(function QuizBoard({ activeQuiz, quizResult, leaderboard,
   const counts = quizResult?.perChoiceCounts ?? [0, 0, 0, 0];
   const correctIndex = quizResult?.correctIndex ?? -1;
   const [showPodium, setShowPodium] = useState(false);
+  const [timeLeft, setTimeLeft] = useState<number | null>(null);
 
   // Get quiz leaderboard sorted by quizPoints
   const quizLeaderboard = leaderboard
@@ -629,6 +630,21 @@ const QuizBoard = memo(function QuizBoard({ activeQuiz, quizResult, leaderboard,
       displayName: entry.displayName,
       quizPoints: entry.quizPoints
     }));
+
+  // クイズタイマー管理
+  useEffect(() => {
+    if (activeQuiz && !quizResult && activeQuiz.deadlineTs) {
+      const interval = setInterval(() => {
+        const now = Date.now();
+        const remaining = Math.max(0, Math.ceil((activeQuiz.deadlineTs - now) / 1000));
+        setTimeLeft(remaining);
+      }, 100);
+
+      return () => clearInterval(interval);
+    } else {
+      setTimeLeft(null);
+    }
+  }, [activeQuiz, quizResult]);
 
   // showRankingフラグでランキング表示を制御（クイズも同様）
   useEffect(() => {
@@ -729,6 +745,55 @@ const QuizBoard = memo(function QuizBoard({ activeQuiz, quizResult, leaderboard,
                 </motion.div>
               ))}
             </motion.div>
+          </motion.div>
+        </motion.section>
+      );
+    }
+
+    // 早押しクイズ優勝者表示（1位のみの場合）
+    if (top3.length === 1 && quizResult) {
+      const winner = top3[0];
+      return (
+        <motion.section
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.9 }}
+          transition={{ duration: 0.6, ease: 'easeOut' }}
+          className="flex h-full flex-col items-center justify-center gap-12"
+          role="region"
+          aria-label="早押しクイズ優勝者"
+        >
+          <motion.div
+            initial={{ y: -50, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.3, type: 'spring', bounce: 0.5 }}
+          >
+            <p className="font-black text-terra-clay text-center" style={{ fontSize: '10rem', lineHeight: 1 }}>
+              優勝！
+            </p>
+          </motion.div>
+
+          <motion.div
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ delay: 0.6, type: 'spring', bounce: 0.4 }}
+            className="glass-panel-strong rounded-3xl p-16 shadow-2xl border-4 border-yellow-400 ring-8 ring-yellow-300/50 bg-gradient-to-br from-yellow-50/40 to-orange-50/40"
+          >
+            <motion.div
+              animate={{ rotate: [0, -15, 15, -15, 0], scale: [1, 1.2, 1] }}
+              transition={{ duration: 0.8, delay: 0.9, repeat: Infinity, repeatDelay: 2 }}
+              className="text-9xl text-center mb-6"
+            >
+              🏆
+            </motion.div>
+            {winner.tableNo && (
+              <p className="text-5xl font-black text-ink text-center mb-4">
+                {winner.tableNo}
+              </p>
+            )}
+            <p className="text-6xl font-black text-terra-clay text-center">
+              {winner.displayName}
+            </p>
           </motion.div>
         </motion.section>
       );
@@ -913,10 +978,23 @@ const QuizBoard = memo(function QuizBoard({ activeQuiz, quizResult, leaderboard,
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -30 }}
       transition={{ duration: 0.5, ease: 'easeOut' }}
-      className="flex h-full flex-col gap-6 rounded-2xl p-12"
+      className="flex h-full flex-col gap-6 rounded-2xl p-12 relative"
       role="region"
       aria-label="クイズ表示"
     >
+      {/* Timer - Top Right */}
+      {timeLeft !== null && !quizResult && (
+        <motion.div
+          initial={{ scale: 0.8, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          className="absolute top-8 right-8 glass-panel-strong px-6 py-4 rounded-2xl shadow-xl border-2 border-white/30"
+        >
+          <p className={`text-5xl font-black ${timeLeft <= 5 ? 'text-red-500' : 'text-terra-clay'}`}>
+            {timeLeft}秒
+          </p>
+        </motion.div>
+      )}
+
       {/* Quiz Number - Always show */}
       {activeQuiz?.ord && (
         <div className="text-center">

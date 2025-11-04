@@ -499,7 +499,7 @@ function JoinModal({ visible, tableNo, displayName, onTableNoChange, onDisplayNa
 }
 
 type CountupOverlayProps = {
-  phase: 'idle' | 'running' | 'ended';
+  phase: 'idle' | 'running' | 'ended' | 'celebrating';
   countdownMs: number;
   leaderboard: LeaderboardEntry[];
   onTap: () => Promise<void> | void;
