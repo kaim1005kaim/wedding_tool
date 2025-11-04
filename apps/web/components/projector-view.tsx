@@ -22,6 +22,11 @@ export default function ProjectorView({ roomId: _roomId }: { roomId: string }) {
   const showRanking = useRoomStore((state) => state.showRanking);
   const showCelebration = useRoomStore((state) => state.showCelebration);
 
+  // Debug: Log state changes
+  useEffect(() => {
+    console.log('[Projector] State update:', { mode, phase, showRanking, showCelebration });
+  }, [mode, phase, showRanking, showCelebration]);
+
   const topTen = useMemo(() => leaderboard.slice(0, 10), [leaderboard]);
   const [lotteryKey, setLotteryKey] = useState(0);
   const [isSpinning, setIsSpinning] = useState(false);
