@@ -117,6 +117,9 @@ export async function showRanking(roomId: string) {
     // ONにする: ランキングを表示
     await upsertRoomSnapshot(roomId, { show_ranking: true, show_celebration: false });
     await appendAuditLog(roomId, 'game:showRanking', {});
+
+    // Supabaseリアルタイムをトリガーするために、room_snapshotsのupdated_atを更新
+    await updateSnapshotLeaderboard(roomId);
   }
 }
 
