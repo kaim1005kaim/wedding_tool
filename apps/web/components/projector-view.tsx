@@ -41,14 +41,19 @@ export default function ProjectorView({ roomId: _roomId }: { roomId: string }) {
 
       const interval = setInterval(() => {
         const elapsed = Date.now() - (countdownStartTimeRef.current ?? 0);
-        const PREPARATION_TIME_MS = 3000;
+        const PREPARATION_TIME_MS = 3000; // 3秒の準備時間
 
-        // 準備期間中（最初の3秒）は10.1秒で固定
+        // 準備期間中（3秒）は準備カウントダウン表示用に13100ms固定
         if (elapsed < PREPARATION_TIME_MS) {
-          setLocalCountdownMs(10100);
+          // 13100, 12100, 11100 → 表示時に -10 して 3, 2, 1
+          const prepRemaining = PREPARATION_TIME_MS - elapsed;
+          setLocalCountdownMs(10000 + prepRemaining + 100);
+        } else if (elapsed < PREPARATION_TIME_MS + 1000) {
+          // START!表示期間（1秒）: 10000msで固定
+          setLocalCountdownMs(10000);
         } else {
-          // 準備期間後、10秒からカウントダウン開始
-          const tapTimeElapsed = elapsed - PREPARATION_TIME_MS;
+          // タップ時間カウントダウン開始
+          const tapTimeElapsed = elapsed - PREPARATION_TIME_MS - 1000;
           const remaining = Math.max(0, 10100 - tapTimeElapsed);
           setLocalCountdownMs(remaining);
 
@@ -298,23 +303,23 @@ const CountupBoard = memo(function CountupBoard({
           {timeLeftSeconds > 10 ? (
             // 準備カウントダウン: 3-2-1
             <motion.p
-              key={timeLeftSeconds}
+              key={timeLeftSeconds - 10}
               initial={{ scale: 0.5, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 1.5, opacity: 0 }}
-              transition={{ duration: 0.5, ease: 'easeOut' }}
+              transition={{ duration: 0.3, ease: 'easeOut' }}
               className="font-black text-ink"
               style={{ fontSize: '20rem', lineHeight: 1 }}
             >
               {timeLeftSeconds - 10}
             </motion.p>
           ) : timeLeftSeconds === 10 ? (
-            // START!表示
+            // START!表示（1秒間）
             <motion.div
               initial={{ scale: 0.5, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 1.2, opacity: 0 }}
-              transition={{ duration: 0.5, ease: 'easeOut' }}
+              transition={{ duration: 0.3, ease: 'easeOut' }}
               className="flex items-center justify-center"
             >
               <p className="font-black text-terra-clay" style={{ fontSize: '20rem', lineHeight: 1 }}>
@@ -332,7 +337,7 @@ const CountupBoard = memo(function CountupBoard({
               {timeLeftSeconds}
             </motion.p>
           ) : (
-            // 0秒: タイムアップ表示
+            // 0秒: タイムアップ表示（ゲーム終了ボタンを押すまで表示）
             <motion.div
               initial={{ scale: 0.5, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
@@ -343,7 +348,7 @@ const CountupBoard = memo(function CountupBoard({
               <p className="font-black text-terra-clay" style={{ fontSize: '12rem', lineHeight: 1 }}>
                 TIME UP!
               </p>
-              <p className="text-5xl font-bold text-ink/80">結果発表 ✨</p>
+              <p className="text-5xl font-bold text-ink/80">管理画面で「ゲーム終了」を押してください</p>
             </motion.div>
           )}
         </div>
