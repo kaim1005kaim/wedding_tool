@@ -3,7 +3,7 @@ import { lotteryResultBroadcastSchema } from './events';
 export { z };
 
 export const roomModeSchema = z.enum(['idle', 'countup', 'quiz', 'buzzer', 'lottery']);
-export const roomPhaseSchema = z.enum(['idle', 'running', 'ended']);
+export const roomPhaseSchema = z.enum(['idle', 'running', 'ended', 'celebrating']);
 
 export const playerSchema = z.object({
   id: z.string().uuid(),
@@ -69,6 +69,8 @@ export const roomSnapshotSchema = z.object({
     .nullable()
     .optional(),
   lottery_result: lotteryResultBroadcastSchema.nullable().optional(),
+  show_ranking: z.boolean().optional().default(false),
+  show_celebration: z.boolean().optional().default(false),
   updated_at: z.union([z.string().datetime(), z.string()]).optional()
 });
 
