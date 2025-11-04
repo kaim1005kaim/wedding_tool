@@ -382,7 +382,7 @@ const CountupBoard = memo(function CountupBoard({
                 START!
               </p>
             </motion.div>
-          ) : (
+          ) : timeLeftSeconds > 0 ? (
             // タップ時間カウントダウン: 10-9-8-...-1
             <motion.p
               className="font-black text-ink"
@@ -391,6 +391,17 @@ const CountupBoard = memo(function CountupBoard({
               transition={{ duration: 0.5, repeat: timeLeftSeconds <= 5 ? Infinity : 0 }}
             >
               {timeLeftSeconds}
+            </motion.p>
+          ) : (
+            // 0秒: STOP!表示（0は表示せず、すぐSTOP!）
+            <motion.p
+              initial={{ scale: 0.5, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ duration: 0.3, ease: 'easeOut' }}
+              className="font-black text-terra-clay"
+              style={{ fontSize: '20rem', lineHeight: 1 }}
+            >
+              STOP!
             </motion.p>
           )}
         </div>

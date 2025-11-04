@@ -95,6 +95,13 @@ export async function showRanking(roomId: string) {
   const snapshot = await fetchRoomSnapshot(roomId);
   const isCurrentlyShowingRanking = snapshot?.show_ranking === true;
 
+  console.log('[showRanking]', {
+    roomId,
+    currentSnapshot: snapshot,
+    isCurrentlyShowingRanking,
+    willToggleTo: isCurrentlyShowingRanking ? 'idle' : 'ranking'
+  });
+
   if (isCurrentlyShowingRanking) {
     // OFFにする: 待機モード(idle)に遷移
     const client = getSupabaseServiceRoleClient();
