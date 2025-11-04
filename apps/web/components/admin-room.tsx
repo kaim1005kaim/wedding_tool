@@ -26,6 +26,7 @@ import { useRoomStore } from '../lib/store/room-store';
 import { appConfig } from '../lib/env';
 import { Section, PrimaryButton } from './brand';
 import type { LucideIcon } from 'lucide-react';
+import { WEDDING_QUIZZES } from '../lib/hardcoded-quizzes';
 
 type QuizSummary = {
   id: string;
