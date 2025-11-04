@@ -1905,23 +1905,27 @@ function labelForMode(mode: string) {
   }
 }
 
-function phaseColor(phase: 'idle' | 'running' | 'ended') {
+function phaseColor(phase: 'idle' | 'running' | 'ended' | 'celebrating') {
   switch (phase) {
     case 'running':
       return 'text-green-600';
     case 'ended':
       return 'text-blue-600';
+    case 'celebrating':
+      return 'text-yellow-600';
     default:
       return 'text-ink/70';
   }
 }
 
-function phaseLabel(phase: 'idle' | 'running' | 'ended') {
+function phaseLabel(phase: 'idle' | 'running' | 'ended' | 'celebrating') {
   switch (phase) {
     case 'running':
       return '進行中';
     case 'ended':
       return '終了';
+    case 'celebrating':
+      return '表彰中';
     default:
       return '待機';
   }
