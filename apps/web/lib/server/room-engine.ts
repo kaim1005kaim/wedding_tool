@@ -351,13 +351,31 @@ export async function revealQuiz(roomId: string, quizId: string, awardedPoints =
     throw awardError;
   }
 
+  // Count answers per choice
+  const perChoiceCounts = [0, 0, 0, 0];
+  if (answers) {
+    for (const answer of answers) {
+      if (answer.choice_index >= 0 && answer.choice_index < 4) {
+        perChoiceCounts[answer.choice_index]++;
+      }
+    }
+  }
+
+  // Get awarded players info
+  const awardedPlayers = answers
+    ? answers
+        .filter((a) => a.choice_index === quiz.answerIndex)
+        .map((a) => ({ playerId: a.player_id, delta: awardedPoints, answeredAt: a.answered_at }))
+    : [];
+
   // Update room snapshot with quiz result
   await recomputeLeaderboard(roomId);
   await upsertRoomSnapshot(roomId, {
     quiz_result: {
       quizId,
-      correctAnswerIndex: quiz.answerIndex,
-      revealedAt: Date.now()
+      correctIndex: quiz.answerIndex,
+      perChoiceCounts,
+      awarded: awardedPlayers
     }
   });
 
