@@ -823,8 +823,8 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
                     return;
                   }
 
-                  // 早押しクイズ開始
-                  const deadlineMs = quizSettings.enableTimeLimit ? quizSettings.quizDurationSeconds * 1000 : undefined;
+                  // 早押しクイズ開始（制限時間10秒固定）
+                  const deadlineMs = 10_000; // 10秒
                   void send({ type: 'quiz:next', payload: undefined }, {
                     deadlineMs,
                     representativeByTable: quizSettings.representativeByTable,

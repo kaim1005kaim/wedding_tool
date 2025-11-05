@@ -1219,7 +1219,7 @@ const QuizBoard = memo(function QuizBoard({ activeQuiz, quizResult, leaderboard,
       {activeQuiz?.ord && (
         <div className="text-center">
           <h2 className="text-4xl font-bold text-ink glass-panel-strong px-8 py-3 rounded-2xl inline-block shadow-lg border border-white/30">
-            第{activeQuiz.ord}問{quizResult ? ' - 正解発表' : ''}
+            {activeQuiz.ord === 6 ? '⚡ 最終問題 - 早押しクイズ' : `第${activeQuiz.ord}問`}{quizResult ? ' - 正解発表' : ''}
           </h2>
         </div>
       )}
