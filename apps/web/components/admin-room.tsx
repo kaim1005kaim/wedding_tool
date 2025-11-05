@@ -741,13 +741,7 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
                 }}
                 className="w-full"
               >
-                {(() => {
-                  if (quizResult) return '次のクイズへ';
-                  if (activeQuiz) return 'クイズ開始';
-                  // Check if any quiz has been revealed (ord > 0 means we've started)
-                  const hasStarted = quizResult?.quizId || activeQuiz?.ord;
-                  return hasStarted ? '次のクイズへ' : 'クイズ開始';
-                })()}
+                {quizResult ? '次のクイズへ' : 'クイズ開始'}
               </AdminButton>
               <AdminButton
                 variant="danger"
