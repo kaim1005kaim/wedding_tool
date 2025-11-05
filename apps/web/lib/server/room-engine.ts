@@ -310,11 +310,16 @@ export async function showNextQuiz(
 export async function revealQuiz(roomId: string, quizId: string, awardedPoints = 10) {
   const client = getSupabaseServiceRoleClient();
 
+  console.log('[revealQuiz] Starting:', { roomId, quizId, awardedPoints });
+
   // Get the correct answer from hardcoded quizzes
   const quiz = WEDDING_QUIZZES.find((q) => q.id === quizId);
   if (!quiz) {
+    console.error('[revealQuiz] Quiz not found:', quizId);
     throw new Error('Quiz not found');
   }
+
+  console.log('[revealQuiz] Found quiz:', { quizId, answerIndex: quiz.answerIndex });
 
   // Get all answers for this quiz
   const { data: answers, error: answersError } = await client
@@ -324,8 +329,11 @@ export async function revealQuiz(roomId: string, quizId: string, awardedPoints =
     .eq('quiz_id', quizId);
 
   if (answersError) {
+    console.error('[revealQuiz] Error fetching answers:', answersError);
     throw answersError;
   }
+
+  console.log('[revealQuiz] Answers fetched:', { count: answers?.length ?? 0 });
 
   // Award points to correct answers
   if (answers && answers.length > 0) {
@@ -373,10 +381,19 @@ export async function revealQuiz(roomId: string, quizId: string, awardedPoints =
   // Fetch player details for awarded players
   const awardedPlayers = [];
   if (awardedPlayerIds.length > 0) {
-    const { data: players } = await client
+    console.log('[revealQuiz] Fetching player details for:', awardedPlayerIds);
+
+    const { data: players, error: playersError } = await client
       .from('players')
       .select('id, display_name, table_no')
       .in('id', awardedPlayerIds);
+
+    if (playersError) {
+      console.error('[revealQuiz] Error fetching players:', playersError);
+      throw playersError;
+    }
+
+    console.log('[revealQuiz] Players fetched:', { count: players?.length ?? 0 });
 
     if (players) {
       for (const player of players) {
@@ -396,6 +413,13 @@ export async function revealQuiz(roomId: string, quizId: string, awardedPoints =
     }
   }
 
+  console.log('[revealQuiz] Creating quiz result:', {
+    quizId,
+    correctIndex: quiz.answerIndex,
+    perChoiceCounts,
+    awardedCount: awardedPlayers.length
+  });
+
   // Update room snapshot with quiz result
   await recomputeLeaderboard(roomId);
   await upsertRoomSnapshot(roomId, {
@@ -406,6 +430,8 @@ export async function revealQuiz(roomId: string, quizId: string, awardedPoints =
       awarded: awardedPlayers
     }
   });
+
+  console.log('[revealQuiz] Successfully revealed quiz');
 
   // Keep current_quiz visible - it will be cleared when next quiz starts
   // await upsertRoomSnapshot(roomId, { current_quiz: null });
