@@ -92,45 +92,29 @@ export async function stopGame(roomId: string) {
 export async function showRanking(roomId: string) {
   await ensureRoomSnapshot(roomId);
 
-  // 現在の状態を取得（最新の状態を確実に取得）
   const snapshot = await fetchRoomSnapshot(roomId);
-  const isCurrentlyShowingRanking = snapshot?.show_ranking === true;
 
-  console.log('[showRanking]', {
+  console.log('[showRanking] Force enabling ranking display:', {
     roomId,
-    currentSnapshot: snapshot,
-    isCurrentlyShowingRanking,
-    willToggleTo: isCurrentlyShowingRanking ? 'idle' : 'ranking'
+    currentSnapshot: snapshot
   });
 
-  const client = getSupabaseServiceRoleClient();
+  // 常にランキング表示をONにする（トグル動作を廃止）
+  await upsertRoomSnapshot(roomId, {
+    show_ranking: true,
+    show_celebration: false
+  });
+  await appendAuditLog(roomId, 'game:showRanking', {});
 
-  if (isCurrentlyShowingRanking) {
-    // OFFにする: 待機モード(idle)に遷移
-    await client.from('rooms').update({ mode: 'idle', phase: 'idle' }).eq('id', roomId);
-    await upsertRoomSnapshot(roomId, {
-      mode: 'idle',
-      phase: 'idle',
-      show_ranking: false,
-      show_celebration: false
-    });
-    await appendAuditLog(roomId, 'game:hideRanking', {});
-  } else {
-    // ONにする: ランキングを表示
-    // modeとphaseはそのまま維持し、show_rankingのみ変更
-    await upsertRoomSnapshot(roomId, { show_ranking: true, show_celebration: false });
-    await appendAuditLog(roomId, 'game:showRanking', {});
-
-    // Supabaseリアルタイムをトリガーするために、room_snapshotsのupdated_atを更新
-    await recomputeLeaderboard(roomId);
-  }
+  // Supabaseリアルタイムをトリガーするために、room_snapshotsのupdated_atを更新
+  await recomputeLeaderboard(roomId);
 
   // 更新後の状態を返す
   const updatedSnapshot = await fetchRoomSnapshot(roomId);
   return {
-    showRanking: updatedSnapshot?.show_ranking ?? false,
-    mode: updatedSnapshot?.mode ?? 'idle',
-    phase: updatedSnapshot?.phase ?? 'idle'
+    showRanking: true,
+    mode: updatedSnapshot?.mode ?? 'quiz',
+    phase: updatedSnapshot?.phase ?? 'running'
   };
 }
 
@@ -512,7 +496,8 @@ export async function revealQuiz(roomId: string, quizId: string, awardedPoints =
   console.log('[revealQuiz] About to save quiz_result to snapshot:', JSON.stringify(quizResultData));
 
   await upsertRoomSnapshot(roomId, {
-    quiz_result: quizResultData
+    quiz_result: quizResultData,
+    show_ranking: false  // 正解公開時にランキング表示をOFFにする
   });
 
   console.log('[revealQuiz] Successfully revealed quiz and saved snapshot');
