@@ -62,7 +62,7 @@ export const roomSnapshotSchema = z.object({
           delta: z.number().int(),
           displayName: z.string().optional(),
           tableNo: z.string().nullable().optional(),
-          latencyMs: z.number().int().nonnegative().nullable().optional()
+          latencyMs: z.number().int().nullable().optional() // Remove nonnegative() to handle legacy data
         })
       )
     })
