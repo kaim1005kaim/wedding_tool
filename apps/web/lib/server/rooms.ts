@@ -158,6 +158,7 @@ export async function ensureRoomSnapshot(roomId: string): Promise<RoomSnapshot> 
 export type LeaderboardEntryInput = {
   playerId: string;
   name: string;
+  tableNo?: string | null;
   points: number;
   quizPoints?: number;
   countupTapCount?: number;
@@ -169,6 +170,7 @@ export async function updateSnapshotLeaderboard(roomId: string, entries: Leaderb
     leaderboard: entries.map((entry, index) => ({
       playerId: entry.playerId,
       name: entry.name,
+      tableNo: entry.tableNo ?? null,
       points: entry.points,
       quizPoints: entry.quizPoints ?? 0,
       countupTapCount: entry.countupTapCount ?? 0,
@@ -181,7 +183,7 @@ export async function recomputeLeaderboard(roomId: string, limit = 20) {
   const client = getSupabaseServiceRoleClient();
   const { data, error } = await client
     .from('scores')
-    .select('player_id, total_points, quiz_points, countup_tap_count, players:players(display_name)')
+    .select('player_id, total_points, quiz_points, countup_tap_count, players:players(display_name, table_no)')
     .eq('room_id', roomId)
     .order('total_points', { ascending: false })
     .limit(limit);
@@ -190,9 +192,22 @@ export async function recomputeLeaderboard(roomId: string, limit = 20) {
     throw error;
   }
 
+  console.log('[recomputeLeaderboard] Scores data:', {
+    roomId,
+    count: data?.length ?? 0,
+    entries: data?.map(d => ({
+      playerId: d.player_id,
+      quizPoints: d.quiz_points,
+      totalPoints: d.total_points,
+      displayName: (d.players as any)?.display_name,
+      tableNo: (d.players as any)?.table_no
+    }))
+  });
+
   const entries: LeaderboardEntryInput[] = (data ?? []).map((row: any, index) => ({
     playerId: row.player_id,
     name: row.players?.display_name ?? 'Unknown',
+    tableNo: row.players?.table_no ?? null,
     points: row.total_points ?? 0,
     quizPoints: row.quiz_points ?? 0,
     countupTapCount: row.countup_tap_count ?? 0,
