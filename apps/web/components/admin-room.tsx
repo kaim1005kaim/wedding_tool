@@ -729,11 +729,19 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
               </div>
             </div>
             <div className="space-y-3">
+              {/* 通常クイズ（第1-5問）統合ボタン */}
               <AdminButton
-                icon={ListChecks}
-                disabled={mode !== 'quiz' || (activeQuiz !== null && !quizResult)}
+                icon={activeQuiz && !quizResult ? Eye : ListChecks}
+                variant={activeQuiz && !quizResult ? 'danger' : 'primary'}
+                disabled={mode !== 'quiz' || (activeQuiz !== null && activeQuiz.ord === 6)}
                 onClick={async () => {
-                  // Check if this is after quiz 5 (ord: 5) - show ranking instead
+                  // 正解公開フェーズ（activeQuizあり、quizResultなし）
+                  if (activeQuiz && !quizResult) {
+                    await handleReveal();
+                    return;
+                  }
+
+                  // 第5問の正解公開後 → ランキング表示
                   if (quizResult && activeQuiz?.ord === 5) {
                     if (!isCloudMode || !adminToken) return;
                     try {
@@ -750,36 +758,59 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
                     } catch (err) {
                       console.error('[Admin] Failed to show ranking:', err);
                     }
-                  } else {
-                    const deadlineMs = quizSettings.enableTimeLimit ? quizSettings.quizDurationSeconds * 1000 : undefined;
-                    void send({ type: 'quiz:next', payload: undefined }, {
-                      deadlineMs,
-                      representativeByTable: quizSettings.representativeByTable
-                    });
+                    return;
                   }
+
+                  // 次のクイズへ or クイズ開始
+                  const deadlineMs = quizSettings.enableTimeLimit ? quizSettings.quizDurationSeconds * 1000 : undefined;
+                  void send({ type: 'quiz:next', payload: undefined }, {
+                    deadlineMs,
+                    representativeByTable: quizSettings.representativeByTable
+                  });
                 }}
                 className="w-full"
               >
                 {(() => {
+                  if (activeQuiz && !quizResult) return '正解を公開';
                   if (quizResult && activeQuiz?.ord === 5) return 'ランキング表示へ';
                   if (quizResult) return '次のクイズへ';
                   return 'クイズ開始';
                 })()}
               </AdminButton>
+
+              {/* 早押しクイズ（第6問）統合ボタン */}
               <AdminButton
-                variant="danger"
-                icon={Eye}
-                disabled={!activeQuiz || !!quizResult}
-                onClick={handleReveal}
-                className="w-full"
-              >
-                正解を公開
-              </AdminButton>
-              <AdminButton
-                variant="primary"
-                icon={Gauge}
-                disabled={mode !== 'quiz' || activeQuiz !== null}
-                onClick={() => {
+                variant={activeQuiz?.ord === 6 && !quizResult ? 'danger' : 'primary'}
+                icon={activeQuiz?.ord === 6 && !quizResult ? Eye : Gauge}
+                disabled={mode !== 'quiz' || (activeQuiz !== null && activeQuiz.ord !== 6)}
+                onClick={async () => {
+                  // 早押しクイズの正解公開フェーズ
+                  if (activeQuiz?.ord === 6 && !quizResult) {
+                    await handleReveal();
+                    return;
+                  }
+
+                  // 早押しクイズの正解公開後 → ランキング表示
+                  if (quizResult && activeQuiz?.ord === 6) {
+                    if (!isCloudMode || !adminToken) return;
+                    try {
+                      const response = await fetch(`/api/admin/rooms/${roomId}/game/show-ranking`, {
+                        method: 'POST',
+                        headers: {
+                          'Content-Type': 'application/json',
+                          Authorization: `Bearer ${adminToken}`
+                        }
+                      });
+                      if (!response.ok) {
+                        throw new Error('Failed to show ranking');
+                      }
+                    } catch (err) {
+                      console.error('[Admin] Failed to show ranking:', err);
+                    }
+                    return;
+                  }
+
+                  // 早押しクイズ開始
                   const deadlineMs = quizSettings.enableTimeLimit ? quizSettings.quizDurationSeconds * 1000 : undefined;
                   void send({ type: 'quiz:next', payload: undefined }, {
                     deadlineMs,
@@ -789,45 +820,14 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
                 }}
                 className="w-full"
               >
-                早押しクイズ開始
+                {(() => {
+                  if (activeQuiz?.ord === 6 && !quizResult) return '正解を公開';
+                  if (quizResult && activeQuiz?.ord === 6) return 'ランキング表示へ';
+                  return '早押しクイズ開始';
+                })()}
               </AdminButton>
-              <div className="flex flex-col gap-3">
-                <AdminButton
-                  variant="secondary"
-                  icon={ListChecks}
-                  disabled={mode !== 'quiz' || rankingLoading}
-                  onClick={async () => {
-                    if (rankingLoading) return;
 
-                    console.log('[Admin] Quiz Ranking button clicked', { roomId, mode, phase, adminToken: !!adminToken });
-                    setRankingLoading(true);
-                    try {
-                      const response = await fetch(`/api/admin/rooms/${roomId}/game/show-ranking`, {
-                        method: 'POST',
-                        headers: {
-                          'Content-Type': 'application/json',
-                          Authorization: `Bearer ${adminToken}`
-                        }
-                      });
-                      console.log('[Admin] Quiz Ranking response', { status: response.status, ok: response.ok });
-                      if (!response.ok) {
-                        const errorText = await response.text();
-                        console.error('[Admin] Quiz Ranking error', errorText);
-                        throw new Error('Failed to toggle ranking');
-                      }
-                      const data = await response.json();
-                      console.log('[Admin] Quiz Ranking success', data);
-                    } catch (err) {
-                      console.error('[Admin] Quiz Ranking exception', err);
-                      window.alert('ランキング表示の切り替えに失敗しました');
-                    } finally {
-                      setRankingLoading(false);
-                    }
-                  }}
-                  className="w-full"
-                >
-                  {rankingLoading ? '処理中...' : 'ランキング表示'}
-                </AdminButton>
+              <div className="flex flex-col gap-3">
                 <AdminButton
                   variant="primary"
                   icon={Eye}

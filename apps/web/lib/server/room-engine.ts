@@ -360,12 +360,28 @@ export async function revealQuiz(roomId: string, quizId: string, awardedPoints =
   if (answers && answers.length > 0) {
     for (const answer of answers) {
       if (answer.choice_index === quiz.answerIndex) {
-        // Award points
-        const { error: updateError } = await client.rpc('increment_quiz_points', {
-          p_room_id: roomId,
-          p_player_id: answer.player_id,
-          p_delta: awardedPoints
-        });
+        // Get current score
+        const { data: existingScore } = await client
+          .from('scores')
+          .select('total_points, quiz_points, countup_tap_count')
+          .eq('room_id', roomId)
+          .eq('player_id', answer.player_id)
+          .single();
+
+        // Award points directly to scores table
+        const { error: updateError } = await client
+          .from('scores')
+          .upsert({
+            room_id: roomId,
+            player_id: answer.player_id,
+            total_points: (existingScore?.total_points || 0) + awardedPoints,
+            quiz_points: (existingScore?.quiz_points || 0) + awardedPoints,
+            countup_tap_count: existingScore?.countup_tap_count || 0,
+            last_update_at: new Date().toISOString()
+          }, {
+            onConflict: 'room_id,player_id'
+          });
+
         if (updateError) {
           console.error('Failed to award points:', updateError);
         }
