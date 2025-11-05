@@ -41,7 +41,12 @@ export const quizShowBroadcastSchema = z.object({
   choices: z.array(z.string()).length(4),
   deadlineTs: z.number(),
   ord: z.number().int().min(1).optional().nullable(),
-  imageUrl: z.string().optional().nullable()
+  imageUrl: z.string().optional().nullable(),
+  suddenDeath: z.object({
+    enabled: z.boolean(),
+    by: z.enum(['table', 'player']),
+    topK: z.number().int().positive()
+  }).nullable().optional()
 });
 
 export const quizResultBroadcastSchema = z.object({
