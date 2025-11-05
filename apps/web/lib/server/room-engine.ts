@@ -292,7 +292,9 @@ export async function showQuiz(
       representativeByTable,
       ...(suddenDeath && { suddenDeath })
     },
-    quiz_result: null
+    quiz_result: null,
+    show_ranking: false,
+    show_celebration: false
   });
 
   await appendAuditLog(roomId, 'quiz:show', { quizId, deadlineTs, representativeByTable, suddenDeath });
