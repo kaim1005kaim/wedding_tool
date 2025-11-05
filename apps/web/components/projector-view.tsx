@@ -1093,23 +1093,28 @@ const QuizBoard = memo(function QuizBoard({ activeQuiz, quizResult, leaderboard,
                 {activeQuiz.question}
               </p>
               {/* Quiz Image - Projector only */}
-              {activeQuiz.imageUrl && (
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: 0.3 }}
-                  className="flex justify-center mt-8"
-                >
-                  <img
-                    src={activeQuiz.imageUrl}
-                    alt="Quiz visual"
-                    className="max-w-md max-h-64 rounded-2xl shadow-lg object-contain"
-                    onLoad={() => console.log('[Projector] Image loaded:', activeQuiz.imageUrl)}
-                    onError={(e) => console.error('[Projector] Image failed to load:', activeQuiz.imageUrl, e)}
-                  />
-                </motion.div>
-              )}
-              {!activeQuiz.imageUrl && console.log('[Projector] No imageUrl:', activeQuiz)}
+              {(() => {
+                if (!activeQuiz.imageUrl) {
+                  console.log('[Projector] No imageUrl:', activeQuiz);
+                  return null;
+                }
+                return (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: 0.3 }}
+                    className="flex justify-center mt-8"
+                  >
+                    <img
+                      src={activeQuiz.imageUrl}
+                      alt="Quiz visual"
+                      className="max-w-md max-h-64 rounded-2xl shadow-lg object-contain"
+                      onLoad={() => console.log('[Projector] Image loaded:', activeQuiz.imageUrl)}
+                      onError={(e) => console.error('[Projector] Image failed to load:', activeQuiz.imageUrl, e)}
+                    />
+                  </motion.div>
+                );
+              })()}
             </div>
           </div>
 
