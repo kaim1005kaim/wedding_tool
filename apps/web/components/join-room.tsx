@@ -1126,7 +1126,7 @@ function QuizOverlay({ phase, countdownMs, roomId, playerToken }: QuizOverlayPro
 
             if (quizResult) {
               if (isCorrect) {
-                buttonClass = 'rounded-2xl p-5 shadow-xl bg-gradient-to-br from-green-500 to-green-600 border-2 border-green-700';
+                buttonClass = 'rounded-2xl p-5 shadow-xl bg-gradient-to-br from-red-500 to-red-600 border-2 border-red-700';
               } else if (isWrong) {
                 // 不正解時も青色に変更
                 buttonClass = 'rounded-2xl p-5 shadow-xl bg-gradient-denim border-2 border-denim-deep';
@@ -1152,13 +1152,20 @@ function QuizOverlay({ phase, countdownMs, roomId, playerToken }: QuizOverlayPro
                 animate={{ scale: 1, opacity: 1 }}
                 transition={{ delay: index * 0.1 }}
               >
-                {/* Correct Answer Indicator */}
+                {/* Correct Answer Indicator - Scale up and fade out */}
                 {isCorrect && (
                   <motion.div
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    transition={{ type: 'spring', bounce: 0.5 }}
-                    className="absolute -top-4 -left-4 w-16 h-16 flex items-center justify-center z-10"
+                    initial={{ scale: 0, opacity: 1 }}
+                    animate={{
+                      scale: [0, 1.5, 2],
+                      opacity: [1, 1, 0]
+                    }}
+                    transition={{
+                      duration: 1.5,
+                      times: [0, 0.4, 1],
+                      ease: "easeOut"
+                    }}
+                    className="absolute -top-4 -left-4 w-16 h-16 flex items-center justify-center z-10 pointer-events-none"
                   >
                     <span className="text-5xl drop-shadow-lg">⭕️</span>
                   </motion.div>
