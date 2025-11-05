@@ -342,7 +342,7 @@ export async function revealQuiz(roomId: string, quizId: string, awardedPoints =
 
   const { data: answers, error: answersError } = await client
     .from('answers')
-    .select('player_id, choice_index, answered_at')
+    .select('player_id, choice_index, answered_at, latency_ms')
     .eq('room_id', roomId)
     .eq('quiz_id', quizId);
 
@@ -425,9 +425,8 @@ export async function revealQuiz(roomId: string, quizId: string, awardedPoints =
     if (players) {
       for (const player of players) {
         const answer = answers?.find((a) => a.player_id === player.id);
-        const latencyMs = answer?.answered_at
-          ? new Date(answer.answered_at).getTime() - (Date.now() - 30000) // Approximate
-          : null;
+        // Use latency_ms from answers table if available, otherwise null
+        const latencyMs = answer?.latency_ms ?? null;
 
         awardedPlayers.push({
           playerId: player.id,
