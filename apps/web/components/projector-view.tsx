@@ -1134,13 +1134,20 @@ const QuizBoard = memo(function QuizBoard({ activeQuiz, quizResult, leaderboard,
                         : 'glass-panel-strong border-white/30'
                     }`}
                   >
-                    {/* Correct Answer Circle */}
+                    {/* Correct Answer Circle - Scale up and fade out */}
                     {isCorrect && (
                       <motion.div
-                        initial={{ scale: 0 }}
-                        animate={{ scale: 1 }}
-                        transition={{ type: 'spring', bounce: 0.5 }}
-                        className="absolute -top-5 -left-5 w-24 h-24 flex items-center justify-center z-10"
+                        initial={{ scale: 0, opacity: 1 }}
+                        animate={{
+                          scale: [0, 1.5, 2],
+                          opacity: [1, 1, 0]
+                        }}
+                        transition={{
+                          duration: 1.5,
+                          times: [0, 0.4, 1],
+                          ease: "easeOut"
+                        }}
+                        className="absolute -top-5 -left-5 w-24 h-24 flex items-center justify-center z-10 pointer-events-none"
                       >
                         <span className="text-7xl drop-shadow-xl">⭕️</span>
                       </motion.div>
