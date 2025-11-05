@@ -733,15 +733,24 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
                 icon={ListChecks}
                 disabled={mode !== 'quiz' || (activeQuiz !== null && !quizResult)}
                 onClick={() => {
-                  const deadlineMs = quizSettings.enableTimeLimit ? quizSettings.quizDurationSeconds * 1000 : undefined;
-                  void send({ type: 'quiz:next', payload: undefined }, {
-                    deadlineMs,
-                    representativeByTable: quizSettings.representativeByTable
-                  });
+                  // Check if this is after quiz 5 (ord: 5) - show ranking instead
+                  if (quizResult && activeQuiz?.ord === 5) {
+                    void send({ type: 'game:ranking', payload: undefined });
+                  } else {
+                    const deadlineMs = quizSettings.enableTimeLimit ? quizSettings.quizDurationSeconds * 1000 : undefined;
+                    void send({ type: 'quiz:next', payload: undefined }, {
+                      deadlineMs,
+                      representativeByTable: quizSettings.representativeByTable
+                    });
+                  }
                 }}
                 className="w-full"
               >
-                {quizResult ? '次のクイズへ' : 'クイズ開始'}
+                {(() => {
+                  if (quizResult && activeQuiz?.ord === 5) return 'ランキング表示へ';
+                  if (quizResult) return '次のクイズへ';
+                  return 'クイズ開始';
+                })()}
               </AdminButton>
               <AdminButton
                 variant="danger"

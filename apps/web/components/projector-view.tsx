@@ -698,13 +698,18 @@ const QuizBoard = memo(function QuizBoard({ activeQuiz, quizResult, leaderboard,
   const [showPodium, setShowPodium] = useState(false);
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
 
-  // Get quiz leaderboard sorted by quizPoints
+  // Get quiz leaderboard sorted by correct answer count (quizPoints / 10)
   const quizLeaderboard = leaderboard
     .filter(entry => entry.quizPoints && entry.quizPoints > 0)
     .sort((a, b) => b.quizPoints - a.quizPoints)
-    .map((entry, index) => ({ ...entry, rank: index + 1 }));
+    .map((entry, index) => ({
+      ...entry,
+      rank: index + 1,
+      correctCount: Math.floor(entry.quizPoints / 10) // 1問10点なので
+    }));
 
   const top3 = quizLeaderboard.slice(0, 3);
+  const rest = quizLeaderboard.slice(3, 12); // 4-12位を取得
 
   // Get quiz participants (tables that have answered at least one quiz)
   const quizParticipants = leaderboard
@@ -823,8 +828,7 @@ const QuizBoard = memo(function QuizBoard({ activeQuiz, quizResult, leaderboard,
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className="text-4xl font-black text-terra-clay">{entry.quizPoints}</p>
-                    <p className="text-base text-ink/80 font-bold">問正解</p>
+                    <p className="text-4xl font-black text-terra-clay">正解数{entry.correctCount}/5</p>
                   </div>
                 </motion.div>
               ))}
@@ -896,11 +900,9 @@ const QuizBoard = memo(function QuizBoard({ activeQuiz, quizResult, leaderboard,
           aria-label="クイズランキング"
         >
           <div className="text-center py-6">
-            <div className="glass-panel-strong rounded-2xl px-12 py-6 inline-block shadow-xl border-2 border-accent-400">
-              <p className="text-4xl font-black text-ink">
-                🏆 クイズランキング TOP3 🏆
-              </p>
-            </div>
+            <p className="text-6xl font-black text-ink">
+              クイズ正解ランキング
+            </p>
           </div>
 
           <div className="flex-1 flex items-end justify-center gap-8 pb-12">
@@ -919,11 +921,9 @@ const QuizBoard = memo(function QuizBoard({ activeQuiz, quizResult, leaderboard,
                 🥈
               </motion.div>
               <div className="rounded-2xl glass-panel-strong p-8 shadow-2xl border-4 border-gray-400 ring-4 ring-gray-300/50 bg-gradient-to-br from-gray-50/30 to-slate-50/30">
-                <p className="text-3xl font-black text-ink text-center mb-2">{top3[1].displayName}</p>
-                {top3[1].tableNo && <p className="text-lg text-ink/70 font-bold text-center mb-4">テーブル {top3[1].tableNo}</p>}
+                <p className="text-2xl font-black text-ink text-center mb-2">2位　{top3[1].tableNo}チーム　{top3[1].displayName}さん</p>
                 <div className="rounded-full glass-panel px-8 py-4 shadow-lg border-2 border-white/40 text-center">
-                  <span className="text-4xl font-black text-terra-clay">{top3[1].quizPoints}</span>
-                  <span className="ml-2 text-xl text-ink/80 font-bold">問</span>
+                  <span className="text-4xl font-black text-terra-clay">正解数{top3[1].correctCount}/5</span>
                 </div>
               </div>
               {/* 台座 */}
@@ -944,14 +944,12 @@ const QuizBoard = memo(function QuizBoard({ activeQuiz, quizResult, leaderboard,
                 transition={{ duration: 0.8, delay: 1 }}
                 className="mb-4 text-9xl"
               >
-                🥇
+                👑
               </motion.div>
               <div className="rounded-2xl glass-panel-strong p-10 shadow-2xl border-4 border-yellow-400 ring-4 ring-yellow-300/50 bg-gradient-to-br from-yellow-50/40 to-orange-50/40">
-                <p className="text-4xl font-black text-ink text-center mb-2">{top3[0].displayName}</p>
-                {top3[0].tableNo && <p className="text-xl text-ink/70 font-bold text-center mb-4">テーブル {top3[0].tableNo}</p>}
+                <p className="text-3xl font-black text-ink text-center mb-2">1位　{top3[0].tableNo}チーム　{top3[0].displayName}さん</p>
                 <div className="rounded-full glass-panel px-10 py-5 shadow-lg border-2 border-white/40 text-center">
-                  <span className="text-5xl font-black text-terra-clay">{top3[0].quizPoints}</span>
-                  <span className="ml-2 text-2xl text-ink/80 font-bold">問</span>
+                  <span className="text-5xl font-black text-terra-clay">正解数{top3[0].correctCount}/5</span>
                 </div>
               </div>
               {/* 台座 */}
@@ -975,11 +973,9 @@ const QuizBoard = memo(function QuizBoard({ activeQuiz, quizResult, leaderboard,
                 🥉
               </motion.div>
               <div className="rounded-2xl glass-panel-strong p-8 shadow-2xl border-4 border-amber-600 ring-4 ring-amber-400/50 bg-gradient-to-br from-amber-50/30 to-orange-50/30">
-                <p className="text-3xl font-black text-ink text-center mb-2">{top3[2].displayName}</p>
-                {top3[2].tableNo && <p className="text-lg text-ink/70 font-bold text-center mb-4">テーブル {top3[2].tableNo}</p>}
+                <p className="text-2xl font-black text-ink text-center mb-2">3位　{top3[2].tableNo}チーム　{top3[2].displayName}さん</p>
                 <div className="rounded-full glass-panel px-8 py-4 shadow-lg border-2 border-white/40 text-center">
-                  <span className="text-4xl font-black text-terra-clay">{top3[2].quizPoints}</span>
-                  <span className="ml-2 text-xl text-ink/80 font-bold">問</span>
+                  <span className="text-4xl font-black text-terra-clay">正解数{top3[2].correctCount}/5</span>
                 </div>
               </div>
               {/* 台座 */}

@@ -38,7 +38,7 @@ export const WEDDING_QUIZZES: HardcodedQuiz[] = [
     ord: 3,
     question: '普段、新郎が新婦を呼んでいる名前は？',
     choices: ['みずき', 'えっちゃん', 'とりとり', 'とりっぴー'],
-    answerIndex: 2, // C.とりとり
+    answerIndex: 3, // D.とりっぴー
     imageUrl: '/quiz-images/quiz3.jpg'
   },
   {
