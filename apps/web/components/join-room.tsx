@@ -282,18 +282,7 @@ export default function JoinRoom({ code }: { code: string }) {
   return (
     <main className="min-h-screen px-6 py-10 relative overflow-hidden bg-gradient-mobile">
       <div className="mx-auto w-full max-w-3xl relative z-10">
-        {registered ? (
-          <div className="rounded-2xl glass-panel-strong px-6 py-4 text-center shadow-md bounce-in border border-white/30 ring-2 ring-accent-400" aria-live="polite">
-            <div className="mb-2 text-3xl">🎉</div>
-            <p className="text-lg font-bold text-ink">参加登録完了！</p>
-            <p className="mt-2 text-base text-ink">
-              <span className="rounded-full glass-panel px-3 py-1 font-bold text-terra-clay border border-white/20">{registeredTableNo}</span>
-              <span className="mx-2 font-bold">テーブル</span>
-            </p>
-            <p className="mt-1 text-xl font-bold text-ink">{registeredName} さん</p>
-            <p className="mt-3 text-sm font-bold text-ink/70">ゲーム開始までお待ちください</p>
-          </div>
-        ) : (
+        {!registered && (
           <div className="text-center py-4">
             <p className="text-base font-bold text-ink/80">
               画面中央のモーダルでテーブルナンバーとお名前を入力し、<br />
@@ -312,15 +301,10 @@ export default function JoinRoom({ code }: { code: string }) {
       {/* 抽選モード非表示 */}
       {registered && mode !== 'countup' && mode !== 'quiz' && mode !== 'lottery' && (
         <div className="mx-auto w-full max-w-3xl mt-8 space-y-6 relative z-10">
-          <div className="rounded-2xl glass-panel-strong p-8 text-center shadow-md slide-up border border-white/30">
-            <div className="mb-4 text-3xl">
-              🎮
-            </div>
-            <h2 className="text-title-sm font-bold text-ink">
-              ゲーム
-            </h2>
-            <p className="mt-4 text-base leading-relaxed text-ink/80 font-medium">
-              まもなくゲームが始まります。画面の指示に従ってください。
+          <div className="text-center py-4">
+            <p className="text-2xl font-bold text-ink">
+              まもなくゲームが始まります。<br />
+              スマホの画面を確認してください。
             </p>
           </div>
 
@@ -701,9 +685,8 @@ function CountupOverlay({ phase, countdownMs, leaderboard, onTap, registeredName
               <img src="/tap-title.svg" alt="Tap Challenge" className="h-24 w-auto" />
             </div>
 
-            <h2 className="text-xl font-bold text-ink">準備中</h2>
-            <p className="text-base leading-relaxed text-ink/80 font-medium">
-              まもなく開始します。画面の指示に従ってください。
+            <p className="text-xl font-bold text-ink leading-relaxed">
+              Tap Challenge開始まで少々お待ちください
             </p>
           </div>
         </div>
@@ -943,9 +926,8 @@ function QuizOverlay({ phase, countdownMs, roomId, playerToken }: QuizOverlayPro
             <img src="/quiz-title.svg" alt="Quiz" className="h-24 w-auto" />
           </div>
 
-          <h2 className="text-xl font-bold text-ink">待機中</h2>
-          <p className="text-base leading-relaxed text-ink/80 font-medium">
-            管理画面からクイズが表示されるまでお待ちください
+          <p className="text-xl font-bold text-ink leading-relaxed">
+            Quiz開始まで少々お待ちください
           </p>
         </div>
       </div>
