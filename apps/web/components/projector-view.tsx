@@ -273,7 +273,7 @@ function renderSection(
     case 'countup':
       return <CountupBoard key="countup" entries={leaderboard} phase={phase} countdownMs={countdownMs} showRanking={showRanking} />;
     case 'quiz':
-      return <QuizBoard key={`quiz-${quizResult?.quizId ?? activeQuiz?.quizId ?? 'waiting'}`} activeQuiz={activeQuiz} quizResult={quizResult} leaderboard={leaderboard} phase={phase} representatives={representatives} showRanking={showRanking} />;
+      return <QuizBoard key={`quiz-${quizResult?.quizId ?? activeQuiz?.quizId ?? 'waiting'}`} activeQuiz={activeQuiz} quizResult={quizResult} leaderboard={leaderboard} phase={phase} representatives={representatives} showRanking={showRanking} mode={mode} />;
     /* 抽選モード非表示
     case 'lottery':
       return <LotteryBoard key={lotteryKey} lotteryResult={lotteryResult} isSpinning={isSpinning} leaderboard={leaderboard} />;
@@ -680,9 +680,10 @@ type QuizPanelProps = {
   phase: 'idle' | 'running' | 'ended' | 'celebrating';
   representatives: RoomStoreState['representatives'];
   showRanking: boolean;
+  mode: 'idle' | 'countup' | 'quiz' | 'buzzer' | 'lottery';
 };
 
-const QuizBoard = memo(function QuizBoard({ activeQuiz, quizResult, leaderboard, phase, representatives, showRanking }: QuizPanelProps) {
+const QuizBoard = memo(function QuizBoard({ activeQuiz, quizResult, leaderboard, phase, representatives, showRanking, mode }: QuizPanelProps) {
   const counts = quizResult?.perChoiceCounts ?? [0, 0, 0, 0];
   const correctIndex = quizResult?.correctIndex ?? -1;
 
@@ -762,8 +763,8 @@ const QuizBoard = memo(function QuizBoard({ activeQuiz, quizResult, leaderboard,
     }
   }, [showRanking, phase, quizLeaderboard.length]);
 
-  // Show ranking when phase is ended
-  if (phase === 'ended' && quizLeaderboard.length > 0) {
+  // Show ranking when phase is ended or showRanking flag is explicitly set
+  if ((phase === 'ended' || (showRanking && mode === 'quiz')) && quizLeaderboard.length > 0) {
     // showRankingがfalseの場合は結果発表タイトルのみ表示
     if (!showRanking) {
       return (
