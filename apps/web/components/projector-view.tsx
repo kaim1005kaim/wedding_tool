@@ -717,6 +717,16 @@ const QuizBoard = memo(function QuizBoard({ activeQuiz, quizResult, leaderboard,
     : [];
 
   // Get quiz leaderboard sorted by correct answer count (quizPoints / 10)
+  console.log('[Projector] Raw leaderboard for quiz ranking:', {
+    count: leaderboard.length,
+    entries: leaderboard.map(e => ({
+      displayName: e.displayName,
+      tableNo: e.tableNo,
+      quizPoints: e.quizPoints,
+      totalPoints: e.totalPoints
+    }))
+  });
+
   const quizLeaderboard = leaderboard
     .filter(entry => entry.quizPoints && entry.quizPoints > 0)
     .sort((a, b) => b.quizPoints - a.quizPoints)
@@ -725,6 +735,16 @@ const QuizBoard = memo(function QuizBoard({ activeQuiz, quizResult, leaderboard,
       rank: index + 1,
       correctCount: Math.floor(entry.quizPoints / 10) // 1問10点なので
     }));
+
+  console.log('[Projector] Filtered quiz leaderboard:', {
+    count: quizLeaderboard.length,
+    entries: quizLeaderboard.map(e => ({
+      displayName: e.displayName,
+      tableNo: e.tableNo,
+      quizPoints: e.quizPoints,
+      correctCount: e.correctCount
+    }))
+  });
 
   const top3 = isBuzzerQuiz ? buzzerRanking.slice(0, 3) : quizLeaderboard.slice(0, 3);
   const rest = isBuzzerQuiz ? buzzerRanking.slice(3, 12) : quizLeaderboard.slice(3, 12); // 4-12位を取得
