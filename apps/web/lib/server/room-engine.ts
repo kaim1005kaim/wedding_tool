@@ -223,6 +223,14 @@ export async function submitQuizAnswer(roomId: string, quizId: string, playerId:
     }
   }
 
+  console.log('[recordQuizAnswer] Attempting to record answer:', {
+    roomId,
+    quizId,
+    playerId,
+    choiceIndex,
+    representativeByTable
+  });
+
   const { error } = await client.rpc('record_quiz_answer', {
     p_room_id: roomId,
     p_quiz_id: quizId,
@@ -233,8 +241,11 @@ export async function submitQuizAnswer(roomId: string, quizId: string, playerId:
   });
 
   if (error) {
+    console.error('[recordQuizAnswer] Error:', error);
     throw error;
   }
+
+  console.log('[recordQuizAnswer] Answer recorded successfully');
 }
 
 export async function showQuiz(
@@ -321,6 +332,8 @@ export async function revealQuiz(roomId: string, quizId: string, awardedPoints =
   console.log('[revealQuiz] Found quiz:', { quizId, answerIndex: quiz.answerIndex });
 
   // Get all answers for this quiz
+  console.log('[revealQuiz] Fetching answers with query:', { roomId, quizId });
+
   const { data: answers, error: answersError } = await client
     .from('answers')
     .select('player_id, choice_index, answered_at')
@@ -332,7 +345,10 @@ export async function revealQuiz(roomId: string, quizId: string, awardedPoints =
     throw answersError;
   }
 
-  console.log('[revealQuiz] Answers fetched:', { count: answers?.length ?? 0 });
+  console.log('[revealQuiz] Answers fetched:', {
+    count: answers?.length ?? 0,
+    answersData: answers ? JSON.stringify(answers) : 'null'
+  });
 
   // Award points to correct answers
   if (answers && answers.length > 0) {
