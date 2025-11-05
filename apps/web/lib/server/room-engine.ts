@@ -287,16 +287,15 @@ export async function showNextQuiz(
   representativeByTable = true,
   suddenDeath: { enabled: boolean; by: 'table' | 'player'; topK: number } | null = null
 ) {
-  const client = getSupabaseServiceRoleClient();
+  // Get already revealed quizzes from room snapshot
+  const snapshot = await fetchRoomSnapshot(roomId);
 
-  // Use hardcoded quizzes
-  const awarded = await client
-    .from('awarded_quizzes')
-    .select('quiz_id')
-    .eq('room_id', roomId);
+  // Track which quizzes have been revealed by checking current_quiz history
+  // For simplicity, we'll show quizzes in order and use current_quiz.ord to determine next
+  const currentOrd = snapshot?.current_quiz?.ord ?? 0;
+  const nextOrd = currentOrd + 1;
 
-  const awardedSet = new Set((awarded.data ?? []).map((row) => row.quiz_id));
-  const next = WEDDING_QUIZZES.find((quiz) => !awardedSet.has(quiz.id));
+  const next = WEDDING_QUIZZES.find((quiz) => quiz.ord === nextOrd);
 
   if (!next) {
     throw new Error('All quizzes have been revealed');
@@ -353,13 +352,9 @@ export async function revealQuiz(roomId: string, quizId: string, awardedPoints =
   }
 
   // Mark quiz as awarded
-  const { error: awardError } = await client
-    .from('awarded_quizzes')
-    .upsert({ room_id: roomId, quiz_id: quizId });
-
-  if (awardError) {
-    throw awardError;
-  }
+  // Note: Skip this for hardcoded quizzes since they don't exist in the quizzes table
+  // We track which quizzes have been awarded by checking the quiz_result in room_snapshots instead
+  console.log('[revealQuiz] Skipping awarded_quizzes insert for hardcoded quiz');
 
   // Count answers per choice
   const perChoiceCounts = [0, 0, 0, 0];
