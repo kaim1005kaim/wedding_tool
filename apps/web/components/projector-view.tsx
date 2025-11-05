@@ -755,13 +755,13 @@ const QuizBoard = memo(function QuizBoard({ activeQuiz, quizResult, leaderboard,
 
   // showRankingフラグでランキング表示を制御（クイズも同様）
   useEffect(() => {
-    if (showRanking && phase === 'ended' && quizLeaderboard.length > 0) {
-      // ボタンが押されたら即座に表彰台表示
+    if (showRanking && quizLeaderboard.length > 0) {
+      // ボタンが押されたら即座に表彰台表示（phaseに関係なく）
       setShowPodium(true);
     } else {
       setShowPodium(false);
     }
-  }, [showRanking, phase, quizLeaderboard.length]);
+  }, [showRanking, quizLeaderboard.length]);
 
   // Show ranking when phase is ended or showRanking flag is explicitly set
   if ((phase === 'ended' || (showRanking && mode === 'quiz')) && quizLeaderboard.length > 0) {
