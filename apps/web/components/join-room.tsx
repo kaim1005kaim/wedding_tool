@@ -1091,9 +1091,9 @@ function QuizOverlay({ phase, countdownMs, roomId, playerToken }: QuizOverlayPro
                 <p className="text-base font-medium">正解発表までお待ちください</p>
               </div>
             ) : selectedChoice === correctIndex ? (
-              <div className="rounded-2xl bg-gradient-to-br from-green-500 to-green-600 text-white px-6 py-4 text-center shadow-xl border-2 border-green-700 space-y-1">
-                <p className="text-3xl font-black">⭕ 正解！</p>
-                <p className="text-xl font-bold">あなたの回答: {CHOICE_LABELS[selectedChoice]}</p>
+              <div className="rounded-2xl px-6 py-4 text-center space-y-1">
+                <p className="text-3xl font-black text-ink">⭕ 正解！</p>
+                <p className="text-xl font-bold text-ink">あなたの回答: {CHOICE_LABELS[selectedChoice]}</p>
               </div>
             ) : (
               <div className="rounded-2xl bg-gradient-denim text-white px-6 py-4 text-center shadow-xl border-2 border-denim-deep space-y-1">

@@ -427,16 +427,20 @@ export async function revealQuiz(roomId: string, quizId: string, awardedPoints =
 
   // Update room snapshot with quiz result
   await recomputeLeaderboard(roomId);
+  const quizResultData = {
+    quizId,
+    correctIndex: quiz.answerIndex,
+    perChoiceCounts,
+    awarded: awardedPlayers
+  };
+
+  console.log('[revealQuiz] About to save quiz_result to snapshot:', JSON.stringify(quizResultData));
+
   await upsertRoomSnapshot(roomId, {
-    quiz_result: {
-      quizId,
-      correctIndex: quiz.answerIndex,
-      perChoiceCounts,
-      awarded: awardedPlayers
-    }
+    quiz_result: quizResultData
   });
 
-  console.log('[revealQuiz] Successfully revealed quiz');
+  console.log('[revealQuiz] Successfully revealed quiz and saved snapshot');
 
   // Keep current_quiz visible - it will be cleared when next quiz starts
   // await upsertRoomSnapshot(roomId, { current_quiz: null });

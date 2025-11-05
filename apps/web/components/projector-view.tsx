@@ -690,8 +690,10 @@ const QuizBoard = memo(function QuizBoard({ activeQuiz, quizResult, leaderboard,
   console.log('[QuizBoard] Render:', {
     hasQuizResult: !!quizResult,
     perChoiceCounts: quizResult?.perChoiceCounts,
-    counts,
-    correctIndex
+    countsArray: counts,
+    countsValues: `[${counts[0]}, ${counts[1]}, ${counts[2]}, ${counts[3]}]`,
+    correctIndex,
+    fullQuizResult: quizResult
   });
   const [showPodium, setShowPodium] = useState(false);
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
