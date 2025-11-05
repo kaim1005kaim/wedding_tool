@@ -698,6 +698,23 @@ const QuizBoard = memo(function QuizBoard({ activeQuiz, quizResult, leaderboard,
   const [showPodium, setShowPodium] = useState(false);
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
 
+  // Check if this is buzzer quiz (quiz 6)
+  const isBuzzerQuiz = activeQuiz?.ord === 6 && quizResult;
+
+  // For buzzer quiz (quiz 6), show ranking based on answer time from quiz result
+  const buzzerRanking = isBuzzerQuiz && quizResult?.awarded
+    ? quizResult.awarded
+        .filter(a => a.latencyMs != null && a.latencyMs >= 0)
+        .sort((a, b) => (a.latencyMs ?? Infinity) - (b.latencyMs ?? Infinity))
+        .map((entry, index) => ({
+          playerId: entry.playerId,
+          displayName: entry.displayName ?? '???',
+          tableNo: entry.tableNo ?? null,
+          latencyMs: entry.latencyMs,
+          rank: index + 1
+        }))
+    : [];
+
   // Get quiz leaderboard sorted by correct answer count (quizPoints / 10)
   const quizLeaderboard = leaderboard
     .filter(entry => entry.quizPoints && entry.quizPoints > 0)
@@ -708,8 +725,8 @@ const QuizBoard = memo(function QuizBoard({ activeQuiz, quizResult, leaderboard,
       correctCount: Math.floor(entry.quizPoints / 10) // 1問10点なので
     }));
 
-  const top3 = quizLeaderboard.slice(0, 3);
-  const rest = quizLeaderboard.slice(3, 12); // 4-12位を取得
+  const top3 = isBuzzerQuiz ? buzzerRanking.slice(0, 3) : quizLeaderboard.slice(0, 3);
+  const rest = isBuzzerQuiz ? buzzerRanking.slice(3, 12) : quizLeaderboard.slice(3, 12); // 4-12位を取得
 
   // Get quiz participants (tables that have answered at least one quiz)
   const quizParticipants = leaderboard
@@ -901,7 +918,7 @@ const QuizBoard = memo(function QuizBoard({ activeQuiz, quizResult, leaderboard,
         >
           <div className="text-center py-6">
             <p className="text-6xl font-black text-ink">
-              クイズ正解ランキング
+              {isBuzzerQuiz ? '早押しクイズランキング' : 'クイズ正解ランキング'}
             </p>
           </div>
 
@@ -923,7 +940,11 @@ const QuizBoard = memo(function QuizBoard({ activeQuiz, quizResult, leaderboard,
               <div className="rounded-2xl glass-panel-strong p-8 shadow-2xl border-4 border-gray-400 ring-4 ring-gray-300/50 bg-gradient-to-br from-gray-50/30 to-slate-50/30">
                 <p className="text-2xl font-black text-ink text-center mb-2">2位　{top3[1].tableNo}チーム　{top3[1].displayName}さん</p>
                 <div className="rounded-full glass-panel px-8 py-4 shadow-lg border-2 border-white/40 text-center">
-                  <span className="text-4xl font-black text-terra-clay">正解数{top3[1].correctCount}/5</span>
+                  <span className="text-4xl font-black text-terra-clay">
+                    {isBuzzerQuiz && 'latencyMs' in top3[1]
+                      ? `${((top3[1].latencyMs ?? 0) / 1000).toFixed(2)}秒`
+                      : `正解数${'correctCount' in top3[1] ? top3[1].correctCount : 0}/5`}
+                  </span>
                 </div>
               </div>
               {/* 台座 */}
@@ -949,7 +970,11 @@ const QuizBoard = memo(function QuizBoard({ activeQuiz, quizResult, leaderboard,
               <div className="rounded-2xl glass-panel-strong p-10 shadow-2xl border-4 border-yellow-400 ring-4 ring-yellow-300/50 bg-gradient-to-br from-yellow-50/40 to-orange-50/40">
                 <p className="text-3xl font-black text-ink text-center mb-2">1位　{top3[0].tableNo}チーム　{top3[0].displayName}さん</p>
                 <div className="rounded-full glass-panel px-10 py-5 shadow-lg border-2 border-white/40 text-center">
-                  <span className="text-5xl font-black text-terra-clay">正解数{top3[0].correctCount}/5</span>
+                  <span className="text-5xl font-black text-terra-clay">
+                    {isBuzzerQuiz && 'latencyMs' in top3[0]
+                      ? `${((top3[0].latencyMs ?? 0) / 1000).toFixed(2)}秒`
+                      : `正解数${'correctCount' in top3[0] ? top3[0].correctCount : 0}/5`}
+                  </span>
                 </div>
               </div>
               {/* 台座 */}
@@ -975,7 +1000,11 @@ const QuizBoard = memo(function QuizBoard({ activeQuiz, quizResult, leaderboard,
               <div className="rounded-2xl glass-panel-strong p-8 shadow-2xl border-4 border-amber-600 ring-4 ring-amber-400/50 bg-gradient-to-br from-amber-50/30 to-orange-50/30">
                 <p className="text-2xl font-black text-ink text-center mb-2">3位　{top3[2].tableNo}チーム　{top3[2].displayName}さん</p>
                 <div className="rounded-full glass-panel px-8 py-4 shadow-lg border-2 border-white/40 text-center">
-                  <span className="text-4xl font-black text-terra-clay">正解数{top3[2].correctCount}/5</span>
+                  <span className="text-4xl font-black text-terra-clay">
+                    {isBuzzerQuiz && 'latencyMs' in top3[2]
+                      ? `${((top3[2].latencyMs ?? 0) / 1000).toFixed(2)}秒`
+                      : `正解数${'correctCount' in top3[2] ? top3[2].correctCount : 0}/5`}
+                  </span>
                 </div>
               </div>
               {/* 台座 */}

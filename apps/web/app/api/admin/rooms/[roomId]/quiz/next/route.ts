@@ -7,6 +7,7 @@ import { showNextQuiz } from '@/lib/server/room-engine';
 const bodySchema = z.object({
   representativeByTable: z.boolean().optional().default(true),
   deadlineMs: z.number().int().positive().optional(),
+  buzzerMode: z.boolean().optional().default(false),
   suddenDeath: z.object({
     enabled: z.boolean(),
     by: z.enum(['table', 'player']),
@@ -33,7 +34,8 @@ export async function POST(request: Request, { params }: { params: { roomId: str
       params.roomId,
       deadlineMs,
       validated?.representativeByTable ?? true,
-      validated?.suddenDeath ?? null
+      validated?.suddenDeath ?? null,
+      validated?.buzzerMode ?? false
     );
     return NextResponse.json({ ok: true, quizId });
   } catch (error) {

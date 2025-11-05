@@ -302,7 +302,8 @@ export async function showNextQuiz(
   roomId: string,
   deadlineMs = DEFAULT_COUNTDOWN_MS,
   representativeByTable = true,
-  suddenDeath: { enabled: boolean; by: 'table' | 'player'; topK: number } | null = null
+  suddenDeath: { enabled: boolean; by: 'table' | 'player'; topK: number } | null = null,
+  buzzerMode = false
 ) {
   // Get already revealed quizzes from room snapshot
   const snapshot = await fetchRoomSnapshot(roomId);
@@ -318,8 +319,43 @@ export async function showNextQuiz(
     throw new Error('All quizzes have been revealed');
   }
 
+  // For buzzer quiz (quiz 6), set up sudden death for top scorers after quiz 5
+  let finalSuddenDeath = suddenDeath;
+  if (buzzerMode && next.isBuzzer && next.ord === 6) {
+    const client = getSupabaseServiceRoleClient();
+
+    // Get scores after quiz 5 (only counting quiz points)
+    const { data: scores } = await client
+      .from('scores')
+      .select('player_id, quiz_points')
+      .eq('room_id', roomId)
+      .order('quiz_points', { ascending: false })
+      .limit(20);
+
+    if (scores && scores.length > 0) {
+      // Find the top quiz_points value
+      const topScore = scores[0].quiz_points;
+
+      // Count how many players have the top score
+      const topPlayers = scores.filter(s => s.quiz_points === topScore);
+
+      // Set sudden death to only allow top scorers
+      finalSuddenDeath = {
+        enabled: true,
+        by: 'player',
+        topK: topPlayers.length
+      };
+
+      console.log('[showNextQuiz] Buzzer quiz sudden death:', {
+        topScore,
+        topPlayersCount: topPlayers.length,
+        topPlayerIds: topPlayers.map(p => p.player_id)
+      });
+    }
+  }
+
   const deadlineTs = Date.now() + deadlineMs;
-  await showQuiz(roomId, next.id, deadlineTs, representativeByTable, suddenDeath);
+  await showQuiz(roomId, next.id, deadlineTs, representativeByTable, finalSuddenDeath);
   return next.id;
 }
 
