@@ -100,9 +100,12 @@ export async function showRanking(roomId: string) {
   });
 
   // 常にランキング表示をONにする（トグル動作を廃止）
+  // quiz_resultとcurrent_quizをクリアして正解エフェクトが再生されないようにする
   await upsertRoomSnapshot(roomId, {
     show_ranking: true,
-    show_celebration: false
+    show_celebration: false,
+    quiz_result: null,
+    current_quiz: null
   });
   await appendAuditLog(roomId, 'game:showRanking', {});
 
