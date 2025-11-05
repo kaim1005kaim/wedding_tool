@@ -317,7 +317,7 @@ export default function JoinRoom({ code }: { code: string }) {
                   rotate: Math.random() * 720 + 360
                 }}
                 transition={{
-                  duration: Math.random() * 3 + 2,
+                  duration: Math.random() * 4 + 3,
                   repeat: Infinity,
                   ease: 'linear',
                   delay: Math.random() * 2
@@ -335,9 +335,18 @@ export default function JoinRoom({ code }: { code: string }) {
             ))}
           </div>
 
+          <div className="flex items-center justify-center min-h-screen px-6">
+            <div className="text-center relative z-10">
+              <p className="text-xl font-bold text-ink">
+                まもなくゲームが始まります。<br />
+                そのまましばらくお待ちください。
+              </p>
+            </div>
+          </div>
+
           <div className="mx-auto w-full max-w-3xl mt-8 space-y-6 relative z-10">
-            <div className="text-center py-4">
-              <p className="text-2xl font-bold text-ink">
+            <div className="text-center py-4" style={{ visibility: 'hidden' }}>
+              <p className="text-xl font-bold text-ink">
                 まもなくゲームが始まります。<br />
                 そのまましばらくお待ちください。
               </p>
@@ -714,18 +723,54 @@ function CountupOverlay({ phase, countdownMs, leaderboard, onTap, registeredName
     <>
       {/* Waiting screen for idle phase */}
       {!showPad && !isFinished && phase === 'idle' && (
-        <div className="mx-auto w-full max-w-3xl mt-8 space-y-6 relative z-10">
-          <div className="rounded-2xl glass-panel-strong p-8 text-center shadow-md slide-up border border-white/30 space-y-6">
-            {/* SVG Title */}
-            <div className="flex justify-center">
-              <img src="/tap-title.svg" alt="Tap Challenge" className="h-24 w-auto" />
-            </div>
-
-            <p className="text-xl font-bold text-ink leading-relaxed">
-              Tap Challenge開始まで少々お待ちください
-            </p>
+        <>
+          {/* 紙吹雪エフェクト */}
+          <div className="fixed inset-0 pointer-events-none z-0">
+            {Array.from({ length: 30 }).map((_, i) => (
+              <motion.div
+                key={i}
+                className="absolute"
+                initial={{
+                  top: -20,
+                  left: `${Math.random() * 100}%`,
+                  rotate: Math.random() * 360
+                }}
+                animate={{
+                  top: '110%',
+                  rotate: Math.random() * 720 + 360
+                }}
+                transition={{
+                  duration: Math.random() * 4 + 3,
+                  repeat: Infinity,
+                  ease: 'linear',
+                  delay: Math.random() * 2
+                }}
+              >
+                <div
+                  className="w-3 h-3 rounded-full"
+                  style={{
+                    backgroundColor: ['#FF6B6B', '#4ECDC4', '#FFE66D', '#A8E6CF', '#FF8B94'][
+                      Math.floor(Math.random() * 5)
+                    ]
+                  }}
+                />
+              </motion.div>
+            ))}
           </div>
-        </div>
+
+          <div className="flex items-center justify-center min-h-screen px-6">
+            <div className="rounded-2xl glass-panel-strong p-8 text-center shadow-md slide-up border border-white/30 space-y-6 relative z-10">
+              {/* SVG Title */}
+              <div className="flex justify-center">
+                <img src="/tap-title.svg" alt="Tap Challenge" className="h-24 w-auto" />
+              </div>
+
+              <p className="text-lg font-bold text-ink leading-relaxed">
+                タップチャレンジ開始まで少々お待ちください
+              </p>
+            </div>
+          </div>
+        </>
       )}
 
       {/* Countdown Timer - Top Right - Only show when timer is actually running (not during preparation or START moment) */}
@@ -955,18 +1000,54 @@ function QuizOverlay({ phase, countdownMs, roomId, playerToken }: QuizOverlayPro
 
   if (!activeQuiz) {
     return (
-      <div className="mx-auto w-full max-w-3xl mt-8 space-y-6 relative z-10">
-        <div className="rounded-2xl glass-panel-strong p-8 text-center shadow-md slide-up border border-white/30 space-y-6">
-          {/* SVG Title */}
-          <div className="flex justify-center">
-            <img src="/quiz-title.svg" alt="Quiz" className="h-24 w-auto" />
-          </div>
-
-          <p className="text-xl font-bold text-ink leading-relaxed">
-            Quiz開始まで少々お待ちください
-          </p>
+      <>
+        {/* 紙吹雪エフェクト */}
+        <div className="fixed inset-0 pointer-events-none z-0">
+          {Array.from({ length: 30 }).map((_, i) => (
+            <motion.div
+              key={i}
+              className="absolute"
+              initial={{
+                top: -20,
+                left: `${Math.random() * 100}%`,
+                rotate: Math.random() * 360
+              }}
+              animate={{
+                top: '110%',
+                rotate: Math.random() * 720 + 360
+              }}
+              transition={{
+                duration: Math.random() * 4 + 3,
+                repeat: Infinity,
+                ease: 'linear',
+                delay: Math.random() * 2
+              }}
+            >
+              <div
+                className="w-3 h-3 rounded-full"
+                style={{
+                  backgroundColor: ['#FF6B6B', '#4ECDC4', '#FFE66D', '#A8E6CF', '#FF8B94'][
+                    Math.floor(Math.random() * 5)
+                  ]
+                }}
+              />
+            </motion.div>
+          ))}
         </div>
-      </div>
+
+        <div className="flex items-center justify-center min-h-screen px-6">
+          <div className="rounded-2xl glass-panel-strong p-8 text-center shadow-md slide-up border border-white/30 space-y-6 relative z-10">
+            {/* SVG Title */}
+            <div className="flex justify-center">
+              <img src="/quiz-title.svg" alt="Quiz" className="h-24 w-auto" />
+            </div>
+
+            <p className="text-lg font-bold text-ink leading-relaxed">
+              クイズ開始まで少々お待ちください
+            </p>
+          </div>
+        </div>
+      </>
     );
   }
 
