@@ -24,14 +24,20 @@ export default function RoomRuntime({ roomId, children }: { roomId: string; chil
       useRoomStore.getState().setRoomId(roomId);
 
       const offState = realtimeClient.on('state:update', (payload) => {
+        console.log('[RoomRuntime] state:update received:', {
+          hasQuizResult: !!payload.quizResult,
+          quizResult: payload.quizResult
+        });
         useRoomStore.getState().hydrateFromState(payload);
       });
 
       const offQuizShow = realtimeClient.on('quiz:show', (payload) => {
+        console.log('[RoomRuntime] quiz:show received:', payload);
         useRoomStore.getState().setActiveQuiz(payload);
       });
 
       const offQuizResult = realtimeClient.on('quiz:result', (payload) => {
+        console.log('[RoomRuntime] quiz:result received:', payload);
         useRoomStore.getState().setQuizResult(payload);
       });
 

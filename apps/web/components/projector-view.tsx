@@ -685,6 +685,14 @@ type QuizPanelProps = {
 const QuizBoard = memo(function QuizBoard({ activeQuiz, quizResult, leaderboard, phase, representatives, showRanking }: QuizPanelProps) {
   const counts = quizResult?.perChoiceCounts ?? [0, 0, 0, 0];
   const correctIndex = quizResult?.correctIndex ?? -1;
+
+  // Debug logging
+  console.log('[QuizBoard] Render:', {
+    hasQuizResult: !!quizResult,
+    perChoiceCounts: quizResult?.perChoiceCounts,
+    counts,
+    correctIndex
+  });
   const [showPodium, setShowPodium] = useState(false);
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
 

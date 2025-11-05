@@ -96,7 +96,10 @@ export const useRoomStore = create<RoomStoreState & RoomStoreActions>((set) => (
       showCelebration: payload.showCelebration ?? false
     }),
   setActiveQuiz: (payload) => set({ activeQuiz: payload, quizResult: null }),
-  setQuizResult: (payload) => set({ quizResult: payload }),
+  setQuizResult: (payload) => {
+    console.log('[RoomStore] setQuizResult called:', payload);
+    set({ quizResult: payload });
+  },
   setLotteryResult: (payload) => set({ lotteryResult: payload }),
   clearTransient: () => set({ activeQuiz: null, quizResult: null, lotteryResult: null }),
   setPlayerAuth: ({ playerId, token }) => set({ playerId, playerToken: token }),
