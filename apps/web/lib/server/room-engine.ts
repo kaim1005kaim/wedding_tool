@@ -252,6 +252,8 @@ export async function showQuiz(
     throw new Error('Quiz not found');
   }
 
+  console.log('[showQuiz] Quiz data:', { quizId, question: quiz.question, imageUrl: quiz.imageUrl });
+
   await client.from('rooms').update({ mode: 'quiz', phase: 'running' }).eq('id', roomId);
   await ensureRoomSnapshot(roomId);
 
@@ -268,7 +270,7 @@ export async function showQuiz(
       choices: quiz.choices,
       deadlineTs,
       ord: quiz.ord,
-      imageUrl: quiz.imageUrl ?? null,
+      imageUrl: quiz.imageUrl || null,
       startTs,
       representativeByTable,
       ...(suddenDeath && { suddenDeath })
