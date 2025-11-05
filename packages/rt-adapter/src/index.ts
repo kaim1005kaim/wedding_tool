@@ -162,7 +162,9 @@ class SupabaseRealtimeClient implements RealtimeClient {
                 quizId: snapshot.current_quiz.quizId,
                 question: snapshot.current_quiz.question,
                 choices: snapshot.current_quiz.choices ?? [],
-                deadlineTs: snapshot.current_quiz.deadlineTs
+                deadlineTs: snapshot.current_quiz.deadlineTs,
+                ord: snapshot.current_quiz.ord ?? null,
+                imageUrl: snapshot.current_quiz.imageUrl ?? null
               }
             : null,
           quizResult: snapshot.quiz_result
