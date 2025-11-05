@@ -1024,18 +1024,10 @@ const QuizBoard = memo(function QuizBoard({ activeQuiz, quizResult, leaderboard,
   }
 
   // Show ranking when showRanking flag is set (check before activeQuiz check)
-  console.log('[Projector] Ranking check:', {
-    showRanking,
-    mode,
-    quizLeaderboardLength: quizLeaderboard.length,
-    leaderboardLength: leaderboard.length,
-    top3Length: top3.length,
-    leaderboardSample: leaderboard.slice(0, 3)
-  });
-
-  if (showRanking && mode === 'quiz' && quizLeaderboard.length > 0) {
+  if (showRanking && mode === 'quiz') {
     // showRankingがtrueの場合、即座に表彰台表示
-    if (top3.length >= 3) {
+    // クイズポイントがある場合のみtop3を表示
+    if (quizLeaderboard.length >= 3 && top3.length >= 3) {
       return (
         <motion.section
           initial={{ opacity: 0, y: 30 }}
@@ -1128,6 +1120,28 @@ const QuizBoard = memo(function QuizBoard({ activeQuiz, quizResult, leaderboard,
         </motion.section>
       );
     }
+
+    // ランキングが0人でも表示する (クイズ終了後)
+    return (
+      <motion.section
+        initial={{ opacity: 0, y: 30 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -30 }}
+        transition={{ duration: 0.5, ease: 'easeOut' }}
+        className="flex h-full flex-col items-center justify-center gap-8"
+        role="region"
+        aria-label="クイズ終了"
+      >
+        <div className="text-center">
+          <p className="text-8xl font-black text-ink mb-8">
+            {isBuzzerQuiz ? '早押しクイズ終了！' : 'クイズ終了！'}
+          </p>
+          <p className="text-5xl text-ink/70">
+            お疲れ様でした
+          </p>
+        </div>
+      </motion.section>
+    );
   }
 
   // Show waiting screen when no active quiz
