@@ -1023,6 +1023,104 @@ const QuizBoard = memo(function QuizBoard({ activeQuiz, quizResult, leaderboard,
     }
   }
 
+  // Show ranking when showRanking flag is set (check before activeQuiz check)
+  if (showRanking && mode === 'quiz' && quizLeaderboard.length > 0) {
+    // showRankingがtrueの場合、即座に表彰台表示
+    if (top3.length >= 3) {
+      return (
+        <motion.section
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -30 }}
+          transition={{ duration: 0.5, ease: 'easeOut' }}
+          className="flex h-full flex-col gap-5"
+          role="region"
+          aria-label="クイズランキング"
+        >
+          <div className="text-center py-6">
+            <p className="text-6xl font-black text-ink">
+              {isBuzzerQuiz ? '早押しクイズランキング' : 'クイズ正解ランキング'}
+            </p>
+          </div>
+
+          <div className="flex-1 flex items-end justify-center gap-8 pb-12">
+            {/* 2位 - 左 */}
+            <motion.div
+              initial={{ y: 100, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.2, type: 'spring', bounce: 0.4 }}
+              className="flex flex-col items-center"
+            >
+              <motion.div
+                animate={{ rotate: [0, -10, 10, -10, 0] }}
+                transition={{ duration: 1.5, delay: 0.5, repeat: Infinity, repeatDelay: 2 }}
+                className="text-7xl mb-4"
+              >
+                🥈
+              </motion.div>
+              <div className="rounded-2xl bg-gradient-to-br from-gray-200/90 to-gray-300/90 backdrop-blur-sm p-8 shadow-2xl border-4 border-gray-400 w-72" style={{ height: '320px' }}>
+                <p className="text-6xl font-black text-ink text-center mb-3">{top3[1].rank}位</p>
+                {top3[1].tableNo && <p className="text-3xl font-black text-ink/70 text-center mb-2">{top3[1].tableNo}</p>}
+                <p className="text-4xl font-bold text-ink text-center mb-4">{top3[1].displayName}</p>
+                <p className="text-5xl font-black text-terra-clay text-center">
+                  {isBuzzerQuiz && 'latencyMs' in top3[1] && top3[1].latencyMs != null ? `${(top3[1].latencyMs / 1000).toFixed(2)}秒` : `${'correctCount' in top3[1] ? top3[1].correctCount : 0}問正解`}
+                </p>
+              </div>
+            </motion.div>
+
+            {/* 1位 - 中央 */}
+            <motion.div
+              initial={{ y: 150, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.4, type: 'spring', bounce: 0.5 }}
+              className="flex flex-col items-center -mt-16"
+            >
+              <motion.div
+                animate={{ rotate: [0, -15, 15, -15, 0], scale: [1, 1.2, 1] }}
+                transition={{ duration: 0.8, delay: 0.7, repeat: Infinity, repeatDelay: 2 }}
+                className="text-9xl mb-6"
+              >
+                🏆
+              </motion.div>
+              <div className="rounded-3xl bg-gradient-to-br from-yellow-200/95 to-yellow-300/95 backdrop-blur-sm p-10 shadow-2xl border-4 border-yellow-500 ring-8 ring-yellow-400/50 w-80" style={{ height: '420px' }}>
+                <p className="text-7xl font-black text-ink text-center mb-4">{top3[0].rank}位</p>
+                {top3[0].tableNo && <p className="text-4xl font-black text-ink/70 text-center mb-3">{top3[0].tableNo}</p>}
+                <p className="text-5xl font-bold text-ink text-center mb-6">{top3[0].displayName}</p>
+                <p className="text-6xl font-black text-terra-clay text-center">
+                  {isBuzzerQuiz && 'latencyMs' in top3[0] && top3[0].latencyMs != null ? `${(top3[0].latencyMs / 1000).toFixed(2)}秒` : `${'correctCount' in top3[0] ? top3[0].correctCount : 0}問正解`}
+                </p>
+              </div>
+            </motion.div>
+
+            {/* 3位 - 右 */}
+            <motion.div
+              initial={{ y: 100, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.3, type: 'spring', bounce: 0.4 }}
+              className="flex flex-col items-center"
+            >
+              <motion.div
+                animate={{ rotate: [0, 10, -10, 10, 0] }}
+                transition={{ duration: 1.5, delay: 0.6, repeat: Infinity, repeatDelay: 2 }}
+                className="text-7xl mb-4"
+              >
+                🥉
+              </motion.div>
+              <div className="rounded-2xl bg-gradient-to-br from-amber-600/30 to-amber-700/30 backdrop-blur-sm p-8 shadow-2xl border-4 border-amber-600 w-72" style={{ height: '280px' }}>
+                <p className="text-6xl font-black text-ink text-center mb-3">{top3[2].rank}位</p>
+                {top3[2].tableNo && <p className="text-3xl font-black text-ink/70 text-center mb-2">{top3[2].tableNo}</p>}
+                <p className="text-4xl font-bold text-ink text-center mb-4">{top3[2].displayName}</p>
+                <p className="text-5xl font-black text-terra-clay text-center">
+                  {isBuzzerQuiz && 'latencyMs' in top3[2] && top3[2].latencyMs != null ? `${(top3[2].latencyMs / 1000).toFixed(2)}秒` : `${'correctCount' in top3[2] ? top3[2].correctCount : 0}問正解`}
+                </p>
+              </div>
+            </motion.div>
+          </div>
+        </motion.section>
+      );
+    }
+  }
+
   // Show waiting screen when no active quiz
   if (!activeQuiz) {
     return (
