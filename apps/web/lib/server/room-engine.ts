@@ -231,18 +231,24 @@ export async function submitQuizAnswer(roomId: string, quizId: string, playerId:
     representativeByTable
   });
 
-  const { error } = await client.rpc('record_quiz_answer', {
-    p_room_id: roomId,
-    p_quiz_id: quizId,
-    p_player_id: playerId,
-    p_choice: choiceIndex,
-    p_representative_by_table: representativeByTable,
-    p_latency_ms: latencyMs
-  });
+  // For hardcoded quizzes, insert directly without using RPC function
+  // This avoids foreign key constraint on quiz_id
+  const { error: insertError } = await client
+    .from('answers')
+    .upsert({
+      room_id: roomId,
+      quiz_id: quizId,
+      player_id: playerId,
+      choice_index: choiceIndex,
+      latency_ms: latencyMs,
+      answered_at: new Date().toISOString()
+    }, {
+      onConflict: 'quiz_id,player_id'
+    });
 
-  if (error) {
-    console.error('[recordQuizAnswer] Error:', error);
-    throw error;
+  if (insertError) {
+    console.error('[recordQuizAnswer] Error:', insertError);
+    throw insertError;
   }
 
   console.log('[recordQuizAnswer] Answer recorded successfully');
