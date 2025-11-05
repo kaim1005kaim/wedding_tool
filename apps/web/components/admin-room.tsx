@@ -742,7 +742,9 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
                   }
 
                   // 第5問の正解公開後 → ランキング表示
-                  if (quizResult && activeQuiz?.ord === 5) {
+                  // Check quiz ID to handle case where activeQuiz.ord might be stale
+                  const isQuiz5 = quizResult?.quizId === '00000000-0000-0000-0000-000000000005' || activeQuiz?.ord === 5;
+                  if (quizResult && isQuiz5) {
                     if (!isCloudMode || !adminToken) return;
                     try {
                       const response = await fetch(`/api/admin/rooms/${roomId}/game/show-ranking`, {
@@ -772,7 +774,8 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
               >
                 {(() => {
                   if (activeQuiz && !quizResult) return '正解を公開';
-                  if (quizResult && activeQuiz?.ord === 5) return 'ランキング表示へ';
+                  const isQuiz5 = quizResult?.quizId === '00000000-0000-0000-0000-000000000005' || activeQuiz?.ord === 5;
+                  if (quizResult && isQuiz5) return 'ランキング表示へ';
                   if (quizResult) return '次のクイズへ';
                   return 'クイズ開始';
                 })()}
