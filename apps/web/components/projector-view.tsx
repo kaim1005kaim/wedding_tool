@@ -1143,7 +1143,7 @@ const QuizBoard = memo(function QuizBoard({ activeQuiz, quizResult, leaderboard,
                     <img
                       src={activeQuiz.imageUrl}
                       alt="Quiz visual"
-                      className="max-w-md max-h-64 rounded-2xl shadow-lg object-contain"
+                      className="max-w-md max-h-64 object-contain"
                       onLoad={() => console.log('[Projector] Image loaded:', activeQuiz.imageUrl)}
                       onError={(e) => console.error('[Projector] Image failed to load:', activeQuiz.imageUrl, e)}
                     />
