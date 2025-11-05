@@ -1024,6 +1024,15 @@ const QuizBoard = memo(function QuizBoard({ activeQuiz, quizResult, leaderboard,
   }
 
   // Show ranking when showRanking flag is set (check before activeQuiz check)
+  console.log('[Projector] Ranking check:', {
+    showRanking,
+    mode,
+    quizLeaderboardLength: quizLeaderboard.length,
+    leaderboardLength: leaderboard.length,
+    top3Length: top3.length,
+    leaderboardSample: leaderboard.slice(0, 3)
+  });
+
   if (showRanking && mode === 'quiz' && quizLeaderboard.length > 0) {
     // showRankingがtrueの場合、即座に表彰台表示
     if (top3.length >= 3) {
