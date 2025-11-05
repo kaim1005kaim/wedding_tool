@@ -102,15 +102,16 @@ export async function showRanking(roomId: string) {
   });
 
   // 常にランキング表示をONにする（トグル動作を廃止）
-  // quiz_resultとcurrent_quizをクリアして正解エフェクトが再生されないようにする
+  // quiz_resultをクリアして正解エフェクトが再生されないようにする
+  // current_quizは保持して、次のクイズの順番を維持する
   // modeとphaseを明示的に維持して、idleモードに戻らないようにする
   await upsertRoomSnapshot(roomId, {
     mode: 'quiz',
     phase: 'running',
     show_ranking: true,
     show_celebration: false,
-    quiz_result: null,
-    current_quiz: null
+    quiz_result: null
+    // current_quizは保持（削除しない）
   });
   await appendAuditLog(roomId, 'game:showRanking', {});
 
@@ -302,15 +303,24 @@ export async function showNextQuiz(
   // Get already revealed quizzes from room snapshot
   const snapshot = await fetchRoomSnapshot(roomId);
 
-  // Track which quizzes have been revealed by checking current_quiz history
-  // For simplicity, we'll show quizzes in order and use current_quiz.ord to determine next
-  const currentOrd = snapshot?.current_quiz?.ord ?? 0;
-  const nextOrd = currentOrd + 1;
+  // For buzzer mode, always start quiz 6 (buzzer quiz)
+  let next: typeof WEDDING_QUIZZES[0] | undefined;
+  if (buzzerMode) {
+    next = WEDDING_QUIZZES.find((quiz) => quiz.ord === 6 && quiz.isBuzzer === true);
+    if (!next) {
+      throw new Error('Buzzer quiz (quiz 6) not found');
+    }
+  } else {
+    // Track which quizzes have been revealed by checking current_quiz history
+    // For simplicity, we'll show quizzes in order and use current_quiz.ord to determine next
+    const currentOrd = snapshot?.current_quiz?.ord ?? 0;
+    const nextOrd = currentOrd + 1;
 
-  const next = WEDDING_QUIZZES.find((quiz) => quiz.ord === nextOrd);
+    next = WEDDING_QUIZZES.find((quiz) => quiz.ord === nextOrd);
 
-  if (!next) {
-    throw new Error('All quizzes have been revealed');
+    if (!next) {
+      throw new Error('All quizzes have been revealed');
+    }
   }
 
   // For buzzer quiz (quiz 6), set up sudden death for top scorers after quiz 5
