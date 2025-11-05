@@ -78,6 +78,7 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
   const phase = useRoomStore((state) => state.phase);
   const countdownMs = useRoomStore((state) => state.countdownMs);
   const activeQuiz = useRoomStore((state) => state.activeQuiz);
+  const quizResult = useRoomStore((state) => state.quizResult);
   const isCloudMode = appConfig.mode === 'cloud';
   const storageKey = useMemo(() => `wedding_tool:${roomId}:admin`, [roomId]);
 
@@ -730,7 +731,7 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
             <div className="space-y-3">
               <AdminButton
                 icon={ListChecks}
-                disabled={mode !== 'quiz' || activeQuiz !== null}
+                disabled={mode !== 'quiz' || (activeQuiz !== null && !quizResult)}
                 onClick={() => {
                   const deadlineMs = quizSettings.enableTimeLimit ? quizSettings.quizDurationSeconds * 1000 : undefined;
                   void send({ type: 'quiz:next', payload: undefined }, {
@@ -740,12 +741,18 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
                 }}
                 className="w-full"
               >
-                クイズ表示
+                {(() => {
+                  if (quizResult) return '次のクイズへ';
+                  if (activeQuiz) return 'クイズ開始';
+                  // Check if any quiz has been revealed (ord > 0 means we've started)
+                  const hasStarted = quizResult?.quizId || activeQuiz?.ord;
+                  return hasStarted ? '次のクイズへ' : 'クイズ開始';
+                })()}
               </AdminButton>
               <AdminButton
                 variant="danger"
                 icon={Eye}
-                disabled={!activeQuiz}
+                disabled={!activeQuiz || !!quizResult}
                 onClick={handleReveal}
                 className="w-full"
               >

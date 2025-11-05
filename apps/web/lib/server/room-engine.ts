@@ -359,12 +359,15 @@ export async function revealQuiz(roomId: string, quizId: string, awardedPoints =
   // Count answers per choice
   const perChoiceCounts = [0, 0, 0, 0];
   if (answers) {
+    console.log('[revealQuiz] Processing answers:', { count: answers.length });
     for (const answer of answers) {
+      console.log('[revealQuiz] Answer:', { playerId: answer.player_id, choiceIndex: answer.choice_index });
       if (answer.choice_index >= 0 && answer.choice_index < 4) {
         perChoiceCounts[answer.choice_index]++;
       }
     }
   }
+  console.log('[revealQuiz] Final perChoiceCounts:', perChoiceCounts);
 
   // Get awarded players info with display names
   const awardedPlayerIds = answers
