@@ -1081,11 +1081,6 @@ const QuizBoard = memo(function QuizBoard({ activeQuiz, quizResult, leaderboard,
       {/* Question */}
       {activeQuiz && (
         <>
-          {/* Quiz Title */}
-          <div className="text-center mb-6">
-            <h2 className="text-4xl font-black text-ink">第{activeQuiz.ord}問</h2>
-          </div>
-
           {/* Question and Image Box */}
           <div className="glass-panel-strong rounded-3xl px-12 py-10 border border-white/30 shadow-xl mb-8">
             <div className="text-center space-y-6">
