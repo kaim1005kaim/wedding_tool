@@ -732,10 +732,24 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
               <AdminButton
                 icon={ListChecks}
                 disabled={mode !== 'quiz' || (activeQuiz !== null && !quizResult)}
-                onClick={() => {
+                onClick={async () => {
                   // Check if this is after quiz 5 (ord: 5) - show ranking instead
                   if (quizResult && activeQuiz?.ord === 5) {
-                    void send({ type: 'game:ranking', payload: undefined });
+                    if (!isCloudMode || !adminToken) return;
+                    try {
+                      const response = await fetch(`/api/admin/rooms/${roomId}/game/show-ranking`, {
+                        method: 'POST',
+                        headers: {
+                          'Content-Type': 'application/json',
+                          Authorization: `Bearer ${adminToken}`
+                        }
+                      });
+                      if (!response.ok) {
+                        throw new Error('Failed to show ranking');
+                      }
+                    } catch (err) {
+                      console.error('[Admin] Failed to show ranking:', err);
+                    }
                   } else {
                     const deadlineMs = quizSettings.enableTimeLimit ? quizSettings.quizDurationSeconds * 1000 : undefined;
                     void send({ type: 'quiz:next', payload: undefined }, {
