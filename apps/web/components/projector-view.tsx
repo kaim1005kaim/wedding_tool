@@ -1081,29 +1081,37 @@ const QuizBoard = memo(function QuizBoard({ activeQuiz, quizResult, leaderboard,
       {/* Question */}
       {activeQuiz && (
         <>
-          <div className="text-center space-y-6">
-            <p className="text-3xl font-bold leading-relaxed text-ink glass-panel-strong px-8 py-6 rounded-2xl border border-white/30 shadow-lg inline-block max-w-5xl">
-              {activeQuiz.question}
-            </p>
-            {/* Quiz Image - Projector only */}
-            {activeQuiz.imageUrl && (
-              <motion.div
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 0.3 }}
-                className="flex justify-center mb-6"
-              >
-                <img
-                  src={activeQuiz.imageUrl}
-                  alt="Quiz visual"
-                  className="max-w-3xl max-h-80 rounded-2xl shadow-xl border-4 border-white/30 object-contain"
-                />
-              </motion.div>
-            )}
+          {/* Quiz Title */}
+          <div className="text-center mb-6">
+            <h2 className="text-4xl font-black text-ink">第{activeQuiz.ord}問</h2>
+          </div>
+
+          {/* Question and Image Box */}
+          <div className="glass-panel-strong rounded-3xl px-12 py-10 border border-white/30 shadow-xl mb-8">
+            <div className="text-center space-y-6">
+              <p className="text-3xl font-bold leading-relaxed text-ink">
+                {activeQuiz.question}
+              </p>
+              {/* Quiz Image - Projector only */}
+              {activeQuiz.imageUrl && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: 0.3 }}
+                  className="flex justify-center mt-8"
+                >
+                  <img
+                    src={activeQuiz.imageUrl}
+                    alt="Quiz visual"
+                    className="max-w-md max-h-64 rounded-2xl shadow-lg object-contain"
+                  />
+                </motion.div>
+              )}
+            </div>
           </div>
 
           {/* 2x2 Grid Layout for Choices */}
-          <div className="grid grid-cols-2 gap-5 mt-6">
+          <div className="grid grid-cols-2 gap-6">
             {activeQuiz.choices.map((choice, index) => {
               const isCorrect = quizResult && index === correctIndex;
               const count = counts[index];
