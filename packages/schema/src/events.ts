@@ -55,7 +55,10 @@ export const quizResultBroadcastSchema = z.object({
   perChoiceCounts: z.array(z.number().int().min(0)).length(4),
   awarded: z.array(z.object({
     playerId: z.string().uuid(),
-    delta: z.number().int()
+    delta: z.number().int(),
+    displayName: z.string().optional(),
+    tableNo: z.string().nullable().optional(),
+    latencyMs: z.number().int().nullable().optional()
   }))
 });
 
