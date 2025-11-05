@@ -379,7 +379,14 @@ export async function revealQuiz(roomId: string, quizId: string, awardedPoints =
     : [];
 
   // Fetch player details for awarded players
-  const awardedPlayers = [];
+  const awardedPlayers: Array<{
+    playerId: string;
+    delta: number;
+    displayName?: string;
+    tableNo?: string | null;
+    latencyMs?: number | null;
+  }> = [];
+
   if (awardedPlayerIds.length > 0) {
     console.log('[revealQuiz] Fetching player details for:', awardedPlayerIds);
 
@@ -405,8 +412,8 @@ export async function revealQuiz(roomId: string, quizId: string, awardedPoints =
         awardedPlayers.push({
           playerId: player.id,
           delta: awardedPoints,
-          displayName: player.display_name,
-          tableNo: player.table_no,
+          displayName: player.display_name ?? undefined,
+          tableNo: player.table_no ?? null,
           latencyMs
         });
       }

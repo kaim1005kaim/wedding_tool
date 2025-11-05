@@ -1224,7 +1224,7 @@ function QuizOverlay({ phase, countdownMs, roomId, playerToken }: QuizOverlayPro
         {hasAnswered && !quizResult && (
           <div className="mt-4">
             <p className="text-sm font-bold text-ink text-center">
-              回答を送信しました。正解発表をお待ちください...
+              回答は送信済みです。
             </p>
           </div>
         )}
