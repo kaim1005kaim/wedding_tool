@@ -881,11 +881,32 @@ const CHOICE_LABELS = ['A', 'B', 'C', 'D'];
 function QuizOverlay({ phase, countdownMs, roomId, playerToken }: QuizOverlayProps) {
   const activeQuiz = useRoomStore((state) => state.activeQuiz);
   const quizResult = useRoomStore((state) => state.quizResult);
+  const leaderboard = useRoomStore((state) => state.leaderboard);
+  const playerId = useRoomStore((state) => state.playerId);
   const [selectedChoice, setSelectedChoice] = useState<number | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [timeLeftSeconds, setTimeLeftSeconds] = useState<number | null>(null);
   const [phaseEndTime, setPhaseEndTime] = useState<number | null>(null);
   const [particleTrigger, setParticleTrigger] = useState<ParticleConfig | null>(null);
+
+  // Check if player can participate (for sudden death mode)
+  const canParticipate = useMemo(() => {
+    if (!activeQuiz?.suddenDeath?.enabled) return true;
+    if (!playerId) return false;
+
+    const suddenDeath = activeQuiz.suddenDeath;
+
+    if (suddenDeath.by === 'player') {
+      // Find player's rank by quiz points
+      const sortedByQuizPoints = [...leaderboard].sort((a, b) => (b.quizPoints ?? 0) - (a.quizPoints ?? 0));
+      const playerIndex = sortedByQuizPoints.findIndex(entry => entry.playerId === playerId);
+
+      // Player can participate if they're in top K
+      return playerIndex >= 0 && playerIndex < suddenDeath.topK;
+    }
+
+    return true;
+  }, [activeQuiz, playerId, leaderboard]);
 
   // Reset selection when quiz changes
   useEffect(() => {
@@ -998,7 +1019,8 @@ function QuizOverlay({ phase, countdownMs, roomId, playerToken }: QuizOverlayPro
     }
   };
 
-  if (!activeQuiz) {
+  // Show waiting screen if quiz hasn't started or player can't participate
+  if (!activeQuiz || !canParticipate) {
     return (
       <>
         {/* 紙吹雪エフェクト */}
@@ -1042,8 +1064,10 @@ function QuizOverlay({ phase, countdownMs, roomId, playerToken }: QuizOverlayPro
               <img src="/quiz-title.svg" alt="Quiz" className="h-24 w-auto" />
             </div>
 
-            <p className="text-lg font-bold text-ink leading-relaxed">
-              クイズ開始まで少々お待ちください
+            <p className="text-lg font-bold text-ink leading-relaxed whitespace-pre-line">
+              {!activeQuiz
+                ? 'クイズ開始まで少々お待ちください'
+                : '早押しクイズは上位者のみ参加できます\n結果発表をお待ちください'}
             </p>
           </div>
         </div>
