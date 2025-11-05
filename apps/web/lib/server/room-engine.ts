@@ -101,7 +101,10 @@ export async function showRanking(roomId: string) {
 
   // 常にランキング表示をONにする（トグル動作を廃止）
   // quiz_resultとcurrent_quizをクリアして正解エフェクトが再生されないようにする
+  // modeとphaseを明示的に維持して、idleモードに戻らないようにする
   await upsertRoomSnapshot(roomId, {
+    mode: 'quiz',
+    phase: 'running',
     show_ranking: true,
     show_celebration: false,
     quiz_result: null,
@@ -116,8 +119,8 @@ export async function showRanking(roomId: string) {
   const updatedSnapshot = await fetchRoomSnapshot(roomId);
   return {
     showRanking: true,
-    mode: updatedSnapshot?.mode ?? 'quiz',
-    phase: updatedSnapshot?.phase ?? 'running'
+    mode: 'quiz',
+    phase: 'running'
   };
 }
 
