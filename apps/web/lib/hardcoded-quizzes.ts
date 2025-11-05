@@ -22,24 +22,24 @@ export const WEDDING_QUIZZES: HardcodedQuiz[] = [
     ord: 1,
     question: '渋谷駅にあるハチ公像、実際は何の犬？',
     choices: ['柴犬', '秋田犬', '豆柴', 'コーギー'],
-    answerIndex: 1 // B.秋田犬
-    // TODO: imageUrl: '/quiz-images/quiz1.jpg'
+    answerIndex: 1, // B.秋田犬
+    imageUrl: '/quiz-images/quiz1.jpg'
   },
   {
     id: '00000000-0000-0000-0000-000000000002',
     ord: 2,
     question: '新婦が長年推しているflumpool。\n今年でファン歴何年目でしょう？',
     choices: ['3年目', '7年目', '14年目', '20年目'],
-    answerIndex: 2 // C.14年目
-    // TODO: imageUrl: '/quiz-images/quiz2.jpg'
+    answerIndex: 2, // C.14年目
+    imageUrl: '/quiz-images/quiz2.jpg'
   },
   {
     id: '00000000-0000-0000-0000-000000000003',
     ord: 3,
     question: '普段、新郎が新婦を呼んでいる名前は？',
     choices: ['みずき', 'えっちゃん', 'とりとり', 'とりっぴー'],
-    answerIndex: 2 // C.とりとり
-    // TODO: imageUrl: '/quiz-images/quiz3.jpg'
+    answerIndex: 2, // C.とりとり
+    imageUrl: '/quiz-images/quiz3.jpg'
   },
   {
     id: '00000000-0000-0000-0000-000000000004',
