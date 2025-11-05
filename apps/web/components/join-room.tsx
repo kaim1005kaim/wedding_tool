@@ -300,15 +300,50 @@ export default function JoinRoom({ code }: { code: string }) {
 
       {/* 抽選モード非表示 */}
       {registered && mode !== 'countup' && mode !== 'quiz' && mode !== 'lottery' && (
-        <div className="mx-auto w-full max-w-3xl mt-8 space-y-6 relative z-10">
-          <div className="text-center py-4">
-            <p className="text-2xl font-bold text-ink">
-              まもなくゲームが始まります。<br />
-              スマホの画面を確認してください。
-            </p>
+        <>
+          {/* 紙吹雪エフェクト */}
+          <div className="fixed inset-0 pointer-events-none z-0">
+            {Array.from({ length: 30 }).map((_, i) => (
+              <motion.div
+                key={i}
+                className="absolute"
+                initial={{
+                  top: -20,
+                  left: `${Math.random() * 100}%`,
+                  rotate: Math.random() * 360
+                }}
+                animate={{
+                  top: '110%',
+                  rotate: Math.random() * 720 + 360
+                }}
+                transition={{
+                  duration: Math.random() * 3 + 2,
+                  repeat: Infinity,
+                  ease: 'linear',
+                  delay: Math.random() * 2
+                }}
+              >
+                <div
+                  className="w-3 h-3 rounded-full"
+                  style={{
+                    backgroundColor: ['#FF6B6B', '#4ECDC4', '#FFE66D', '#A8E6CF', '#FF8B94'][
+                      Math.floor(Math.random() * 5)
+                    ]
+                  }}
+                />
+              </motion.div>
+            ))}
           </div>
 
-          {/* Personal Score Display */}
+          <div className="mx-auto w-full max-w-3xl mt-8 space-y-6 relative z-10">
+            <div className="text-center py-4">
+              <p className="text-2xl font-bold text-ink">
+                まもなくゲームが始まります。<br />
+                そのまましばらくお待ちください。
+              </p>
+            </div>
+
+            {/* Personal Score Display */}
           {(() => {
             const myEntry = leaderboard.find(entry => entry.displayName === registeredName);
             const hasScore = myEntry && myEntry.totalPoints > 0;
@@ -343,7 +378,8 @@ export default function JoinRoom({ code }: { code: string }) {
               </div>
             );
           })()}
-        </div>
+          </div>
+        </>
       )}
 
       {registered && mode === 'countup' && (
@@ -1103,14 +1139,12 @@ function QuizOverlay({ phase, countdownMs, roomId, playerToken }: QuizOverlayPro
           })}
         </div>
 
-        {/* Status Message */}
+        {/* Status Message - Below choices */}
         {hasAnswered && !quizResult && (
-          <div className="mt-8">
-            <div className="glass-panel-strong rounded-2xl px-8 py-4 shadow-xl border border-white/30">
-              <p className="text-xl font-bold text-ink text-center">
-                回答を送信しました。正解発表をお待ちください...
-              </p>
-            </div>
+          <div className="mt-4">
+            <p className="text-sm font-bold text-ink text-center">
+              回答を送信しました。正解発表をお待ちください...
+            </p>
           </div>
         )}
       </div>
