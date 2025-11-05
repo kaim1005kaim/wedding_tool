@@ -735,8 +735,14 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
                 variant={activeQuiz && !quizResult ? 'danger' : 'primary'}
                 disabled={mode !== 'quiz' || (activeQuiz !== null && activeQuiz.ord === 6)}
                 onClick={async () => {
+                  console.log('[Admin Quiz Button] Click:', {
+                    activeQuiz: activeQuiz ? { ord: activeQuiz.ord, quizId: activeQuiz.quizId } : null,
+                    quizResult: quizResult ? { quizId: quizResult.quizId } : null
+                  });
+
                   // 正解公開フェーズ（activeQuizあり、quizResultなし）
                   if (activeQuiz && !quizResult) {
+                    console.log('[Admin] → Revealing answer');
                     await handleReveal();
                     return;
                   }
@@ -744,7 +750,10 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
                   // 第5問の正解公開後 → ランキング表示
                   // Check quiz ID to handle case where activeQuiz.ord might be stale
                   const isQuiz5 = quizResult?.quizId === '00000000-0000-0000-0000-000000000005' || activeQuiz?.ord === 5;
+                  console.log('[Admin] isQuiz5 check:', { isQuiz5, quizResultId: quizResult?.quizId, activeQuizOrd: activeQuiz?.ord });
+
                   if (quizResult && isQuiz5) {
+                    console.log('[Admin] → Showing ranking');
                     if (!isCloudMode || !adminToken) return;
                     try {
                       const response = await fetch(`/api/admin/rooms/${roomId}/game/show-ranking`, {
@@ -764,6 +773,7 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
                   }
 
                   // 次のクイズへ or クイズ開始
+                  console.log('[Admin] → Next quiz or start');
                   const deadlineMs = quizSettings.enableTimeLimit ? quizSettings.quizDurationSeconds * 1000 : undefined;
                   void send({ type: 'quiz:next', payload: undefined }, {
                     deadlineMs,
