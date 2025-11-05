@@ -907,11 +907,11 @@ function QuizOverlay({ phase, countdownMs, roomId, playerToken }: QuizOverlayPro
       if (!response.ok) {
         const error = await response.json();
         console.error('Failed to submit answer:', error);
-        setSelectedChoice(null);
+        // Keep selection even on error - user cannot change answer
       }
     } catch (err) {
       console.error('Failed to submit answer:', err);
-      setSelectedChoice(null);
+      // Keep selection even on error - user cannot change answer
     } finally {
       setIsSubmitting(false);
     }
