@@ -845,7 +845,11 @@ const QuizBoard = memo(function QuizBoard({ activeQuiz, quizResult, leaderboard,
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className="text-4xl font-black text-terra-clay">正解数{entry.correctCount}/5</p>
+                    <p className="text-4xl font-black text-terra-clay">
+                      {isBuzzerQuiz && 'latencyMs' in entry
+                        ? `${((entry.latencyMs ?? 0) / 1000).toFixed(2)}秒`
+                        : `正解数${'correctCount' in entry ? entry.correctCount : 0}/5`}
+                    </p>
                   </div>
                 </motion.div>
               ))}
