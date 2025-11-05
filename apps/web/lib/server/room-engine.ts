@@ -363,12 +363,38 @@ export async function revealQuiz(roomId: string, quizId: string, awardedPoints =
     }
   }
 
-  // Get awarded players info
-  const awardedPlayers = answers
+  // Get awarded players info with display names
+  const awardedPlayerIds = answers
     ? answers
         .filter((a) => a.choice_index === quiz.answerIndex)
-        .map((a) => ({ playerId: a.player_id, delta: awardedPoints, answeredAt: a.answered_at }))
+        .map((a) => a.player_id)
     : [];
+
+  // Fetch player details for awarded players
+  const awardedPlayers = [];
+  if (awardedPlayerIds.length > 0) {
+    const { data: players } = await client
+      .from('players')
+      .select('id, display_name, table_no')
+      .in('id', awardedPlayerIds);
+
+    if (players) {
+      for (const player of players) {
+        const answer = answers?.find((a) => a.player_id === player.id);
+        const latencyMs = answer?.answered_at
+          ? new Date(answer.answered_at).getTime() - (Date.now() - 30000) // Approximate
+          : null;
+
+        awardedPlayers.push({
+          playerId: player.id,
+          delta: awardedPoints,
+          displayName: player.display_name,
+          tableNo: player.table_no,
+          latencyMs
+        });
+      }
+    }
+  }
 
   // Update room snapshot with quiz result
   await recomputeLeaderboard(roomId);
