@@ -761,10 +761,10 @@ function CountupOverlay({ phase, countdownMs, leaderboard, onTap, registeredName
       {phase === 'ended' && (
         <div className="mx-auto w-full max-w-3xl mt-8 space-y-6 relative z-10">
           <div className="flex flex-col items-center gap-6 bounce-in">
-            <span className="text-[min(20vw,8rem)] font-bold uppercase tracking-wider text-terra-clay drop-shadow-lg">
+            <span className="text-[min(15vw,6rem)] font-bold uppercase tracking-wider text-terra-clay drop-shadow-lg">
               TIME UP!
             </span>
-            <p className="text-2xl font-bold text-ink glass-panel-strong px-6 py-3 rounded-xl border border-white/30">結果発表まで少々お待ちください</p>
+            <p className="text-2xl font-bold text-ink px-6 py-3">結果発表まで少々お待ちください</p>
           </div>
         </div>
       )}

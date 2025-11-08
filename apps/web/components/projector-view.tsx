@@ -1380,7 +1380,7 @@ const CelebrationBoard = memo(function CelebrationBoard() {
     >
       {/* 紙吹雪エフェクト */}
       <div className="absolute inset-0 pointer-events-none">
-        {Array.from({ length: 50 }).map((_, i) => (
+        {Array.from({ length: 150 }).map((_, i) => (
           <motion.div
             key={i}
             className="absolute"
@@ -1411,18 +1411,6 @@ const CelebrationBoard = memo(function CelebrationBoard() {
           </motion.div>
         ))}
       </div>
-
-      {/* 祝！優勝！！ - センター揃え */}
-      <motion.div
-        initial={{ scale: 0.5, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        transition={{ type: 'spring', bounce: 0.5, duration: 1 }}
-        className="relative z-10 flex items-center justify-center"
-      >
-        <p className="font-black text-terra-clay text-center" style={{ fontSize: '15rem', lineHeight: 1 }}>
-          祝！優勝！！
-        </p>
-      </motion.div>
     </motion.section>
   );
 });
