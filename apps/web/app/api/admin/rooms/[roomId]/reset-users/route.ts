@@ -75,6 +75,25 @@ export async function POST(request: Request, props: { params: Promise<{ roomId: 
       throw refreshError;
     }
 
+    // Broadcast state update to notify all clients
+    const channel = client.channel(`room:${roomId}`);
+    await channel.send({
+      type: 'broadcast',
+      event: 'state:update',
+      payload: {
+        mode: 'idle',
+        phase: 'idle',
+        serverTime: Date.now(),
+        countdownMs: 0,
+        leaderboard: [],
+        activeQuiz: null,
+        quizResult: null,
+        lotteryResult: null,
+        representatives: [],
+        showRanking: false
+      }
+    });
+
     // Log the action
     await appendAuditLog(roomId, 'admin:resetUsers', {});
 

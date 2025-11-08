@@ -126,6 +126,19 @@ export default function JoinRoom({ code }: { code: string }) {
     return fingerprint.substring(0, 128);
   };
 
+  const clearAuthAndStorage = useCallback(() => {
+    clearPlayerAuth();
+    setRegistered(false);
+    setShowModal(true);
+    if (typeof window !== 'undefined') {
+      window.localStorage.removeItem(storageKey);
+      window.localStorage.removeItem(`${storageKey}:tableNo`);
+      window.localStorage.removeItem(`${storageKey}:name`);
+      window.localStorage.removeItem(`${storageKey}:furigana`);
+      window.localStorage.removeItem(`${storageKey}:room`);
+    }
+  }, [clearPlayerAuth, storageKey]);
+
   const handleJoin = async () => {
     if (!tableNo.trim()) {
       setModalError('テーブルナンバーを入力してください');
@@ -237,6 +250,12 @@ export default function JoinRoom({ code }: { code: string }) {
           body: JSON.stringify({ delta })
         });
         if (!response.ok) {
+          if (response.status === 401) {
+            // Token expired or user was reset - clear auth and show registration modal
+            clearAuthAndStorage();
+            setError('セッションが無効になりました。再度登録してください。');
+            return;
+          }
           const data = (await response.json().catch(() => ({}))) as { error?: string };
           throw new Error(data.error ?? response.statusText);
         }
@@ -249,7 +268,7 @@ export default function JoinRoom({ code }: { code: string }) {
     } catch (err) {
       setError(err instanceof Error ? err.message : '送信に失敗しました');
     }
-  }, [isCloudMode, runtimeRoomId, roomId, playerToken, client]);
+  }, [isCloudMode, runtimeRoomId, roomId, playerToken, client, clearAuthAndStorage]);
 
   const handleTap = useCallback(() => {
     const now = Date.now();
@@ -426,6 +445,8 @@ export default function JoinRoom({ code }: { code: string }) {
           countdownMs={countdownMs}
           roomId={runtimeRoomId}
           playerToken={playerToken}
+          clearAuthAndStorage={clearAuthAndStorage}
+          setError={setError}
         />
       )}
 
@@ -882,11 +903,13 @@ type QuizOverlayProps = {
   countdownMs: number;
   roomId: string | null;
   playerToken: string | null;
+  clearAuthAndStorage: () => void;
+  setError: (error: string | null) => void;
 };
 
 const CHOICE_LABELS = ['A', 'B', 'C', 'D'];
 
-function QuizOverlay({ phase, countdownMs, roomId, playerToken }: QuizOverlayProps) {
+function QuizOverlay({ phase, countdownMs, roomId, playerToken, clearAuthAndStorage, setError }: QuizOverlayProps) {
   const activeQuiz = useRoomStore((state) => state.activeQuiz);
   const quizResult = useRoomStore((state) => state.quizResult);
   const showRanking = useRoomStore((state) => state.showRanking);
@@ -1016,6 +1039,12 @@ function QuizOverlay({ phase, countdownMs, roomId, playerToken }: QuizOverlayPro
       });
 
       if (!response.ok) {
+        if (response.status === 401) {
+          // Token expired or user was reset - clear auth and show registration modal
+          clearAuthAndStorage();
+          setError('セッションが無効になりました。再度登録してください。');
+          return;
+        }
         const error = await response.json();
         console.error('Failed to submit answer:', error);
         // Keep selection even on error - user cannot change answer
