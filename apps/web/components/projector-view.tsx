@@ -516,9 +516,9 @@ const CountupBoard = memo(function CountupBoard({
               <motion.div
                 animate={{ rotate: [0, -10, 10, -10, 0] }}
                 transition={{ duration: 0.6, delay: 0.8 }}
-                className="mb-4 text-8xl"
+                className="mb-4"
               >
-                🥈
+                <img src="/medals/2nd.png" alt="2nd place" className="w-32 h-32 object-contain" />
               </motion.div>
               <div className="rounded-2xl glass-panel-strong p-8 shadow-2xl border-4 border-gray-400 ring-4 ring-gray-300/50 bg-gradient-to-br from-gray-50/30 to-slate-50/30">
                 {top3[1].furigana && <p className="text-base text-ink/60 font-medium text-center">{top3[1].furigana}</p>}
@@ -547,9 +547,9 @@ const CountupBoard = memo(function CountupBoard({
               <motion.div
                 animate={{ rotate: [0, -15, 15, -15, 0], scale: [1, 1.2, 1] }}
                 transition={{ duration: 0.8, delay: 1 }}
-                className="mb-4 text-9xl"
+                className="mb-4"
               >
-                🥇
+                <img src="/medals/1st.png" alt="1st place" className="w-40 h-40 object-contain" />
               </motion.div>
               <div className="rounded-2xl glass-panel-strong p-10 shadow-2xl border-4 border-yellow-400 ring-4 ring-yellow-300/50 bg-gradient-to-br from-yellow-50/40 to-orange-50/40">
                 {top3[0].furigana && <p className="text-lg text-ink/60 font-medium text-center">{top3[0].furigana}</p>}
@@ -578,9 +578,9 @@ const CountupBoard = memo(function CountupBoard({
               <motion.div
                 animate={{ rotate: [0, -10, 10, -10, 0] }}
                 transition={{ duration: 0.6, delay: 0.6 }}
-                className="mb-4 text-8xl"
+                className="mb-4"
               >
-                🥉
+                <img src="/medals/3rd.png" alt="3rd place" className="w-32 h-32 object-contain" />
               </motion.div>
               <div className="rounded-2xl glass-panel-strong p-8 shadow-2xl border-4 border-amber-600 ring-4 ring-amber-400/50 bg-gradient-to-br from-amber-50/30 to-orange-50/30">
                 {top3[2].furigana && <p className="text-base text-ink/60 font-medium text-center">{top3[2].furigana}</p>}
@@ -654,8 +654,12 @@ const IdleBoardOld = memo(function IdleBoardOld({ leaderboard }: { leaderboard: 
                         : 'ring-2 ring-terra-clay'
                   }`}
                 >
-                  <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-full text-3xl glass-panel shadow-md">
-                    {['🥇', '🥈', '🥉'][entry.rank - 1]}
+                  <div className="mb-3 flex h-14 w-14 items-center justify-center">
+                    <img
+                      src={`/medals/${['1st', '2nd', '3rd'][entry.rank - 1]}.png`}
+                      alt={`${entry.rank} place`}
+                      className="w-14 h-14 object-contain"
+                    />
                   </div>
                   {entry.furigana && <p className="text-xs text-ink/60 font-medium text-center">{entry.furigana}</p>}
                   <p className="mb-1 text-center text-xl font-bold text-ink">{entry.displayName}</p>

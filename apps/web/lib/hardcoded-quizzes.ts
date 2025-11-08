@@ -46,7 +46,8 @@ export const WEDDING_QUIZZES: HardcodedQuiz[] = [
     ord: 4,
     question: '新郎はダイエットして最大何キロ減量した？',
     choices: ['5kg', '15kg', '25kg', '減らしてない'],
-    answerIndex: 2 // C.25kg
+    answerIndex: 2, // C.25kg
+    imageUrl: '/quiz-images/quiz4.png'
   },
   {
     id: '00000000-0000-0000-0000-000000000005',
@@ -58,7 +59,8 @@ export const WEDDING_QUIZZES: HardcodedQuiz[] = [
       'サプライズでflumpoolの曲を歌ってくれた',
       'フラッシュモブをした'
     ],
-    answerIndex: 0 // A.初めて手紙を書いて気持ちを伝えてくれた
+    answerIndex: 0, // A.初めて手紙を書いて気持ちを伝えてくれた
+    imageUrl: '/quiz-images/quiz5.png'
   },
   {
     id: '00000000-0000-0000-0000-000000000006',
@@ -66,6 +68,7 @@ export const WEDDING_QUIZZES: HardcodedQuiz[] = [
     question: '今日（11月23日）は何の日？',
     choices: ['勤労感謝の日', 'いい夫婦の日', '文化の日', '体育の日'],
     answerIndex: 0, // A.勤労感謝の日
+    imageUrl: '/quiz-images/quiz6.png',
     isBuzzer: true
   }
 ];
