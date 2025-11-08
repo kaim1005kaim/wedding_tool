@@ -901,42 +901,39 @@ function CountupOverlay({ phase, countdownMs, leaderboard, onTap, registeredName
       )}
 
       {showPad && (
-        <div className="mx-auto w-full max-w-3xl mt-8 space-y-6 relative z-10">
+        <div className="fixed inset-0 flex items-center justify-center z-10">
           {timeLeftSeconds > 11 ? (
             // 準備カウントダウン: 3-2-1
             <div className="flex flex-col items-center gap-6 bounce-in">
-              <div className="rounded-full glass-panel-strong p-16 shadow-xl border border-white/30">
-                <span className="text-[min(40vw,18rem)] font-bold leading-none text-terra-clay">
-                  {timeLeftSeconds - 11}
-                </span>
-              </div>
-              <p className="text-3xl font-bold text-ink glass-panel-strong px-6 py-3 rounded-xl border border-white/30">準備してください！</p>
+              <span className="text-[min(40vw,18rem)] font-bold leading-none text-terra-clay">
+                {timeLeftSeconds - 11}
+              </span>
+              <p className="text-3xl font-bold text-ink">準備してください！</p>
             </div>
           ) : timeLeftSeconds === 11 ? (
             // START!表示
             <div className="flex flex-col items-center gap-6 bounce-in">
-              <div className="text-6xl animate-bounce">🚀</div>
-              <span className="text-[min(20vw,8rem)] font-bold uppercase tracking-wider text-white bg-gradient-terracotta px-8 py-4 rounded-xl shadow-xl">
+              <span className="text-[min(20vw,8rem)] font-bold uppercase tracking-wider text-terra-clay">
                 START!
               </span>
             </div>
           ) : timeLeftSeconds > 0 ? (
-            // タップ時間: 10-9-8...1
-            <div className="relative">
+            // タップ時間: 画面全体がタップ可能
+            <div className="relative w-full h-full">
               <button
                 type="button"
                 onPointerDown={handleTap}
                 disabled={disabled}
-                className="w-full rounded-3xl bg-gradient-sunset px-12 py-16 text-center shadow-xl transition-all duration-100 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed min-h-[280px]"
+                className="w-full h-full flex flex-col items-center justify-center transition-all duration-100 active:opacity-80 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <div className="text-[min(25vw,10rem)] font-bold uppercase text-white animate-pulse drop-shadow-lg">
+                <div className="text-[min(25vw,10rem)] font-bold uppercase text-terra-clay animate-pulse drop-shadow-lg">
                   TAP!
                 </div>
-                <p className="mt-3 text-2xl font-bold text-white drop-shadow">連打してポイント獲得！</p>
+                <p className="mt-3 text-2xl font-bold text-ink drop-shadow">画面どこでもタップでポイント獲得！</p>
               </button>
               {flash && (
                 <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                  <span className="text-8xl font-bold text-white opacity-90 animate-bounce-in drop-shadow-lg">
+                  <span className="text-8xl font-bold text-terra-clay opacity-90 animate-bounce-in drop-shadow-lg">
                     +1
                   </span>
                 </div>
@@ -945,8 +942,7 @@ function CountupOverlay({ phase, countdownMs, leaderboard, onTap, registeredName
           ) : (
             // STOP!表示
             <div className="flex flex-col items-center gap-6 bounce-in">
-              <div className="text-6xl">🎉</div>
-              <span className="text-[min(20vw,8rem)] font-bold uppercase tracking-wider text-white bg-gradient-terracotta px-8 py-4 rounded-xl shadow-xl">
+              <span className="text-[min(20vw,8rem)] font-bold uppercase tracking-wider text-terra-clay">
                 STOP!
               </span>
             </div>
