@@ -738,38 +738,14 @@ function CountupOverlay({ phase, countdownMs, leaderboard, onTap, registeredName
         </>
       )}
 
-      {/* Countdown Timer - Top Right - Only show when timer is actually running (not during preparation or START moment) */}
-      {showPad && displaySeconds !== '' && !isPreparation && !isStartMoment && (
-        <div className="fixed top-4 right-4 z-[70] pointer-events-none">
-          <div className="rounded-2xl glass-panel-strong px-5 py-3 shadow-xl border border-white/30">
-            <span className="text-4xl font-bold text-terra-clay drop-shadow">{displaySeconds}</span>
-          </div>
-        </div>
-      )}
 
-      {/* Rank and Tap Count - Top Left - Show during active tapping */}
-      {showPad && !isPreparation && !isStartMoment && myRank > 0 && (
-        <div className="fixed top-4 left-4 z-[70] pointer-events-none">
-          <div className="rounded-2xl glass-panel-strong px-5 py-3 shadow-xl border border-white/30 space-y-1">
-            <div className="text-sm font-bold text-ink/70">現在の順位</div>
-            <div className="text-3xl font-black text-terra-clay">{myRank}位</div>
-            <div className="text-lg font-bold text-ink">{myTapCount}回</div>
-          </div>
-        </div>
-      )}
-
-      {isFinished && phase === 'running' && (
+      {phase === 'ended' && (
         <div className="mx-auto w-full max-w-3xl mt-8 space-y-6 relative z-10">
           <div className="flex flex-col items-center gap-6 bounce-in">
-            {banner === 'stop' && (
-              <>
-                <div className="text-6xl">🎉</div>
-                <span className="text-[min(20vw,8rem)] font-bold uppercase tracking-wider text-white bg-gradient-terracotta px-8 py-4 rounded-xl shadow-xl">
-                  STOP!
-                </span>
-              </>
-            )}
-            <p className="text-xl font-bold text-ink glass-panel-strong px-6 py-3 rounded-xl border border-white/30">投影画面で結果を確認してください</p>
+            <span className="text-[min(20vw,8rem)] font-bold uppercase tracking-wider text-terra-clay drop-shadow-lg">
+              TIME UP!
+            </span>
+            <p className="text-2xl font-bold text-ink glass-panel-strong px-6 py-3 rounded-xl border border-white/30">結果発表まで少々お待ちください</p>
           </div>
         </div>
       )}
@@ -813,7 +789,14 @@ function CountupOverlay({ phase, countdownMs, leaderboard, onTap, registeredName
                 </div>
               )}
             </div>
-          ) : null}
+          ) : (
+            <div className="flex flex-col items-center gap-6 bounce-in">
+              <div className="text-6xl">🎉</div>
+              <span className="text-[min(20vw,8rem)] font-bold uppercase tracking-wider text-white bg-gradient-terracotta px-8 py-4 rounded-xl shadow-xl">
+                STOP!
+              </span>
+            </div>
+          )}
         </div>
       )}
       <ParticleEffect trigger={particleTrigger} />

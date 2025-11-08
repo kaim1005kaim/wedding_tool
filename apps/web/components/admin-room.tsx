@@ -969,13 +969,15 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
                     if (autoStopRef.current) {
                       clearTimeout(autoStopRef.current);
                     }
-                    const countdownMs = tapSettings.countdownSeconds * 1000;
-                    const durationMs = tapSettings.durationSeconds * 1000;
-                    await send({ type: 'game:start', payload: undefined }, { countdownMs });
+                    const preparationMs = tapSettings.countdownSeconds * 1000; // 3カウント（3秒）
+                    const startMs = 1000; // START表示（1秒）
+                    const durationMs = tapSettings.durationSeconds * 1000; // タップ時間（10秒）
+                    const totalCountdownMs = preparationMs + startMs + durationMs; // 合計14秒
+                    await send({ type: 'game:start', payload: undefined }, { countdownMs: totalCountdownMs });
                     autoStopRef.current = setTimeout(() => {
                       void send({ type: 'game:stop', payload: undefined });
                       autoStopRef.current = null;
-                    }, countdownMs + durationMs + 500);
+                    }, totalCountdownMs + 500);
                   }}
                 >
                   スタート
