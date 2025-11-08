@@ -42,11 +42,8 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
   const [adminToken, setAdminTokenState] = useState<string | null>(null);
   const [confirm, setConfirm] = useState<ConfirmState | null>(null);
   const [manageOpen, setManageOpen] = useState(false);
-  const [manageTab, setManageTab] = useState<'quiz' | 'lottery' | 'representatives'>('quiz');
   const [manageMessage, setManageMessage] = useState<string | null>(null);
   const [manageLoading, setManageLoading] = useState(false);
-  const [representatives, setRepresentatives] = useState<Array<{ tableNo: string; name: string; furigana?: string }>>([]);
-  const [representativeForm, setRepresentativeForm] = useState({ tableNo: '', name: '', furigana: '' });
   const [modeSwitching, setModeSwitching] = useState(false);
   const [rankingLoading, setRankingLoading] = useState(false);
   const [lotteryCandidates, setLotteryCandidates] = useState<LotteryCandidateSummary[]>([]);
@@ -347,31 +344,6 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
     }
   }, [adminToken, isCloudMode, roomId]);
 
-  const fetchRepresentatives = useCallback(async () => {
-    if (!isCloudMode || !adminToken) return;
-    try {
-      const response = await fetch(`/api/admin/rooms/${roomId}/representatives`, {
-        headers: {
-          Authorization: `Bearer ${adminToken}`
-        }
-      });
-      if (response.ok) {
-        const json = (await response.json()) as { representatives: Array<{ table_no: string; representative_name: string }> };
-        setRepresentatives((json.representatives ?? []).map(r => ({ tableNo: r.table_no, name: r.representative_name })));
-      }
-    } catch (err) {
-      console.error(err);
-    }
-  }, [adminToken, isCloudMode, roomId]);
-
-  useEffect(() => {
-    if (!manageOpen || !isCloudMode) return;
-    if (manageTab === 'lottery') {
-      void fetchLotteryCandidates();
-    } else if (manageTab === 'representatives') {
-      void fetchRepresentatives();
-    }
-  }, [manageOpen, manageTab, isCloudMode, fetchLotteryCandidates, fetchRepresentatives]);
 
   const openManagement = () => {
     if (isCloudMode && !adminToken) {
@@ -379,63 +351,11 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
       return;
     }
     setManageMessage(null);
-    setManageTab('quiz');
     setManageOpen(true);
     if (isCloudMode) {
       void fetchLotteryCandidates();
     } else {
       setLotteryCandidates([]);
-    }
-  };
-
-
-  const handleAddRepresentative = () => {
-    if (!representativeForm.tableNo.trim() || !representativeForm.name.trim()) {
-      setManageMessage('テーブル番号と名前を入力してください');
-      return;
-    }
-    if (representatives.some(r => r.tableNo === representativeForm.tableNo.trim())) {
-      setManageMessage('このテーブル番号は既に登録されています');
-      return;
-    }
-    setRepresentatives([...representatives, {
-      tableNo: representativeForm.tableNo.trim(),
-      name: representativeForm.name.trim(),
-      furigana: representativeForm.furigana.trim() || undefined
-    }]);
-    setRepresentativeForm({ tableNo: '', name: '', furigana: '' });
-    setManageMessage(null);
-  };
-
-  const handleRemoveRepresentative = (tableNo: string) => {
-    setRepresentatives(representatives.filter(r => r.tableNo !== tableNo));
-  };
-
-  const handleSaveRepresentatives = async () => {
-    if (!isCloudMode || !adminToken) return;
-
-    setManageLoading(true);
-    setManageMessage(null);
-    try {
-      const response = await fetch(`/api/admin/rooms/${roomId}/representatives`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${adminToken}`
-        },
-        body: JSON.stringify({ representatives })
-      });
-
-      if (!response.ok) {
-        const data = (await response.json().catch(() => ({}))) as { error?: string };
-        throw new Error(data.error ?? response.statusText);
-      }
-
-      setManageMessage('代表者を保存しました');
-    } catch (err) {
-      setManageMessage(err instanceof Error ? err.message : '代表者の保存に失敗しました');
-    } finally {
-      setManageLoading(false);
     }
   };
 
@@ -1179,30 +1099,14 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
                   閉じる
                 </button>
               </div>
-              <div className="mt-4 inline-flex rounded-full bg-brand-blue-50 p-1 text-sm">
-                <button
-                  className={`rounded-full px-4 py-2 font-semibold transition-colors ${
-                    manageTab === 'quiz' ? 'bg-white text-brand-blue-700 shadow-sm' : 'text-brand-blue-600 hover:text-brand-blue-700'
-                  }`}
-                  onClick={() => setManageTab('quiz')}
-                >
-                  クイズ一覧
-                </button>
-                <button
-                  className={`rounded-full px-4 py-2 font-semibold transition-colors ${
-                    manageTab === 'representatives' ? 'bg-white text-brand-blue-700 shadow-sm' : 'text-brand-blue-600 hover:text-brand-blue-700'
-                  }`}
-                  onClick={() => setManageTab('representatives')}
-                >
-                  代表者設定
-                </button>
+              <div className="mt-4 text-sm font-semibold text-brand-blue-700">
+                クイズ一覧
               </div>
               {!isCloudMode && (
                 <p className="mt-4 text-sm text-brand-blue-700/70">LANモードでは設定を閲覧のみ利用できます。クラウドモードで編集してください。</p>
               )}
               {manageMessage && <p className="mt-4 text-sm text-brand-terra-600">{manageMessage}</p>}
-              {manageTab === 'quiz' ? (
-                <div className="mt-6 space-y-4">
+              <div className="mt-6 space-y-4">
                   <div className="rounded-xl bg-blue-50 p-4 border border-blue-200">
                     <p className="text-sm text-blue-800 font-medium">📝 クイズ情報</p>
                     <p className="text-xs text-blue-700 mt-2">
@@ -1248,142 +1152,6 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
                     </ul>
                   </div>
                 </div>
-              ) : manageTab === 'lottery' ? (
-                <div className="mt-6 space-y-6">
-                  <form
-                    className="space-y-4"
-                    onSubmit={(event) => {
-                      event.preventDefault();
-                      void handleAddCandidate();
-                    }}
-                  >
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium text-brand-blue-700">お名前</label>
-                      <input
-                        className="w-full rounded-xl border border-brand-blue-200 bg-white px-4 py-3 text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-blue-400"
-                        value={candidateForm.displayName}
-                        onChange={(event) => setCandidateForm((prev) => ({ ...prev, displayName: event.target.value }))}
-                        placeholder="例：山田 太郎"
-                        required
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium text-brand-blue-700">カテゴリ</label>
-                      <select
-                        className="w-full rounded-xl border border-brand-blue-200 bg-white px-4 py-3 text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-blue-400"
-                        value={candidateForm.groupTag}
-                        onChange={(event) =>
-                          setCandidateForm((prev) => ({
-                            ...prev,
-                            groupTag: event.target.value as 'all' | 'groom' | 'bride'
-                          }))
-                        }
-                      >
-                        <option value="all">全員対象</option>
-                        <option value="groom">新郎</option>
-                        <option value="bride">新婦</option>
-                      </select>
-                    </div>
-                    <PrimaryButton type="submit" disabled={manageLoading || !isCloudMode}>
-                      抽選リストに追加
-                    </PrimaryButton>
-                  </form>
-                  <div className="space-y-2">
-                    <h3 className="text-sm font-semibold text-brand-blue-700">登録済み候補</h3>
-                    {lotteryCandidates.length === 0 ? (
-                      <p className="text-sm text-brand-blue-700/70">登録された候補はまだありません。</p>
-                    ) : (
-                      <ul className="space-y-2">
-                        {lotteryCandidates.map((candidate) => (
-                          <li key={candidate.id} className="rounded-xl bg-white/85 px-4 py-3 text-sm shadow-brand">
-                            <p className="font-semibold text-brand-terra-600">{candidate.display_name}</p>
-                            <p className="text-xs text-brand-blue-700/60">
-                              {lotteryKindLabel(candidate.group_tag ?? 'all')} / 登録日: {new Date(candidate.created_at).toLocaleString('ja-JP')}
-                            </p>
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-                  </div>
-                </div>
-              ) : manageTab === 'representatives' ? (
-                <div className="mt-6 space-y-6">
-                  <div className="space-y-4">
-                    <div className="grid grid-cols-3 gap-3">
-                      <div className="space-y-2">
-                        <label className="text-sm font-medium text-brand-blue-700">テーブル番号</label>
-                        <input
-                          className="w-full rounded-xl border border-brand-blue-200 bg-white px-4 py-3 text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-blue-400"
-                          value={representativeForm.tableNo}
-                          onChange={(event) => setRepresentativeForm((prev) => ({ ...prev, tableNo: event.target.value }))}
-                          placeholder="例：A"
-                          disabled={!isCloudMode}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <label className="text-sm font-medium text-brand-blue-700">代表者名</label>
-                        <input
-                          className="w-full rounded-xl border border-brand-blue-200 bg-white px-4 py-3 text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-blue-400"
-                          value={representativeForm.name}
-                          onChange={(event) => setRepresentativeForm((prev) => ({ ...prev, name: event.target.value }))}
-                          placeholder="例：山田太郎"
-                          disabled={!isCloudMode}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <label className="text-sm font-medium text-brand-blue-700">ふりがな</label>
-                        <input
-                          className="w-full rounded-xl border border-brand-blue-200 bg-white px-4 py-3 text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-blue-400"
-                          value={representativeForm.furigana}
-                          onChange={(event) => setRepresentativeForm((prev) => ({ ...prev, furigana: event.target.value }))}
-                          placeholder="例：やまだたろう"
-                          disabled={!isCloudMode}
-                        />
-                      </div>
-                    </div>
-                    <PrimaryButton type="button" onClick={handleAddRepresentative} disabled={manageLoading || !isCloudMode}>
-                      追加
-                    </PrimaryButton>
-                  </div>
-
-                  <div className="space-y-2">
-                    <h3 className="text-sm font-semibold text-brand-blue-700">登録済み代表者</h3>
-                    {representatives.length === 0 ? (
-                      <p className="text-sm text-brand-blue-700/70">登録された代表者はまだありません。</p>
-                    ) : (
-                      <ul className="space-y-2">
-                        {representatives.map((rep) => (
-                          <li key={rep.tableNo} className="rounded-xl bg-white/85 px-4 py-3 text-sm shadow-brand flex items-center justify-between">
-                            <div>
-                              <p className="font-semibold text-brand-terra-600">{rep.tableNo}: {rep.name}さん</p>
-                              {rep.furigana && <p className="text-xs text-brand-blue-700/60">{rep.furigana}</p>}
-                            </div>
-                            <button
-                              onClick={() => handleRemoveRepresentative(rep.tableNo)}
-                              className="rounded-lg bg-red-100 p-2 text-red-700 hover:bg-red-200 disabled:opacity-50"
-                              disabled={manageLoading || !isCloudMode}
-                              title="削除"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </button>
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-                  </div>
-
-                  <PrimaryButton type="button" onClick={handleSaveRepresentatives} disabled={manageLoading || !isCloudMode}>
-                    保存して投影画面に表示
-                  </PrimaryButton>
-
-                  <div className="rounded-xl bg-blue-50 p-4 border border-blue-200">
-                    <p className="text-sm text-blue-800 font-medium">💡 代表者設定について</p>
-                    <p className="text-xs text-blue-700 mt-2">
-                      保存すると、投影画面に「各テーブルの回答代表者」として表示されます。ここで設定した代表者のみがクイズに回答できます。
-                    </p>
-                  </div>
-                </div>
-              ) : null}
             </div>
           </div>
         )}

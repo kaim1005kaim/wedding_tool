@@ -1,6 +1,7 @@
 import { getSupabaseServiceRoleClient, upsertRoomSnapshot, fetchRoomSnapshot } from '@/lib/supabase/server';
 import { appendAuditLog, ensureRoomSnapshot, updateSnapshotLeaderboard, recomputeLeaderboard } from '@/lib/server/rooms';
 import { WEDDING_QUIZZES } from '@/lib/hardcoded-quizzes';
+import { REPRESENTATIVES } from '@/lib/hardcoded-representatives';
 
 const DEFAULT_COUNTDOWN_MS = 10_000;
 const PREPARATION_TIME_MS = 3_000; // 3秒の準備カウントダウン
@@ -571,7 +572,10 @@ export async function drawLottery(roomId: string, kind: 'all' | 'groom' | 'bride
 
 export async function showRepresentatives(roomId: string) {
   await ensureRoomSnapshot(roomId);
-  await upsertRoomSnapshot(roomId, { show_representatives: true });
+  await upsertRoomSnapshot(roomId, {
+    representatives: REPRESENTATIVES.map(r => ({ ...r })),
+    show_representatives: true
+  });
   await appendAuditLog(roomId, 'representatives:show', {});
 }
 
