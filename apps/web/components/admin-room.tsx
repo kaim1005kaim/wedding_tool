@@ -709,7 +709,7 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
                 variant="secondary"
                 disabled={mode !== 'quiz'}
                 onClick={() => {
-                  void send({ type: 'representatives:show' });
+                  void send({ type: 'representatives:show', payload: undefined });
                 }}
                 className="w-full"
               >
