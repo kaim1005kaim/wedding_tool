@@ -894,6 +894,18 @@ const QuizBoard = memo(function QuizBoard({ activeQuiz, quizResult, leaderboard,
           <p className="text-6xl font-black text-ink mb-2">
             {isBuzzerQuiz ? '早押しクイズランキング' : 'クイズ正解ランキング'}
           </p>
+          {isBuzzerQuiz && activeQuiz && quizResult && (
+            <motion.div
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+              className="mt-6 glass-panel-strong rounded-2xl p-6 shadow-xl border-2 border-terra-clay inline-block"
+            >
+              <p className="text-4xl font-black text-terra-clay">
+                正解: {CHOICE_LABELS[quizResult.correctIndex]}. {activeQuiz.choices[quizResult.correctIndex]}
+              </p>
+            </motion.div>
+          )}
         </motion.div>
 
         <div className="flex-1 overflow-y-auto">
@@ -943,18 +955,24 @@ const QuizBoard = memo(function QuizBoard({ activeQuiz, quizResult, leaderboard,
 
                     {/* スコア */}
                     <div className="shrink-0 flex items-center gap-4">
-                      {isBuzzerQuiz && 'isCorrect' in entry && (
-                        <span className="text-5xl">
-                          {entry.isCorrect ? '⭕' : '❌'}
-                        </span>
+                      {isBuzzerQuiz && 'isCorrect' in entry ? (
+                        <>
+                          <span className="text-6xl">
+                            {entry.isCorrect ? '⭕' : '❌'}
+                          </span>
+                          <div className="rounded-full glass-panel px-8 py-4 shadow-lg border-2 border-white/40">
+                            <span className="text-4xl font-black text-terra-clay whitespace-nowrap">
+                              {((entry.latencyMs ?? 0) / 1000).toFixed(2)}秒
+                            </span>
+                          </div>
+                        </>
+                      ) : (
+                        <div className="rounded-full glass-panel px-8 py-4 shadow-lg border-2 border-white/40">
+                          <span className="text-4xl font-black text-terra-clay whitespace-nowrap">
+                            正解数{'correctCount' in entry ? entry.correctCount : 0}/5
+                          </span>
+                        </div>
                       )}
-                      <div className="rounded-full glass-panel px-8 py-4 shadow-lg border-2 border-white/40">
-                        <span className="text-4xl font-black text-terra-clay whitespace-nowrap">
-                          {isBuzzerQuiz && 'latencyMs' in entry
-                            ? `${((entry.latencyMs ?? 0) / 1000).toFixed(2)}秒`
-                            : `正解数${'correctCount' in entry ? entry.correctCount : 0}/5`}
-                        </span>
-                      </div>
                     </div>
                   </div>
                 </motion.div>

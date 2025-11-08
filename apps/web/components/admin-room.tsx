@@ -793,18 +793,18 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
 
               {/* 早押しクイズ（第6問）統合ボタン */}
               <AdminButton
-                variant={activeQuiz?.ord === 6 && !quizResult ? 'danger' : 'primary'}
-                icon={activeQuiz?.ord === 6 && !quizResult ? Eye : Gauge}
+                variant={activeQuiz?.ord === 6 ? 'primary' : 'primary'}
+                icon={activeQuiz?.ord === 6 ? Eye : Gauge}
                 disabled={mode !== 'quiz' || (activeQuiz !== null && activeQuiz.ord !== 6)}
                 onClick={async () => {
-                  // 早押しクイズの正解公開フェーズ
-                  if (activeQuiz?.ord === 6 && !quizResult) {
+                  // 早押しクイズ開始後 → ランキング表示（正解公開 + ランキング表示を同時に実行）
+                  if (activeQuiz?.ord === 6) {
+                    // まず正解を公開
                     await handleReveal();
-                    return;
-                  }
 
-                  // 早押しクイズの正解公開後 → ランキング表示
-                  if (quizResult && activeQuiz?.ord === 6) {
+                    // その後、ランキング表示（短い待機時間を入れて確実にquizResultが反映されるのを待つ）
+                    await new Promise(resolve => setTimeout(resolve, 500));
+
                     if (!isCloudMode || !adminToken) return;
                     try {
                       const response = await fetch(`/api/admin/rooms/${roomId}/game/show-ranking`, {
@@ -834,8 +834,7 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
                 className="w-full"
               >
                 {(() => {
-                  if (activeQuiz?.ord === 6 && !quizResult) return '正解を公開';
-                  if (quizResult && activeQuiz?.ord === 6) return 'ランキング表示へ';
+                  if (activeQuiz?.ord === 6) return 'ランキングを表示';
                   return '早押しクイズ開始';
                 })()}
               </AdminButton>

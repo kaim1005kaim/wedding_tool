@@ -539,7 +539,14 @@ export async function revealQuiz(roomId: string, quizId: string, awardedPoints =
     quizId,
     correctIndex: quiz.answerIndex,
     perChoiceCounts,
-    awardedCount: awardedPlayers.length
+    awardedCount: awardedPlayers.length,
+    isBuzzerQuiz,
+    awardedPlayers: awardedPlayers.map(p => ({
+      playerId: p.playerId,
+      choiceIndex: p.choiceIndex,
+      isCorrect: p.isCorrect,
+      latencyMs: p.latencyMs
+    }))
   });
 
   // Update room snapshot with quiz result
