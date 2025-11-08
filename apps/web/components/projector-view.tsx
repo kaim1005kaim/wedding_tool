@@ -252,7 +252,7 @@ export default function ProjectorView({ roomId: _roomId }: { roomId: string }) {
 
 function renderSection(
   mode: string,
-  phase: 'idle' | 'running' | 'ended' | 'celebrating',
+  phase: 'idle' | 'running' | 'ended',
   countdownMs: number,
   leaderboard: LeaderboardEntry[],
   activeQuiz: RoomStoreState['activeQuiz'],
@@ -264,14 +264,11 @@ function renderSection(
   showRanking: boolean,
   showCelebration: boolean
 ) {
-  // 表彰中画面を最優先で表示
-  if (phase === 'celebrating' || showCelebration) {
-    return <CelebrationBoard key="celebration" />;
-  }
-
   switch (mode) {
     case 'countup':
-      return <CountupBoard key="countup" entries={leaderboard} phase={phase} countdownMs={countdownMs} showRanking={showRanking} />;
+      return <CountupBoard key="countup" entries={leaderboard} phase={phase} countdownMs={countdownMs} showRanking={showRanking} isPractice={false} />;
+    case 'countup_practice':
+      return <CountupBoard key="countup-practice" entries={leaderboard} phase={phase} countdownMs={countdownMs} showRanking={false} isPractice={true} />;
     case 'quiz':
       return <QuizBoard key={`quiz-${quizResult?.quizId ?? activeQuiz?.quizId ?? 'waiting'}`} activeQuiz={activeQuiz} quizResult={quizResult} leaderboard={leaderboard} phase={phase} representatives={representatives} showRanking={showRanking} mode={mode} />;
     /* 抽選モード非表示
@@ -287,12 +284,14 @@ const CountupBoard = memo(function CountupBoard({
   entries,
   phase,
   countdownMs,
-  showRanking
+  showRanking,
+  isPractice = false
 }: {
   entries: LeaderboardEntry[];
-  phase: 'idle' | 'running' | 'ended' | 'celebrating';
+  phase: 'idle' | 'running' | 'ended';
   countdownMs: number;
   showRanking: boolean;
+  isPractice?: boolean;
 }) {
   // Top 3 highlighted, rest in compact grid
   const top3 = entries.slice(0, 3);
@@ -417,8 +416,8 @@ const CountupBoard = memo(function CountupBoard({
         </div>
       )}
 
-      {/* TIME UP!表示（ゲーム終了直後、ランキング表示前） */}
-      {phase === 'ended' && !showScrollRanking && !showPodium && (
+      {/* TIME UP!表示（ゲーム終了直後、ランキング表示前 or 練習モード） */}
+      {phase === 'ended' && (isPractice || (!showScrollRanking && !showPodium)) && (
         <motion.div
           initial={{ scale: 0.5, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
@@ -432,8 +431,8 @@ const CountupBoard = memo(function CountupBoard({
         </motion.div>
       )}
 
-      {/* 全員ランキングスクロール（下から上へ） */}
-      {phase === 'ended' && showScrollRanking && entries.length > 0 && (
+      {/* 全員ランキングスクロール（下から上へ） - 練習モードでは非表示 */}
+      {!isPractice && phase === 'ended' && showScrollRanking && entries.length > 0 && (
         <motion.div
           className="flex h-full flex-col"
           initial={{ opacity: 0 }}
@@ -467,6 +466,7 @@ const CountupBoard = memo(function CountupBoard({
                       {entry.rank}
                     </span>
                     <div>
+                      {entry.furigana && <p className="text-sm text-ink/60 font-medium">{entry.furigana}</p>}
                       <p className="text-3xl font-black text-ink">{entry.displayName}</p>
                       {entry.tableNo && <p className="text-lg text-ink/70 font-bold">テーブル {entry.tableNo}</p>}
                     </div>
@@ -482,8 +482,8 @@ const CountupBoard = memo(function CountupBoard({
         </motion.div>
       )}
 
-      {/* 表彰台スタイル表示 */}
-      {phase === 'ended' && showPodium && top3.length > 0 && (
+      {/* 表彰台スタイル表示 - 練習モードでは非表示 */}
+      {!isPractice && phase === 'ended' && showPodium && top3.length > 0 && (
         <div className="flex-1 flex flex-col">
           {/* TOP3発表タイトル */}
           <motion.div
@@ -513,6 +513,7 @@ const CountupBoard = memo(function CountupBoard({
                 🥈
               </motion.div>
               <div className="rounded-2xl glass-panel-strong p-8 shadow-2xl border-4 border-gray-400 ring-4 ring-gray-300/50 bg-gradient-to-br from-gray-50/30 to-slate-50/30">
+                {top3[1].furigana && <p className="text-base text-ink/60 font-medium text-center">{top3[1].furigana}</p>}
                 <p className="text-3xl font-black text-ink text-center mb-2">{top3[1].displayName}</p>
                 {top3[1].tableNo && <p className="text-lg text-ink/70 font-bold text-center mb-4">テーブル {top3[1].tableNo}</p>}
                 <div className="rounded-full glass-panel px-8 py-4 shadow-lg border-2 border-white/40 text-center">
@@ -543,6 +544,7 @@ const CountupBoard = memo(function CountupBoard({
                 🥇
               </motion.div>
               <div className="rounded-2xl glass-panel-strong p-10 shadow-2xl border-4 border-yellow-400 ring-4 ring-yellow-300/50 bg-gradient-to-br from-yellow-50/40 to-orange-50/40">
+                {top3[0].furigana && <p className="text-lg text-ink/60 font-medium text-center">{top3[0].furigana}</p>}
                 <p className="text-4xl font-black text-ink text-center mb-2">{top3[0].displayName}</p>
                 {top3[0].tableNo && <p className="text-xl text-ink/70 font-bold text-center mb-4">テーブル {top3[0].tableNo}</p>}
                 <div className="rounded-full glass-panel px-10 py-5 shadow-lg border-2 border-white/40 text-center">
@@ -573,6 +575,7 @@ const CountupBoard = memo(function CountupBoard({
                 🥉
               </motion.div>
               <div className="rounded-2xl glass-panel-strong p-8 shadow-2xl border-4 border-amber-600 ring-4 ring-amber-400/50 bg-gradient-to-br from-amber-50/30 to-orange-50/30">
+                {top3[2].furigana && <p className="text-base text-ink/60 font-medium text-center">{top3[2].furigana}</p>}
                 <p className="text-3xl font-black text-ink text-center mb-2">{top3[2].displayName}</p>
                 {top3[2].tableNo && <p className="text-lg text-ink/70 font-bold text-center mb-4">テーブル {top3[2].tableNo}</p>}
                 <div className="rounded-full glass-panel px-8 py-4 shadow-lg border-2 border-white/40 text-center">
@@ -646,6 +649,7 @@ const IdleBoardOld = memo(function IdleBoardOld({ leaderboard }: { leaderboard: 
                   <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-full text-3xl glass-panel shadow-md">
                     {['🥇', '🥈', '🥉'][entry.rank - 1]}
                   </div>
+                  {entry.furigana && <p className="text-xs text-ink/60 font-medium text-center">{entry.furigana}</p>}
                   <p className="mb-1 text-center text-xl font-bold text-ink">{entry.displayName}</p>
                   {entry.tableNo && <p className="mb-2 text-sm text-ink/70 font-bold">テーブル {entry.tableNo}</p>}
                   <div className="rounded-full glass-panel px-5 py-2 shadow-md">
@@ -688,7 +692,7 @@ type QuizPanelProps = {
   activeQuiz: RoomStoreState['activeQuiz'];
   quizResult: RoomStoreState['quizResult'];
   leaderboard: LeaderboardEntry[];
-  phase: 'idle' | 'running' | 'ended' | 'celebrating';
+  phase: 'idle' | 'running' | 'ended';
   representatives: RoomStoreState['representatives'];
   showRanking: boolean;
   mode: 'idle' | 'countup' | 'quiz' | 'buzzer' | 'lottery';
@@ -803,6 +807,7 @@ const QuizBoard = memo(function QuizBoard({ activeQuiz, quizResult, leaderboard,
     .map(entry => ({
       tableNo: entry.tableNo!,
       displayName: entry.displayName,
+      furigana: entry.furigana,
       quizPoints: entry.quizPoints
     }));
 
@@ -1048,6 +1053,7 @@ const QuizBoard = memo(function QuizBoard({ activeQuiz, quizResult, leaderboard,
                     transition={{ duration: 0.4 }}
                     className="rounded-2xl glass-panel-strong p-6 border border-white/30 shadow-xl"
                   >
+                    {rep.furigana && <p className="text-base text-ink/60 font-medium text-center">{rep.furigana}</p>}
                     <p className="text-3xl font-black text-ink text-center">
                       {rep.tableNo}: {rep.name}さん
                     </p>
@@ -1209,7 +1215,10 @@ const QuizBoard = memo(function QuizBoard({ activeQuiz, quizResult, leaderboard,
                       className="glass-panel rounded-xl px-4 py-2 border border-white/20 flex items-center gap-2"
                     >
                       <span className="text-sm font-black text-terra-clay">{participant.tableNo}</span>
-                      <span className="text-sm font-bold text-ink">{participant.displayName}</span>
+                      <div className="flex flex-col">
+                        {participant.furigana && <span className="text-xs text-ink/60 font-medium">{participant.furigana}</span>}
+                        <span className="text-sm font-bold text-ink">{participant.displayName}</span>
+                      </div>
                       <span className="text-xs font-bold text-ink/70">({participant.quizPoints}問正解)</span>
                     </div>
                   ))}
@@ -1231,6 +1240,7 @@ type LotteryPanelProps = {
 
 const LotteryBoard = memo(function LotteryBoard({ lotteryResult, isSpinning, leaderboard }: LotteryPanelProps) {
   const [displayName, setDisplayName] = useState<string | null>(null);
+  const [displayFurigana, setDisplayFurigana] = useState<string | null>(null);
   const [displayKind, setDisplayKind] = useState<string | null>(null);
   const [isRevealing, setIsRevealing] = useState(false);
   const prevWinnerRef = useRef<string | null>(null);
@@ -1268,9 +1278,11 @@ const LotteryBoard = memo(function LotteryBoard({ lotteryResult, isSpinning, lea
     clearTimers();
     setIsRevealing(false);
     setDisplayName(null);
+    setDisplayFurigana(null);
     setDisplayKind(null);
 
     const finalName = currentResult.player.name;
+    const finalFurigana = currentResult.player.furigana;
     const candidatePool = Array.from(
       new Set(
         leaderboard
@@ -1307,10 +1319,12 @@ const LotteryBoard = memo(function LotteryBoard({ lotteryResult, isSpinning, lea
       step += 1;
 
       if (isFinal) {
+        setDisplayFurigana(finalFurigana ?? null);
         sequenceTimeoutRef.current = null;
         revealTimeoutRef.current = setTimeout(() => {
           setIsRevealing(false);
           setDisplayName(null);
+          setDisplayFurigana(null);
           setDisplayKind(null);
         }, 5000);
         return;
@@ -1350,6 +1364,7 @@ const LotteryBoard = memo(function LotteryBoard({ lotteryResult, isSpinning, lea
           transition={{ duration: isSpinning ? 3 : 0.6, ease: 'easeOut' }}
           className="rounded-3xl glass-panel-strong px-16 py-14 shadow-lg border border-white/30"
         >
+          {displayFurigana && <p className="text-[min(5vw,4rem)] font-medium text-ink/60 text-center mb-4">{displayFurigana}</p>}
           <p className="text-[min(10vw,9rem)] font-bold text-ink">{displayName}</p>
         </motion.div>
       )}
@@ -1369,51 +1384,6 @@ function labelForMode(mode: string) {
       return '待機中';
   }
 }
-
-const CelebrationBoard = memo(function CelebrationBoard() {
-  return (
-    <motion.section
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className="flex h-full items-center justify-center relative overflow-hidden"
-    >
-      {/* 紙吹雪エフェクト */}
-      <div className="absolute inset-0 pointer-events-none">
-        {Array.from({ length: 150 }).map((_, i) => (
-          <motion.div
-            key={i}
-            className="absolute"
-            initial={{
-              top: -20,
-              left: `${Math.random() * 100}%`,
-              rotate: Math.random() * 360
-            }}
-            animate={{
-              top: '110%',
-              rotate: Math.random() * 720 + 360
-            }}
-            transition={{
-              duration: Math.random() * 3 + 2,
-              repeat: Infinity,
-              ease: 'linear',
-              delay: Math.random() * 2
-            }}
-          >
-            <div
-              className="w-3 h-3 rounded-full"
-              style={{
-                backgroundColor: ['#FF6B6B', '#4ECDC4', '#FFE66D', '#A8E6CF', '#FF8B94'][
-                  Math.floor(Math.random() * 5)
-                ]
-              }}
-            />
-          </motion.div>
-        ))}
-      </div>
-    </motion.section>
-  );
-});
 
 function labelForLotteryKind(kind: string | undefined) {
   switch (kind) {

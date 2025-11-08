@@ -20,6 +20,7 @@ const MAX_TAPS_PER_SECOND = 20; // Physical limit: max 20 taps per second
 export default function JoinRoom({ code }: { code: string }) {
   const [tableNo, setTableNo] = useState('');
   const [displayName, setDisplayName] = useState('');
+  const [furigana, setFurigana] = useState('');
   const [modalError, setModalError] = useState<string | null>(null);
   const [registered, setRegistered] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -51,10 +52,12 @@ export default function JoinRoom({ code }: { code: string }) {
     if (typeof window === 'undefined') return;
     const storedTableNo = window.localStorage.getItem(`${storageKey}:tableNo`);
     const storedName = window.localStorage.getItem(`${storageKey}:name`);
+    const storedFurigana = window.localStorage.getItem(`${storageKey}:furigana`);
     const storedPlayerData = window.localStorage.getItem(storageKey);
 
     if (storedTableNo) setTableNo(storedTableNo);
     if (storedName) setDisplayName(storedName);
+    if (storedFurigana) setFurigana(storedFurigana);
 
     // Check if there's existing valid player session
     if (storedPlayerData && storedTableNo && storedName) {
@@ -132,6 +135,10 @@ export default function JoinRoom({ code }: { code: string }) {
       setModalError('お名前を入力してください');
       return;
     }
+    if (furigana.trim() && !/^[ぁ-んー\s]+$/.test(furigana.trim())) {
+      setModalError('ふりがなはひらがなで入力してください');
+      return;
+    }
 
     setModalError(null);
     setError(null);
@@ -153,6 +160,7 @@ export default function JoinRoom({ code }: { code: string }) {
           },
           body: JSON.stringify({
             displayName: displayName.trim(),
+            furigana: furigana.trim() || undefined,
             tableNo: tableNo.trim(),
             deviceFingerprint: getDeviceFingerprint()
           })
@@ -177,6 +185,7 @@ export default function JoinRoom({ code }: { code: string }) {
         if (typeof window !== 'undefined') {
           window.localStorage.setItem(`${storageKey}:tableNo`, tableNo.trim());
           window.localStorage.setItem(`${storageKey}:name`, displayName.trim());
+          window.localStorage.setItem(`${storageKey}:furigana`, furigana.trim());
           window.localStorage.setItem(`${storageKey}:room`, fetchedRoomId);
           window.localStorage.setItem(storageKey, JSON.stringify({ playerId, token, expiresAt }));
         }
@@ -185,6 +194,7 @@ export default function JoinRoom({ code }: { code: string }) {
           type: 'hello',
           payload: {
             displayName: displayName.trim(),
+            furigana: furigana.trim() || undefined,
             tableNo: tableNo.trim()
           }
         });
@@ -285,7 +295,7 @@ export default function JoinRoom({ code }: { code: string }) {
         {!registered && (
           <div className="text-center py-4">
             <p className="text-base font-bold text-ink/80">
-              画面中央のモーダルでテーブルナンバーとお名前を入力し、<br />
+              画面中央のモーダルでテーブルナンバー、お名前、ふりがなを入力し、<br />
               「参加する」ボタンを押してください
             </p>
           </div>
@@ -391,7 +401,7 @@ export default function JoinRoom({ code }: { code: string }) {
         </>
       )}
 
-      {registered && mode === 'countup' && (
+      {registered && (mode === 'countup' || mode === 'countup_practice') && (
         <CountupOverlay
           phase={phase}
           countdownMs={countdownMs}
@@ -414,8 +424,10 @@ export default function JoinRoom({ code }: { code: string }) {
         visible={showModal}
         tableNo={tableNo}
         displayName={displayName}
+        furigana={furigana}
         onTableNoChange={setTableNo}
         onDisplayNameChange={setDisplayName}
+        onFuriganaChange={setFurigana}
         onSubmit={handleJoin}
         error={modalError}
         mode={mode}
@@ -429,24 +441,26 @@ type JoinModalProps = {
   visible: boolean;
   tableNo: string;
   displayName: string;
+  furigana: string;
   onTableNoChange: (value: string) => void;
   onDisplayNameChange: (value: string) => void;
+  onFuriganaChange: (value: string) => void;
   onSubmit: () => void;
   error: string | null;
   mode: string;
   isJoining: boolean;
 };
 
-function JoinModal({ visible, tableNo, displayName, onTableNoChange, onDisplayNameChange, onSubmit, error, mode, isJoining }: JoinModalProps) {
+function JoinModal({ visible, tableNo, displayName, furigana, onTableNoChange, onDisplayNameChange, onFuriganaChange, onSubmit, error, mode, isJoining }: JoinModalProps) {
   if (!visible) return null;
 
   const guidanceText = mode === 'quiz'
     ? '各テーブル代表者の方のみ登録してください。'
-    : mode === 'countup'
+    : (mode === 'countup' || mode === 'countup_practice')
       ? '全員ご参加ください。'
-      : 'テーブルナンバーとお名前を入力してください。';
+      : 'テーブルナンバー、お名前、ふりがなを入力してください。';
 
-  const guidanceIcon = mode === 'quiz' ? '🎯' : mode === 'countup' ? '⚡' : '🎮';
+  const guidanceIcon = mode === 'quiz' ? '🎯' : (mode === 'countup' || mode === 'countup_practice') ? '⚡' : '🎮';
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
@@ -497,6 +511,20 @@ function JoinModal({ visible, tableNo, displayName, onTableNoChange, onDisplayNa
               autoComplete="name"
               maxLength={30}
               required
+            />
+          </div>
+          <div className="space-y-1">
+            <label className="flex items-center gap-1.5 text-xs font-bold text-ink" htmlFor="furigana">
+              <span>✏️</span>
+              <span>ふりがな（ひらがな）</span>
+            </label>
+            <input
+              id="furigana"
+              className="input-terra w-full text-base py-3"
+              value={furigana}
+              onChange={(event) => onFuriganaChange(event.target.value)}
+              placeholder="例：やまだはなこ"
+              maxLength={30}
             />
           </div>
           {error && (

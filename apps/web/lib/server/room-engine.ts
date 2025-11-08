@@ -46,7 +46,7 @@ export async function resetQuizProgress(roomId: string) {
   await appendAuditLog(roomId, 'quiz:reset', {});
 }
 
-export async function switchRoomMode(roomId: string, to: 'countup' | 'quiz' | 'lottery' | 'idle') {
+export async function switchRoomMode(roomId: string, to: 'countup' | 'countup_practice' | 'quiz' | 'lottery' | 'idle') {
   const client = getSupabaseServiceRoleClient();
   await client.from('rooms').update({ mode: to, phase: 'idle' }).eq('id', roomId);
   await ensureRoomSnapshot(roomId);
@@ -156,40 +156,6 @@ export async function showRanking(roomId: string) {
     showRanking: true,
     mode: 'quiz',
     phase: 'running'
-  };
-}
-
-export async function showCelebration(roomId: string) {
-  await ensureRoomSnapshot(roomId);
-
-  // 現在の状態を取得（最新の状態を確実に取得）
-  const snapshot = await fetchRoomSnapshot(roomId);
-  const isCurrentlyCelebrating = snapshot?.phase === 'celebrating' || snapshot?.show_celebration === true;
-
-  const client = getSupabaseServiceRoleClient();
-
-  if (isCurrentlyCelebrating) {
-    // OFFにする: 待機モード(idle)に遷移
-    await client.from('rooms').update({ mode: 'idle', phase: 'idle' }).eq('id', roomId);
-    await upsertRoomSnapshot(roomId, {
-      mode: 'idle',
-      phase: 'idle',
-      show_celebration: false,
-      show_ranking: false
-    });
-    await appendAuditLog(roomId, 'game:hideCelebration', {});
-  } else {
-    // ONにする: 表彰中画面を表示
-    await upsertRoomSnapshot(roomId, { phase: 'celebrating', show_celebration: true });
-    await appendAuditLog(roomId, 'game:showCelebration', {});
-  }
-
-  // 更新後の状態を返す
-  const updatedSnapshot = await fetchRoomSnapshot(roomId);
-  return {
-    showCelebration: updatedSnapshot?.show_celebration ?? false,
-    mode: updatedSnapshot?.mode ?? 'idle',
-    phase: updatedSnapshot?.phase ?? 'idle'
   };
 }
 
@@ -497,6 +463,7 @@ export async function revealQuiz(roomId: string, quizId: string, awardedPoints =
     playerId: string;
     delta: number;
     displayName?: string;
+    furigana?: string;
     tableNo?: string | null;
     latencyMs?: number | null;
     choiceIndex?: number;
@@ -508,7 +475,7 @@ export async function revealQuiz(roomId: string, quizId: string, awardedPoints =
 
     const { data: players, error: playersError } = await client
       .from('players')
-      .select('id, display_name, table_no')
+      .select('id, display_name, furigana, table_no')
       .in('id', playerIdsToFetch);
 
     if (playersError) {
@@ -530,6 +497,7 @@ export async function revealQuiz(roomId: string, quizId: string, awardedPoints =
           playerId: player.id,
           delta: isCorrect ? awardedPoints : 0, // Award points only to correct answerers
           displayName: player.display_name ?? undefined,
+          furigana: player.furigana ?? undefined,
           tableNo: player.table_no ?? null,
           latencyMs,
           ...(isBuzzerQuiz && { choiceIndex, isCorrect }) // Include choice info for buzzer quiz
@@ -605,7 +573,7 @@ export async function refreshLeaderboardSnapshot(roomId: string, limit = 20) {
   const client = getSupabaseServiceRoleClient();
   const { data, error } = await client
     .from('scores')
-    .select('player_id, total_points, quiz_points, countup_tap_count, players:players(display_name)')
+    .select('player_id, total_points, quiz_points, countup_tap_count, players:players(display_name, furigana)')
     .eq('room_id', roomId)
     .order('total_points', { ascending: false })
     .limit(limit);
@@ -617,6 +585,7 @@ export async function refreshLeaderboardSnapshot(roomId: string, limit = 20) {
   const entries = (data ?? []).map((row: any, index) => ({
     playerId: row.player_id,
     name: row.players?.display_name ?? 'Unknown',
+    furigana: row.players?.furigana,
     points: row.total_points ?? 0,
     quizPoints: row.quiz_points ?? 0,
     countupTapCount: row.countup_tap_count ?? 0,

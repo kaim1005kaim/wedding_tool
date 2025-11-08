@@ -3,6 +3,7 @@ import { z } from 'zod';
 export const playerIdentifierSchema = z.object({
   id: z.string().uuid(),
   name: z.string(),
+  furigana: z.string().optional(),
   table_no: z.string().nullable().optional(),
   seat_no: z.string().nullable().optional()
 });
@@ -18,12 +19,13 @@ export const quizAnswerEventSchema = z.object({
 
 export const helloEventSchema = z.object({
   displayName: z.string().min(1).max(32),
+  furigana: z.string().max(32).optional(),
   tableNo: z.string().max(8).optional().nullable(),
   seatNo: z.string().max(8).optional().nullable()
 });
 
 export const modeSwitchEventSchema = z.object({
-  to: z.enum(['idle', 'countup', 'quiz', 'buzzer', 'lottery'])
+  to: z.enum(['idle', 'countup', 'countup_practice', 'quiz', 'buzzer', 'lottery'])
 });
 
 const legacyLotteryKinds = ['escort', 'cake_groom', 'cake_bride', 'groom_friends', 'bride_friends'] as const;
@@ -57,6 +59,7 @@ export const quizResultBroadcastSchema = z.object({
     playerId: z.string().uuid(),
     delta: z.number().int(),
     displayName: z.string().optional(),
+    furigana: z.string().optional(),
     tableNo: z.string().nullable().optional(),
     latencyMs: z.number().int().nullable().optional(),
     choiceIndex: z.number().int().min(0).max(3).optional(), // For buzzer quiz: which choice was selected
@@ -70,14 +73,15 @@ export const lotteryResultBroadcastSchema = z.object({
 });
 
 export const stateUpdateBroadcastSchema = z.object({
-  mode: z.enum(['countup', 'quiz', 'buzzer', 'lottery', 'idle']),
-  phase: z.enum(['idle', 'running', 'ended', 'celebrating']),
+  mode: z.enum(['countup', 'countup_practice', 'quiz', 'buzzer', 'lottery', 'idle']),
+  phase: z.enum(['idle', 'running', 'ended']),
   serverTime: z.number(),
   countdownMs: z.number().nonnegative(),
   leaderboard: z.array(
     z.object({
       playerId: z.string().uuid(),
       displayName: z.string(),
+      furigana: z.string().optional(),
       tableNo: z.string().nullable().optional(),
       totalPoints: z.number().int().nonnegative(),
       rank: z.number().int().min(1),
@@ -92,7 +96,8 @@ export const stateUpdateBroadcastSchema = z.object({
   representatives: z.array(
     z.object({
       tableNo: z.string(),
-      name: z.string()
+      name: z.string(),
+      furigana: z.string().optional()
     })
   ).optional(),
   showRanking: z.boolean().optional(),

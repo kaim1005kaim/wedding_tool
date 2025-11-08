@@ -13,6 +13,7 @@ import {
 
 const requestSchema = z.object({
   displayName: z.string().trim().min(1).max(30),
+  furigana: z.string().trim().max(30).optional(),
   tableNo: z.string().trim().min(1).max(8),
   deviceFingerprint: z.string().max(256).optional() // Increased limit for safety
 });
@@ -24,7 +25,7 @@ export async function POST(request: Request, { params }: { params: { roomId: str
     const json = await request.json();
     console.log('[Join API] Request body:', JSON.stringify(json));
 
-    const { displayName, tableNo, deviceFingerprint } = requestSchema.parse(json);
+    const { displayName, furigana, tableNo, deviceFingerprint } = requestSchema.parse(json);
     const roomId = params.roomId;
 
     console.log('[Join API] Ensuring room snapshot...');
@@ -43,13 +44,14 @@ export async function POST(request: Request, { params }: { params: { roomId: str
       console.log('[Join API] Updating existing player...');
       await updatePlayer(playerId, {
         display_name: displayName,
+        furigana: furigana || null,
         table_no: tableNo,
         seat_no: null
       });
       console.log('[Join API] Player updated');
     } else {
       console.log('[Join API] Creating new player...');
-      const player = await upsertPlayer({ roomId, displayName, tableNo, seatNo: null });
+      const player = await upsertPlayer({ roomId, displayName, furigana: furigana || null, tableNo, seatNo: null });
       playerId = player.id;
       console.log('[Join API] New player created:', playerId);
     }

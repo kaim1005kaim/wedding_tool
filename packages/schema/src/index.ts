@@ -2,13 +2,14 @@ import { z } from 'zod';
 import { lotteryResultBroadcastSchema } from './events';
 export { z };
 
-export const roomModeSchema = z.enum(['idle', 'countup', 'quiz', 'buzzer', 'lottery']);
-export const roomPhaseSchema = z.enum(['idle', 'running', 'ended', 'celebrating']);
+export const roomModeSchema = z.enum(['idle', 'countup', 'countup_practice', 'quiz', 'buzzer', 'lottery']);
+export const roomPhaseSchema = z.enum(['idle', 'running', 'ended']);
 
 export const playerSchema = z.object({
   id: z.string().uuid(),
   room_id: z.string().uuid(),
   display_name: z.string(),
+  furigana: z.string().optional(),
   table_no: z.string().nullable().optional(),
   seat_no: z.string().nullable().optional(),
   is_present: z.boolean().default(true),
@@ -20,6 +21,7 @@ export type Player = z.infer<typeof playerSchema>;
 export const leaderboardEntrySchema = z.object({
   playerId: z.string().uuid(),
   name: z.string(),
+  furigana: z.string().optional(),
   tableNo: z.string().nullable().optional(),
   points: z.number().int().nonnegative(),
   quizPoints: z.number().int().nonnegative().optional().default(0),

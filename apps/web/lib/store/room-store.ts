@@ -6,11 +6,12 @@ import type {
   StateUpdatePayload
 } from '@wedding_tool/schema';
 
-export type RoomView = 'idle' | 'countup' | 'quiz' | 'buzzer' | 'lottery';
+export type RoomView = 'idle' | 'countup' | 'countup_practice' | 'quiz' | 'buzzer' | 'lottery';
 
 export type LeaderboardEntry = {
   playerId: string;
   displayName: string;
+  furigana?: string;
   tableNo?: string | null;
   totalPoints: number;
   rank: number;
@@ -22,12 +23,13 @@ export type LeaderboardEntry = {
 export type TableRepresentative = {
   tableNo: string;
   name: string;
+  furigana?: string;
 };
 
 export type RoomStoreState = {
   roomId: string | null;
   mode: RoomView;
-  phase: 'idle' | 'running' | 'ended' | 'celebrating';
+  phase: 'idle' | 'running' | 'ended';
   serverTime: number;
   countdownMs: number;
   leaderboard: LeaderboardEntry[];

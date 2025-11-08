@@ -664,7 +664,16 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
                 disabled={modeSwitching}
                 className="flex-1"
               >
-                {modeSwitching && mode !== 'countup' ? '切替中...' : 'タップチャレンジ'}
+                {modeSwitching && mode !== 'countup' ? '切替中...' : 'タップ(本番)'}
+              </AdminButton>
+              <AdminButton
+                variant={mode === 'countup_practice' ? 'primary' : 'secondary'}
+                icon={Shuffle}
+                onClick={() => send({ type: 'mode:switch', payload: { to: 'countup_practice' } })}
+                disabled={modeSwitching}
+                className="flex-1"
+              >
+                {modeSwitching && mode !== 'countup_practice' ? '切替中...' : 'タップ(練習)'}
               </AdminButton>
               {/* 抽選モード非表示
               <AdminButton
@@ -680,8 +689,8 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
             </div>
           </AdminCard>
 
-          {/* 2段目: クイズ操作とタップチャレンジ（2カラム） */}
-          <div className="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* 2段目: クイズ操作（全幅） */}
+          <div className="mt-6">
           <AdminCard title="クイズ操作" description="出題と正解の公開" icon={Eye}>
             {mode !== 'quiz' && (
               <div className="mb-4 rounded-lg bg-yellow-50 border border-yellow-200 p-3">
@@ -822,28 +831,6 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
 
               <div className="flex flex-col gap-3">
                 <AdminButton
-                  variant="primary"
-                  icon={Eye}
-                  disabled={mode !== 'quiz'}
-                  onClick={async () => {
-                    try {
-                      const response = await fetch(`/api/admin/rooms/${roomId}/game/show-celebration`, {
-                        method: 'POST',
-                        headers: {
-                          'Content-Type': 'application/json',
-                          Authorization: `Bearer ${adminToken}`
-                        }
-                      });
-                      if (!response.ok) throw new Error('Failed to toggle celebration');
-                    } catch (err) {
-                      window.alert('表彰中画面の切り替えに失敗しました');
-                    }
-                  }}
-                  className="w-full"
-                >
-                  表彰中画面表示
-                </AdminButton>
-                <AdminButton
                   variant="secondary"
                   icon={Trash2}
                   disabled={mode !== 'quiz'}
@@ -909,6 +896,7 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
               <p className="mt-2 text-sm text-blue-600">各テーブル1名のみ回答が有効です</p>
             )}
           </AdminCard>
+          </div>
 
           {/* 抽選機能非表示
           <AdminCard title="抽選" description="候補リストからランダムに選出します" icon={Dice1}>
@@ -926,10 +914,86 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
           </AdminCard>
           */}
 
-          <AdminCard title="タップチャレンジ" description={`${tapSettings.countdownSeconds}秒カウント後に${tapSettings.durationSeconds}秒で自動終了します`} icon={Play}>
+          {/* 3段目: タップチャレンジ（練習・本番2カラム） */}
+          <div className="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <AdminCard title="タップチャレンジ（練習）" description="ランキング表示なし・スコアリセット不要" icon={Play}>
+            {mode !== 'countup_practice' && (
+              <div className="mb-4 rounded-lg bg-yellow-50 border border-yellow-200 p-3">
+                <p className="text-sm font-bold text-yellow-800">⚠️ タップ(練習)モードに切り替えてください</p>
+              </div>
+            )}
+            <div className="mb-4 space-y-3">
+              <div className="flex items-center gap-4">
+                <label className="text-sm font-medium text-ink w-32">カウントダウン</label>
+                <input
+                  type="number"
+                  min="1"
+                  max="10"
+                  value={tapSettings.countdownSeconds}
+                  onChange={(e) => setTapSettings((prev) => ({ ...prev, countdownSeconds: parseInt(e.target.value) || 3 }))}
+                  className="w-20 rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm text-center"
+                  disabled={mode !== 'countup_practice'}
+                />
+                <span className="text-sm text-ink">秒</span>
+              </div>
+              <div className="flex items-center gap-4">
+                <label className="text-sm font-medium text-ink w-32">タップ時間</label>
+                <input
+                  type="number"
+                  min="5"
+                  max="60"
+                  value={tapSettings.durationSeconds}
+                  onChange={(e) => setTapSettings((prev) => ({ ...prev, durationSeconds: parseInt(e.target.value) || 10 }))}
+                  className="w-20 rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm text-center"
+                  disabled={mode !== 'countup_practice'}
+                />
+                <span className="text-sm text-ink">秒</span>
+              </div>
+            </div>
+            <div className="space-y-3">
+              <div className="grid grid-cols-2 gap-3">
+                <AdminButton
+                  icon={Play}
+                  disabled={mode !== 'countup_practice' || phase === 'running'}
+                  onClick={async () => {
+                    if (autoStopRef.current) {
+                      clearTimeout(autoStopRef.current);
+                    }
+                    const preparationMs = tapSettings.countdownSeconds * 1000; // 3カウント（3秒）
+                    const startMs = 1000; // START表示（1秒）
+                    const durationMs = tapSettings.durationSeconds * 1000; // タップ時間（10秒）
+                    const totalCountdownMs = preparationMs + startMs + durationMs; // 合計14秒
+                    await send({ type: 'game:start', payload: undefined }, { countdownMs: totalCountdownMs });
+                    autoStopRef.current = setTimeout(() => {
+                      void send({ type: 'game:stop', payload: undefined });
+                      autoStopRef.current = null;
+                    }, totalCountdownMs + 500);
+                  }}
+                >
+                  スタート
+                </AdminButton>
+                <AdminButton
+                  variant="secondary"
+                  icon={Square}
+                  disabled={phase !== 'running'}
+                  onClick={() => {
+                    if (autoStopRef.current) {
+                      clearTimeout(autoStopRef.current);
+                      autoStopRef.current = null;
+                    }
+                    void send({ type: 'game:stop', payload: undefined });
+                  }}
+                >
+                  緊急停止
+                </AdminButton>
+              </div>
+            </div>
+          </AdminCard>
+
+          <AdminCard title="タップチャレンジ（本番）" description={`${tapSettings.countdownSeconds}秒カウント後に${tapSettings.durationSeconds}秒で自動終了します`} icon={Play}>
             {mode !== 'countup' && (
               <div className="mb-4 rounded-lg bg-yellow-50 border border-yellow-200 p-3">
-                <p className="text-sm font-bold text-yellow-800">⚠️ タップチャレンジモードに切り替えてください</p>
+                <p className="text-sm font-bold text-yellow-800">⚠️ タップ(本番)モードに切り替えてください</p>
               </div>
             )}
             <div className="mb-4 space-y-3">
@@ -1032,28 +1096,6 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
                 className="w-full"
               >
                 {rankingLoading ? '処理中...' : 'ランキング表示'}
-              </AdminButton>
-              <AdminButton
-                variant="primary"
-                icon={Eye}
-                disabled={mode !== 'countup'}
-                onClick={async () => {
-                  try {
-                    const response = await fetch(`/api/admin/rooms/${roomId}/game/show-celebration`, {
-                      method: 'POST',
-                      headers: {
-                        'Content-Type': 'application/json',
-                        Authorization: `Bearer ${adminToken}`
-                      }
-                    });
-                    if (!response.ok) throw new Error('Failed to toggle celebration');
-                  } catch (err) {
-                    window.alert('表彰中画面の切り替えに失敗しました');
-                  }
-                }}
-                className="w-full"
-              >
-                表彰中画面表示
               </AdminButton>
               <AdminButton
                 variant="danger"

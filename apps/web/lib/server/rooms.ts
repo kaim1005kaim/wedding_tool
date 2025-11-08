@@ -41,11 +41,13 @@ export async function appendAuditLog(roomId: string, action: string, payload: Re
 export async function upsertPlayer({
   roomId,
   displayName,
+  furigana,
   tableNo,
   seatNo
 }: {
   roomId: string;
   displayName: string;
+  furigana?: string | null;
   tableNo?: string | null;
   seatNo?: string | null;
 }) {
@@ -55,6 +57,7 @@ export async function upsertPlayer({
     .insert({
       room_id: roomId,
       display_name: displayName,
+      furigana: furigana ?? null,
       table_no: tableNo ?? null,
       seat_no: seatNo ?? null
     })
@@ -68,7 +71,7 @@ export async function upsertPlayer({
   return data;
 }
 
-export async function updatePlayer(playerId: string, payload: Partial<{ display_name: string; table_no: string | null; seat_no: string | null }>) {
+export async function updatePlayer(playerId: string, payload: Partial<{ display_name: string; furigana: string | null; table_no: string | null; seat_no: string | null }>) {
   const client = getSupabaseServiceRoleClient();
   const { error } = await client.from('players').update(payload).eq('id', playerId);
   if (error) {
@@ -158,6 +161,7 @@ export async function ensureRoomSnapshot(roomId: string): Promise<RoomSnapshot> 
 export type LeaderboardEntryInput = {
   playerId: string;
   name: string;
+  furigana?: string;
   tableNo?: string | null;
   points: number;
   quizPoints?: number;
@@ -170,6 +174,7 @@ export async function updateSnapshotLeaderboard(roomId: string, entries: Leaderb
     leaderboard: entries.map((entry, index) => ({
       playerId: entry.playerId,
       name: entry.name,
+      furigana: entry.furigana,
       tableNo: entry.tableNo ?? null,
       points: entry.points,
       quizPoints: entry.quizPoints ?? 0,
@@ -186,7 +191,7 @@ export async function recomputeLeaderboard(roomId: string, limit = 20) {
 
   const { data, error } = await client
     .from('scores')
-    .select('player_id, total_points, quiz_points, countup_tap_count, players:players(display_name, table_no)')
+    .select('player_id, total_points, quiz_points, countup_tap_count, players:players(display_name, furigana, table_no)')
     .eq('room_id', roomId)
     .order('total_points', { ascending: false })
     .limit(limit);
@@ -217,6 +222,7 @@ export async function recomputeLeaderboard(roomId: string, limit = 20) {
   const entries: LeaderboardEntryInput[] = (data ?? []).map((row: any, index) => ({
     playerId: row.player_id,
     name: row.players?.display_name ?? 'Unknown',
+    furigana: row.players?.furigana,
     tableNo: row.players?.table_no ?? null,
     points: row.total_points ?? 0,
     quizPoints: row.quiz_points ?? 0,
