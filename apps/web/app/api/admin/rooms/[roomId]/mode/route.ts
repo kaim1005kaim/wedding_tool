@@ -6,7 +6,7 @@ import { switchRoomMode } from '@/lib/server/room-engine';
 import { handleApiError, authError, forbiddenError } from '@/lib/server/error-handler';
 
 const requestSchema = z.object({
-  to: z.enum(['countup', 'quiz', 'lottery', 'idle'])
+  to: z.enum(['countup', 'countup_practice', 'quiz', 'lottery', 'idle'])
 });
 
 export async function POST(request: Request, { params }: { params: { roomId: string } }) {
