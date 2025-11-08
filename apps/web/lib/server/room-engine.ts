@@ -562,7 +562,7 @@ export async function revealQuiz(roomId: string, quizId: string, awardedPoints =
 
   await upsertRoomSnapshot(roomId, {
     quiz_result: quizResultData,
-    show_ranking: false  // 正解公開時にランキング表示をOFFにする
+    show_ranking: isBuzzerQuiz ? true : false  // 早押しクイズは即座にランキング表示、通常クイズは結果発表のみ
   });
 
   console.log('[revealQuiz] Successfully revealed quiz and saved snapshot');

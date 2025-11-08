@@ -811,7 +811,10 @@ const QuizBoard = memo(function QuizBoard({ activeQuiz, quizResult, leaderboard,
   }, [activeQuiz, quizResult]);
 
   // Show ranking when phase is ended or showRanking flag is explicitly set
-  if ((phase === 'ended' || (showRanking && mode === 'quiz')) && quizLeaderboard.length > 0) {
+  // For buzzer quiz, check buzzerRanking; for normal quiz, check quizLeaderboard
+  const hasRankingData = isBuzzerQuiz ? buzzerRanking.length > 0 : quizLeaderboard.length > 0;
+
+  if ((phase === 'ended' || (showRanking && mode === 'quiz')) && hasRankingData) {
     // showRankingがfalseの場合は結果発表タイトルのみ表示
     if (!showRanking) {
       return (

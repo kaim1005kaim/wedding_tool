@@ -797,29 +797,10 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
                 icon={activeQuiz?.ord === 6 ? Eye : Gauge}
                 disabled={mode !== 'quiz' || (activeQuiz !== null && activeQuiz.ord !== 6)}
                 onClick={async () => {
-                  // 早押しクイズ開始後 → ランキング表示（正解公開 + ランキング表示を同時に実行）
+                  // 早押しクイズ開始後 → ランキング表示（正解公開すると自動的にランキングも表示される）
                   if (activeQuiz?.ord === 6) {
-                    // まず正解を公開
+                    // 正解を公開（早押しクイズの場合は自動的にshow_ranking: trueになる）
                     await handleReveal();
-
-                    // その後、ランキング表示（短い待機時間を入れて確実にquizResultが反映されるのを待つ）
-                    await new Promise(resolve => setTimeout(resolve, 500));
-
-                    if (!isCloudMode || !adminToken) return;
-                    try {
-                      const response = await fetch(`/api/admin/rooms/${roomId}/game/show-ranking`, {
-                        method: 'POST',
-                        headers: {
-                          'Content-Type': 'application/json',
-                          Authorization: `Bearer ${adminToken}`
-                        }
-                      });
-                      if (!response.ok) {
-                        throw new Error('Failed to show ranking');
-                      }
-                    } catch (err) {
-                      console.error('[Admin] Failed to show ranking:', err);
-                    }
                     return;
                   }
 
