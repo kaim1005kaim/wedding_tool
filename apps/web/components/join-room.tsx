@@ -1148,44 +1148,8 @@ function QuizOverlay({ phase, countdownMs, roomId, playerToken }: QuizOverlayPro
           </div>
         </div>
 
-        {/* Choices - 1 Column Vertical or Buzzer Button */}
-        {activeQuiz.ord === 6 && !quizResult ? (
-          /* 早押しクイズモード: 大きな早押しボタン */
-          <div className="w-full max-w-2xl flex flex-col items-center gap-6">
-            <motion.button
-              onClick={(e) => handleChoiceSelect(0, e)}
-              disabled={hasAnswered || isSubmitting}
-              className={`w-80 h-80 rounded-full shadow-2xl transition-all duration-200 ${
-                hasAnswered
-                  ? 'bg-gradient-denim border-4 border-denim-deep scale-95 opacity-90'
-                  : 'bg-gradient-to-br from-red-500 to-red-600 border-4 border-red-700 hover:scale-105 active:scale-95'
-              }`}
-              whileTap={{ scale: hasAnswered ? 0.95 : 0.9 }}
-            >
-              <div className="flex flex-col items-center justify-center h-full text-white">
-                {hasAnswered ? (
-                  <>
-                    <p className="text-5xl font-black mb-4">⏱️</p>
-                    <p className="text-3xl font-bold">回答済み</p>
-                    <p className="text-lg mt-2">結果発表をお待ちください</p>
-                  </>
-                ) : (
-                  <>
-                    <p className="text-6xl font-black mb-4">⚡</p>
-                    <p className="text-4xl font-bold">早押し!</p>
-                  </>
-                )}
-              </div>
-            </motion.button>
-            {!hasAnswered && (
-              <p className="text-xl font-bold text-ink text-center glass-panel-strong px-6 py-3 rounded-2xl">
-                ボタンをタップして回答！
-              </p>
-            )}
-          </div>
-        ) : (
-          /* 通常クイズモード: 選択肢ボタン */
-          <div className="w-full max-w-2xl flex flex-col gap-4">
+        {/* Choices - 1 Column Vertical (for all quizzes including buzzer quiz) */}
+        <div className="w-full max-w-2xl flex flex-col gap-4">
             {activeQuiz.choices.map((choice, index) => {
               const isSelected = selectedChoice === index;
               const isCorrect = quizResult && index === correctIndex;
@@ -1295,8 +1259,7 @@ function QuizOverlay({ phase, countdownMs, roomId, playerToken }: QuizOverlayPro
               </motion.button>
             );
           })}
-          </div>
-        )}
+        </div>
 
         {/* Status Message - Below choices */}
         {hasAnswered && !quizResult && (

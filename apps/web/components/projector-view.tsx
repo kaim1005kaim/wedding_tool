@@ -702,15 +702,25 @@ const QuizBoard = memo(function QuizBoard({ activeQuiz, quizResult, leaderboard,
   const isBuzzerQuiz = activeQuiz?.ord === 6 && quizResult;
 
   // For buzzer quiz (quiz 6), show ranking based on answer time from quiz result
+  // Include ALL answerers (both correct and incorrect), sorted by correctness first, then by time
   const buzzerRanking = isBuzzerQuiz && quizResult?.awarded
     ? quizResult.awarded
         .filter(a => a.latencyMs != null && a.latencyMs >= 0)
-        .sort((a, b) => (a.latencyMs ?? Infinity) - (b.latencyMs ?? Infinity))
+        .sort((a, b) => {
+          // Sort by correctness first (correct answers first)
+          const aCorrect = a.isCorrect ?? false;
+          const bCorrect = b.isCorrect ?? false;
+          if (aCorrect !== bCorrect) return bCorrect ? 1 : -1;
+          // Then sort by latency (faster first)
+          return (a.latencyMs ?? Infinity) - (b.latencyMs ?? Infinity);
+        })
         .map((entry, index) => ({
           playerId: entry.playerId,
           displayName: entry.displayName ?? '???',
           tableNo: entry.tableNo ?? null,
           latencyMs: entry.latencyMs,
+          choiceIndex: entry.choiceIndex,
+          isCorrect: entry.isCorrect ?? false,
           rank: index + 1
         }))
     : [];
@@ -932,12 +942,19 @@ const QuizBoard = memo(function QuizBoard({ activeQuiz, quizResult, leaderboard,
                     </div>
 
                     {/* スコア */}
-                    <div className="shrink-0 rounded-full glass-panel px-8 py-4 shadow-lg border-2 border-white/40">
-                      <span className="text-4xl font-black text-terra-clay whitespace-nowrap">
-                        {isBuzzerQuiz && 'latencyMs' in entry
-                          ? `${((entry.latencyMs ?? 0) / 1000).toFixed(2)}秒`
-                          : `正解数${'correctCount' in entry ? entry.correctCount : 0}/5`}
-                      </span>
+                    <div className="shrink-0 flex items-center gap-4">
+                      {isBuzzerQuiz && 'isCorrect' in entry && (
+                        <span className="text-5xl">
+                          {entry.isCorrect ? '⭕' : '❌'}
+                        </span>
+                      )}
+                      <div className="rounded-full glass-panel px-8 py-4 shadow-lg border-2 border-white/40">
+                        <span className="text-4xl font-black text-terra-clay whitespace-nowrap">
+                          {isBuzzerQuiz && 'latencyMs' in entry
+                            ? `${((entry.latencyMs ?? 0) / 1000).toFixed(2)}秒`
+                            : `正解数${'correctCount' in entry ? entry.correctCount : 0}/5`}
+                        </span>
+                      </div>
                     </div>
                   </div>
                 </motion.div>

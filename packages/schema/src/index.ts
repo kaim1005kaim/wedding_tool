@@ -62,7 +62,9 @@ export const roomSnapshotSchema = z.object({
           delta: z.number().int(),
           displayName: z.string().optional(),
           tableNo: z.string().nullable().optional(),
-          latencyMs: z.number().int().nullable().optional() // Remove nonnegative() to handle legacy data
+          latencyMs: z.number().int().nullable().optional(), // Remove nonnegative() to handle legacy data
+          choiceIndex: z.number().int().min(0).max(3).optional(), // For buzzer quiz: which choice was selected
+          isCorrect: z.boolean().optional() // For buzzer quiz: whether the choice was correct
         })
       )
     })
@@ -109,5 +111,9 @@ export type RoomAdmin = z.infer<typeof roomAdminSchema>;
 export type PlayerSession = z.infer<typeof playerSessionSchema>;
 export type AdminAuditLog = z.infer<typeof adminAuditLogSchema>;
 export type AwardedQuiz = z.infer<typeof awardedQuizSchema>;
+
+// Export quiz result and awarded player types for type safety
+export type QuizResult = NonNullable<RoomSnapshot['quiz_result']>;
+export type AwardedPlayer = QuizResult['awarded'][number];
 
 export * from './events';

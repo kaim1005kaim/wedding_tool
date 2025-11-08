@@ -476,11 +476,17 @@ export async function revealQuiz(roomId: string, quizId: string, awardedPoints =
   }
   console.log('[revealQuiz] Final perChoiceCounts:', perChoiceCounts);
 
-  // Get awarded players info with display names
-  const awardedPlayerIds = answers
-    ? answers
-        .filter((a) => a.choice_index === quiz.answerIndex)
-        .map((a) => a.player_id)
+  // For buzzer quiz (quiz 6), include ALL answerers regardless of correctness
+  // For normal quizzes, include only correct answerers
+  const isBuzzerQuiz = quiz.ord === 6;
+
+  // Get player IDs to fetch details for
+  const playerIdsToFetch = answers
+    ? (isBuzzerQuiz
+        ? answers.map((a) => a.player_id) // All answerers for buzzer quiz
+        : answers
+            .filter((a) => a.choice_index === quiz.answerIndex) // Only correct for normal quiz
+            .map((a) => a.player_id))
     : [];
 
   // Fetch player details for awarded players
@@ -490,15 +496,17 @@ export async function revealQuiz(roomId: string, quizId: string, awardedPoints =
     displayName?: string;
     tableNo?: string | null;
     latencyMs?: number | null;
+    choiceIndex?: number;
+    isCorrect?: boolean;
   }> = [];
 
-  if (awardedPlayerIds.length > 0) {
-    console.log('[revealQuiz] Fetching player details for:', awardedPlayerIds);
+  if (playerIdsToFetch.length > 0) {
+    console.log('[revealQuiz] Fetching player details for:', playerIdsToFetch);
 
     const { data: players, error: playersError } = await client
       .from('players')
       .select('id, display_name, table_no')
-      .in('id', awardedPlayerIds);
+      .in('id', playerIdsToFetch);
 
     if (playersError) {
       console.error('[revealQuiz] Error fetching players:', playersError);
@@ -512,13 +520,16 @@ export async function revealQuiz(roomId: string, quizId: string, awardedPoints =
         const answer = answers?.find((a) => a.player_id === player.id);
         // Use latency_ms from answers table if available, otherwise null
         const latencyMs = answer?.latency_ms ?? null;
+        const choiceIndex = answer?.choice_index;
+        const isCorrect = choiceIndex === quiz.answerIndex;
 
         awardedPlayers.push({
           playerId: player.id,
-          delta: awardedPoints,
+          delta: isCorrect ? awardedPoints : 0, // Award points only to correct answerers
           displayName: player.display_name ?? undefined,
           tableNo: player.table_no ?? null,
-          latencyMs
+          latencyMs,
+          ...(isBuzzerQuiz && { choiceIndex, isCorrect }) // Include choice info for buzzer quiz
         });
       }
     }

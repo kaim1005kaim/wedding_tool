@@ -58,7 +58,9 @@ export const quizResultBroadcastSchema = z.object({
     delta: z.number().int(),
     displayName: z.string().optional(),
     tableNo: z.string().nullable().optional(),
-    latencyMs: z.number().int().nullable().optional()
+    latencyMs: z.number().int().nullable().optional(),
+    choiceIndex: z.number().int().min(0).max(3).optional(), // For buzzer quiz: which choice was selected
+    isCorrect: z.boolean().optional() // For buzzer quiz: whether the choice was correct
   }))
 });
 
