@@ -710,32 +710,6 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
                   <span className="font-medium">代表者制（各テーブル1回答まで）</span>
                 </label>
               </div>
-              <div className="flex items-center gap-3 rounded-lg bg-blue-50 p-3 border border-blue-200">
-                <label className="flex cursor-pointer items-center gap-2 text-sm text-slate-700 flex-1">
-                  <input
-                    type="checkbox"
-                    checked={quizSettings.enableTimeLimit}
-                    onChange={(e) => setQuizSettings({ ...quizSettings, enableTimeLimit: e.target.checked })}
-                    className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-2 focus:ring-blue-400"
-                    disabled={mode !== 'quiz'}
-                  />
-                  <span className="font-medium">制限時間</span>
-                </label>
-                {quizSettings.enableTimeLimit && (
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="number"
-                      min="10"
-                      max="120"
-                      value={quizSettings.quizDurationSeconds}
-                      onChange={(e) => setQuizSettings({ ...quizSettings, quizDurationSeconds: parseInt(e.target.value) || 30 })}
-                      className="w-16 rounded-lg border border-slate-300 bg-white px-3 py-1 text-sm text-center"
-                      disabled={mode !== 'quiz'}
-                    />
-                    <span className="text-sm text-slate-700">秒</span>
-                  </div>
-                )}
-              </div>
             </div>
             <div className="space-y-3">
               {/* 通常クイズ（第1-5問）統合ボタン */}
@@ -916,7 +890,7 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
 
           {/* 3段目: タップチャレンジ（練習・本番2カラム） */}
           <div className="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <AdminCard title="タップチャレンジ（練習）" description="ランキング表示なし・スコアリセット不要" icon={Play}>
+          <AdminCard title="タップチャレンジ（練習）" description={`${tapSettings.countdownSeconds}秒カウント後に${tapSettings.durationSeconds}秒で自動終了します（ランキング表示なし）`} icon={Play}>
             {mode !== 'countup_practice' && (
               <div className="mb-4 rounded-lg bg-yellow-50 border border-yellow-200 p-3">
                 <p className="text-sm font-bold text-yellow-800">⚠️ タップ(練習)モードに切り替えてください</p>

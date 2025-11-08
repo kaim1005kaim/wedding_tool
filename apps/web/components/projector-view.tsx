@@ -621,9 +621,9 @@ const IdleBoard = memo(function IdleBoard({ leaderboard }: { leaderboard: Leader
       </div>
 
       {/* Participant Count - Bottom Right */}
-      <div className="absolute bottom-8 right-8 flex items-center gap-4 glass-panel-strong px-8 py-6 rounded-2xl shadow-xl border border-white/30">
+      <div className="absolute bottom-8 right-8 flex items-center gap-4">
         {/* Connection Animation */}
-        <div className="relative flex items-center justify-center">
+        <div className="relative flex items-center justify-center self-center">
           <motion.div
             className="absolute w-8 h-8 rounded-full bg-sky-400/30"
             animate={{
