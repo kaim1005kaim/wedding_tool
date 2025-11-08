@@ -34,6 +34,7 @@ type AdminEventMap = {
   'quiz:next': undefined;
   'quiz:reveal': undefined;
   'lottery:draw': z.infer<typeof lotteryDrawEventSchema>;
+  'representatives:show': undefined;
 };
 
 type ClientEvent = {
@@ -188,8 +189,10 @@ class SupabaseRealtimeClient implements RealtimeClient {
                 }
               }
             : null,
+          representatives: snapshot.representatives ?? [],
           showRanking: snapshot.show_ranking ?? false,
-          showCelebration: snapshot.show_celebration ?? false
+          showCelebration: snapshot.show_celebration ?? false,
+          showRepresentatives: snapshot.show_representatives ?? false
         });
       }
     );
