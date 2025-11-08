@@ -678,11 +678,17 @@ const IdleBoard = memo(function IdleBoard({ leaderboard }: { leaderboard: Leader
       </div>
 
       {/* Participant Count - Bottom Right */}
-      <div className="absolute bottom-8 right-8 flex items-center gap-4">
+      <div className="absolute bottom-12 right-12 flex items-center gap-6">
+        <div className="flex items-baseline gap-3">
+          <span className="text-4xl font-bold text-ink">接続状況：現在</span>
+          <span className="text-8xl font-black text-sky-400">{participantCount}</span>
+          <span className="text-4xl font-bold text-ink">人のゲストが参加しています</span>
+        </div>
+
         {/* Connection Animation */}
-        <div className="relative flex items-center justify-center self-center">
+        <div className="relative flex items-center justify-center self-end mb-4">
           <motion.div
-            className="absolute w-8 h-8 rounded-full bg-sky-400/30"
+            className="absolute w-12 h-12 rounded-full bg-sky-400/30"
             animate={{
               scale: [1, 1.5, 1],
               opacity: [0.5, 0, 0.5]
@@ -694,7 +700,7 @@ const IdleBoard = memo(function IdleBoard({ leaderboard }: { leaderboard: Leader
             }}
           />
           <motion.div
-            className="w-4 h-4 rounded-full bg-sky-400"
+            className="w-6 h-6 rounded-full bg-sky-400"
             animate={{
               scale: [1, 0.8, 1]
             }}
@@ -704,12 +710,6 @@ const IdleBoard = memo(function IdleBoard({ leaderboard }: { leaderboard: Leader
               ease: 'easeInOut'
             }}
           />
-        </div>
-
-        <div className="flex items-baseline gap-2">
-          <span className="text-2xl font-bold text-ink">接続状況：現在</span>
-          <span className="text-5xl font-black text-sky-400">{participantCount}</span>
-          <span className="text-2xl font-bold text-ink">人のゲストが参加しています</span>
         </div>
       </div>
     </motion.section>
