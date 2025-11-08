@@ -658,11 +658,8 @@ function CountupOverlay({ phase, countdownMs, leaderboard, onTap, registeredName
 
   // 準備カウントダウン中（countdownMs > 11000）はタップ無効
   const timeLeftSeconds = Math.max(0, Math.ceil(localCountdownMs / 1000));
-  const isPreparation = timeLeftSeconds > 11;
-  const isStartMoment = timeLeftSeconds === 11;
-  const disabled = phase !== 'running' || isPreparation || isStartMoment || banner === 'stop';
+  const disabled = phase !== 'running' || timeLeftSeconds > 10 || banner === 'stop';
   const showPad = phase === 'running';
-  const displaySeconds = !isPreparation && !isStartMoment && banner !== 'stop' && timeLeftSeconds > 0 ? timeLeftSeconds : '';
 
   const handleTap = (e: React.PointerEvent) => {
     if (disabled) return;
@@ -752,7 +749,8 @@ function CountupOverlay({ phase, countdownMs, leaderboard, onTap, registeredName
 
       {showPad && (
         <div className="mx-auto w-full max-w-3xl mt-8 space-y-6 relative z-10">
-          {isPreparation ? (
+          {timeLeftSeconds > 11 ? (
+            // 準備カウントダウン: 3-2-1
             <div className="flex flex-col items-center gap-6 bounce-in">
               <div className="rounded-full glass-panel-strong p-16 shadow-xl border border-white/30">
                 <span className="text-[min(40vw,18rem)] font-bold leading-none text-terra-clay">
@@ -761,7 +759,8 @@ function CountupOverlay({ phase, countdownMs, leaderboard, onTap, registeredName
               </div>
               <p className="text-3xl font-bold text-ink glass-panel-strong px-6 py-3 rounded-xl border border-white/30">準備してください！</p>
             </div>
-          ) : isStartMoment ? (
+          ) : timeLeftSeconds === 11 ? (
+            // START!表示
             <div className="flex flex-col items-center gap-6 bounce-in">
               <div className="text-6xl animate-bounce">🚀</div>
               <span className="text-[min(20vw,8rem)] font-bold uppercase tracking-wider text-white bg-gradient-terracotta px-8 py-4 rounded-xl shadow-xl">
@@ -769,6 +768,7 @@ function CountupOverlay({ phase, countdownMs, leaderboard, onTap, registeredName
               </span>
             </div>
           ) : timeLeftSeconds > 0 ? (
+            // タップ時間: 10-9-8...1
             <div className="relative">
               <button
                 type="button"
@@ -790,6 +790,7 @@ function CountupOverlay({ phase, countdownMs, leaderboard, onTap, registeredName
               )}
             </div>
           ) : (
+            // STOP!表示
             <div className="flex flex-col items-center gap-6 bounce-in">
               <div className="text-6xl">🎉</div>
               <span className="text-[min(20vw,8rem)] font-bold uppercase tracking-wider text-white bg-gradient-terracotta px-8 py-4 rounded-xl shadow-xl">
