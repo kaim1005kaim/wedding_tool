@@ -54,6 +54,7 @@ export default function AwardsView({ roomId: _roomId }: { roomId: string }) {
                 key={entry.playerId}
                 rank={entry.rank}
                 displayName={entry.displayName}
+                furigana={entry.furigana}
                 tableNo={entry.tableNo}
                 points={entry.totalPoints}
                 label="pt"
@@ -78,6 +79,7 @@ export default function AwardsView({ roomId: _roomId }: { roomId: string }) {
                   key={entry.playerId}
                   rank={entry.rank}
                   displayName={entry.displayName}
+                  furigana={entry.furigana}
                   tableNo={entry.tableNo}
                   points={entry.quizPoints}
                   label="問正解"
@@ -102,6 +104,7 @@ export default function AwardsView({ roomId: _roomId }: { roomId: string }) {
                   key={entry.playerId}
                   rank={entry.rank}
                   displayName={entry.displayName}
+                  furigana={entry.furigana}
                   tableNo={entry.tableNo}
                   points={entry.countupTapCount}
                   label="回"
@@ -128,6 +131,7 @@ export default function AwardsView({ roomId: _roomId }: { roomId: string }) {
 function RankingRow({
   rank,
   displayName,
+  furigana,
   tableNo,
   points,
   label,
@@ -135,6 +139,7 @@ function RankingRow({
 }: {
   rank: number;
   displayName: string;
+  furigana?: string;
   tableNo?: string | null;
   points: number;
   label: string;
@@ -180,6 +185,7 @@ function RankingRow({
           </span>
         </div>
         <div>
+          {furigana && <p className="text-sm text-ink/60 font-medium print:text-xs">{furigana}</p>}
           <p className="text-2xl font-black text-ink print:text-xl">{displayName}</p>
           {tableNo && <p className="text-base text-ink/70 font-bold print:text-sm">テーブル {tableNo}</p>}
           {details && <p className="text-sm text-ink/60 font-medium print:text-xs">{details}</p>}
