@@ -611,7 +611,7 @@ function JoinModal({ visible, tableNo, displayName, furigana, onTableNoChange, o
               className="input-terra w-full text-base py-3"
               value={displayName}
               onChange={(event) => onDisplayNameChange(event.target.value)}
-              placeholder="例：山田花子"
+              placeholder="例：山田　花子"
               autoComplete="name"
               maxLength={30}
               required
@@ -627,7 +627,7 @@ function JoinModal({ visible, tableNo, displayName, furigana, onTableNoChange, o
               className="input-terra w-full text-base py-3"
               value={furigana}
               onChange={(event) => onFuriganaChange(event.target.value)}
-              placeholder="例：やまだはなこ"
+              placeholder="例：やまだ　はなこ"
               maxLength={30}
             />
           </div>
