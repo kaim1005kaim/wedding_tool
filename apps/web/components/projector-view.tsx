@@ -304,22 +304,27 @@ const CountupBoard = memo(function CountupBoard({
 
   // showRankingフラグでランキング表示を制御
   useEffect(() => {
+    console.log('[CountupBoard] Ranking effect triggered:', { showRanking, phase, entriesLength: entries.length });
     if (showRanking && phase === 'ended' && entries.length > 0) {
+      console.log('[CountupBoard] Starting ranking animation sequence');
       // まず全員スクロール表示
       setShowScrollRanking(true);
       setShowPodium(false);
 
       // スクロール時間を全員分に応じて調整（1人あたり1秒程度）
       const scrollDuration = Math.max(5000, entries.length * 1000);
+      console.log('[CountupBoard] Scroll duration:', scrollDuration);
 
       // スクロール終了後に表彰台表示
       const timer = setTimeout(() => {
+        console.log('[CountupBoard] Switching to podium display');
         setShowScrollRanking(false);
         setShowPodium(true);
       }, scrollDuration);
 
       return () => clearTimeout(timer);
     } else {
+      console.log('[CountupBoard] Resetting ranking display');
       setShowScrollRanking(false);
       setShowPodium(false);
     }
