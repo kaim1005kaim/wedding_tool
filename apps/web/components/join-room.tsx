@@ -595,9 +595,31 @@ function CountupOverlay({ phase, countdownMs, leaderboard, onTap, registeredName
     }, STOP_BANNER_DURATION_MS);
   }, [clearStartDelay, clearStopDelay]);
 
-  // サーバーから送られてくるcountdownMsを使ってカウントダウンを同期
+  // サーバーから送られてくるcountdownMsを使ってカウントダウンを同期（投影画面と同じロジック）
   useEffect(() => {
-    setLocalCountdownMs(countdownMs);
+    if (phase === 'running') {
+      // 新しいカウントダウン開始時にリセット
+      countdownStartTimeRef.current = Date.now();
+      initialCountdownRef.current = countdownMs;
+      setLocalCountdownMs(13999); // 準備カウントダウン3秒 + START! 1秒 + タップ時間10秒 = 14秒から開始
+
+      const interval = setInterval(() => {
+        const elapsed = Date.now() - (countdownStartTimeRef.current ?? 0);
+        const remaining = Math.max(0, 13999 - elapsed);
+        setLocalCountdownMs(remaining);
+
+        if (remaining <= 0) {
+          clearInterval(interval);
+        }
+      }, 100); // 100msごとに更新
+
+      return () => clearInterval(interval);
+    } else {
+      // phase が running でない場合はリセット
+      countdownStartTimeRef.current = null;
+      initialCountdownRef.current = 0;
+      setLocalCountdownMs(countdownMs);
+    }
   }, [phase, countdownMs]);
 
   useEffect(() => {
