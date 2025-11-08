@@ -54,13 +54,14 @@ export default function JoinRoom({ code }: { code: string }) {
     const storedName = window.localStorage.getItem(`${storageKey}:name`);
     const storedFurigana = window.localStorage.getItem(`${storageKey}:furigana`);
     const storedPlayerData = window.localStorage.getItem(storageKey);
+    const storedRoomId = window.localStorage.getItem(`${storageKey}:room`);
 
     if (storedTableNo) setTableNo(storedTableNo);
     if (storedName) setDisplayName(storedName);
     if (storedFurigana) setFurigana(storedFurigana);
 
     // Check if there's existing valid player session
-    if (storedPlayerData && storedTableNo && storedName) {
+    if (storedPlayerData && storedTableNo && storedName && storedRoomId) {
       try {
         const { playerId, token, expiresAt } = JSON.parse(storedPlayerData) as {
           playerId: string;
@@ -68,15 +69,63 @@ export default function JoinRoom({ code }: { code: string }) {
           expiresAt: number;
         };
 
-        // Check if token is still valid
-        if (expiresAt > Date.now()) {
+        // Check if token is expired
+        if (expiresAt <= Date.now()) {
+          clearPlayerAuth();
+          setRegistered(false);
+          setShowModal(true);
+          return;
+        }
+
+        // Verify token with server by making a test API request
+        if (isCloudMode) {
+          fetch(`/api/rooms/${storedRoomId}/tap`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${token}`
+            },
+            body: JSON.stringify({ delta: 0 }) // Send 0 delta as a validation ping
+          }).then(response => {
+            if (response.ok || response.status !== 401) {
+              // Token is valid on server
+              setPlayerAuth({ playerId, token });
+              setRegistered(true);
+              setRegisteredTableNo(storedTableNo);
+              setRegisteredName(storedName);
+              setShowModal(false);
+              setRoomId(storedRoomId);
+            } else {
+              // Token is invalid (401) - clear auth
+              clearPlayerAuth();
+              setRegistered(false);
+              setShowModal(true);
+              // Clear localStorage
+              window.localStorage.removeItem(storageKey);
+              window.localStorage.removeItem(`${storageKey}:tableNo`);
+              window.localStorage.removeItem(`${storageKey}:name`);
+              window.localStorage.removeItem(`${storageKey}:furigana`);
+              window.localStorage.removeItem(`${storageKey}:room`);
+            }
+          }).catch(() => {
+            // Network error - assume token is still valid to allow offline usage
+            setPlayerAuth({ playerId, token });
+            setRegistered(true);
+            setRegisteredTableNo(storedTableNo);
+            setRegisteredName(storedName);
+            setShowModal(false);
+            setRoomId(storedRoomId);
+          });
+        } else {
+          // LAN mode - trust local token
           setPlayerAuth({ playerId, token });
           setRegistered(true);
           setRegisteredTableNo(storedTableNo);
           setRegisteredName(storedName);
           setShowModal(false);
-          return;
+          setRoomId(storedRoomId);
         }
+        return;
       } catch (err) {
         console.error('Failed to restore player session:', err);
       }
@@ -85,7 +134,7 @@ export default function JoinRoom({ code }: { code: string }) {
     clearPlayerAuth();
     setRegistered(false);
     setShowModal(true);
-  }, [storageKey, clearPlayerAuth, setPlayerAuth]);
+  }, [storageKey, clearPlayerAuth, setPlayerAuth, isCloudMode]);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
