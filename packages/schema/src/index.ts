@@ -75,6 +75,14 @@ export const roomSnapshotSchema = z.object({
   lottery_result: lotteryResultBroadcastSchema.nullable().optional(),
   show_ranking: z.boolean().optional().default(false),
   show_celebration: z.boolean().optional().default(false),
+  representatives: z.array(
+    z.object({
+      tableNo: z.string(),
+      name: z.string(),
+      furigana: z.string().optional()
+    })
+  ).optional().default([]),
+  show_representatives: z.boolean().optional().default(false),
   updated_at: z.union([z.string().datetime(), z.string()]).optional()
 });
 
