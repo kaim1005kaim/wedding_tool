@@ -42,7 +42,7 @@ export default function ProjectorView({ roomId: _roomId }: { roomId: string }) {
 
   // クライアント側でカウントダウンを管理
   useEffect(() => {
-    if (phase === 'running' && mode === 'countup') {
+    if (phase === 'running' && (mode === 'countup' || mode === 'countup_practice')) {
       // 新しいカウントダウン開始時にリセット
       countdownStartTimeRef.current = Date.now();
       initialCountdownRef.current = countdownMs;
