@@ -30,6 +30,7 @@ export default function JoinRoom({ code }: { code: string }) {
   const [connection, setConnection] = useState<ConnectionStatus>('good');
   const [showModal, setShowModal] = useState(true);
   const [isJoining, setIsJoining] = useState(false);
+  const [isValidatingToken, setIsValidatingToken] = useState(true);
   const tapBatchRef = useRef(0);
   const tapBatchTimerRef = useRef<NodeJS.Timeout | null>(null);
   const tapTimestampsRef = useRef<number[]>([]);
@@ -50,6 +51,9 @@ export default function JoinRoom({ code }: { code: string }) {
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
+
+    setIsValidatingToken(true);
+
     const storedTableNo = window.localStorage.getItem(`${storageKey}:tableNo`);
     const storedName = window.localStorage.getItem(`${storageKey}:name`);
     const storedFurigana = window.localStorage.getItem(`${storageKey}:furigana`);
@@ -74,6 +78,7 @@ export default function JoinRoom({ code }: { code: string }) {
           clearPlayerAuth();
           setRegistered(false);
           setShowModal(true);
+          setIsValidatingToken(false);
           return;
         }
 
@@ -107,6 +112,7 @@ export default function JoinRoom({ code }: { code: string }) {
               window.localStorage.removeItem(`${storageKey}:furigana`);
               window.localStorage.removeItem(`${storageKey}:room`);
             }
+            setIsValidatingToken(false);
           }).catch(() => {
             // Network error - assume token is still valid to allow offline usage
             setPlayerAuth({ playerId, token });
@@ -115,6 +121,7 @@ export default function JoinRoom({ code }: { code: string }) {
             setRegisteredName(storedName);
             setShowModal(false);
             setRoomId(storedRoomId);
+            setIsValidatingToken(false);
           });
         } else {
           // LAN mode - trust local token
@@ -124,6 +131,7 @@ export default function JoinRoom({ code }: { code: string }) {
           setRegisteredName(storedName);
           setShowModal(false);
           setRoomId(storedRoomId);
+          setIsValidatingToken(false);
         }
         return;
       } catch (err) {
@@ -134,6 +142,7 @@ export default function JoinRoom({ code }: { code: string }) {
     clearPlayerAuth();
     setRegistered(false);
     setShowModal(true);
+    setIsValidatingToken(false);
   }, [storageKey, clearPlayerAuth, setPlayerAuth, isCloudMode]);
 
   useEffect(() => {
@@ -365,6 +374,20 @@ export default function JoinRoom({ code }: { code: string }) {
     warn: { label: '注意が必要です', dot: 'bg-warning', icon: '⚠' },
     bad: { label: '接続が不安定です。場所を変えるか再接続をお試しください。', dot: 'bg-error', icon: '✕' }
   };
+
+  // Show loading screen while validating token
+  if (isValidatingToken) {
+    return (
+      <main className="min-h-screen px-6 py-10 relative overflow-hidden bg-gradient-mobile">
+        <div className="mx-auto w-full max-w-3xl relative z-10 flex items-center justify-center min-h-[60vh]">
+          <div className="text-center">
+            <div className="animate-spin h-12 w-12 border-4 border-accent-400 border-t-transparent rounded-full mx-auto mb-4"></div>
+            <p className="text-lg font-bold text-ink">読み込み中...</p>
+          </div>
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main className="min-h-screen px-6 py-10 relative overflow-hidden bg-gradient-mobile">
