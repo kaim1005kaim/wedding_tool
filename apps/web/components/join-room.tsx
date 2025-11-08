@@ -135,7 +135,16 @@ export default function JoinRoom({ code }: { code: string }) {
       setModalError('お名前を入力してください');
       return;
     }
-    if (furigana.trim() && !/^[ぁ-んー\s]+$/.test(furigana.trim())) {
+    // 名前に漢字・ひらがな・カタカナが含まれているかチェック
+    if (!/[\u4E00-\u9FFF\u3040-\u309F\u30A0-\u30FF]/.test(displayName.trim())) {
+      setModalError('お名前は漢字・ひらがな・カタカナで入力してください');
+      return;
+    }
+    if (!furigana.trim()) {
+      setModalError('ふりがなを入力してください');
+      return;
+    }
+    if (!/^[ぁ-んー\s]+$/.test(furigana.trim())) {
       setModalError('ふりがなはひらがなで入力してください');
       return;
     }
