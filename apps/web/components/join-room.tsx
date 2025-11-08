@@ -595,45 +595,10 @@ function CountupOverlay({ phase, countdownMs, leaderboard, onTap, registeredName
     }, STOP_BANNER_DURATION_MS);
   }, [clearStartDelay, clearStopDelay]);
 
-  // クライアント側でカウントダウンを管理
+  // サーバーから送られてくるcountdownMsを使ってカウントダウンを同期
   useEffect(() => {
-    if (phase === 'running' && isTimerRunning && localCountdown === null) {
-      // 新しいカウントダウン開始時にリセット
-      countdownStartTimeRef.current = Date.now();
-      initialCountdownRef.current = countdownMs;
-      setLocalCountdownMs(10100); // 10.1秒から開始して、確実に10が表示されるようにする
-
-      const interval = setInterval(() => {
-        const elapsed = Date.now() - (countdownStartTimeRef.current ?? 0);
-        const PREPARATION_TIME_MS = 3000; // 3秒の準備時間
-
-        // 準備期間中（3秒）は準備カウントダウン表示用
-        if (elapsed < PREPARATION_TIME_MS) {
-          const prepRemaining = PREPARATION_TIME_MS - elapsed;
-          setLocalCountdownMs(10000 + prepRemaining + 100);
-        } else if (elapsed < PREPARATION_TIME_MS + 1000) {
-          // START!表示期間（1秒）: 10000msで固定
-          setLocalCountdownMs(10000);
-        } else {
-          // タップ時間カウントダウン開始（9999msから開始）
-          const tapTimeElapsed = elapsed - PREPARATION_TIME_MS - 1000;
-          const remaining = Math.max(0, 9999 - tapTimeElapsed);
-          setLocalCountdownMs(remaining);
-
-          if (remaining <= 0) {
-            clearInterval(interval);
-          }
-        }
-      }, 100); // 100msごとに更新
-
-      return () => clearInterval(interval);
-    } else if (phase !== 'running') {
-      // phase が running でない場合はリセット
-      countdownStartTimeRef.current = null;
-      initialCountdownRef.current = 0;
-      setLocalCountdownMs(countdownMs);
-    }
-  }, [phase, isTimerRunning, localCountdown, countdownMs]);
+    setLocalCountdownMs(countdownMs);
+  }, [phase, countdownMs]);
 
   useEffect(() => {
     const prev = prevPhaseRef.current;
@@ -691,10 +656,10 @@ function CountupOverlay({ phase, countdownMs, leaderboard, onTap, registeredName
     }, START_BANNER_DURATION_MS);
   }, [phase, localCountdown, isFinished, isTimerRunning, clearStartDelay]);
 
-  // 準備カウントダウン中（countdownMs > 10000）はタップ無効
+  // 準備カウントダウン中（countdownMs > 11000）はタップ無効
   const timeLeftSeconds = Math.max(0, Math.ceil(localCountdownMs / 1000));
-  const isPreparation = timeLeftSeconds > 10;
-  const isStartMoment = timeLeftSeconds === 10;
+  const isPreparation = timeLeftSeconds > 11;
+  const isStartMoment = timeLeftSeconds === 11;
   const disabled = phase !== 'running' || isPreparation || isStartMoment || banner === 'stop';
   const showPad = phase === 'running';
   const displaySeconds = !isPreparation && !isStartMoment && banner !== 'stop' && timeLeftSeconds > 0 ? timeLeftSeconds : '';
@@ -815,7 +780,7 @@ function CountupOverlay({ phase, countdownMs, leaderboard, onTap, registeredName
             <div className="flex flex-col items-center gap-6 bounce-in">
               <div className="rounded-full glass-panel-strong p-16 shadow-xl border border-white/30">
                 <span className="text-[min(40vw,18rem)] font-bold leading-none text-terra-clay">
-                  {timeLeftSeconds - 10}
+                  {timeLeftSeconds - 11}
                 </span>
               </div>
               <p className="text-3xl font-bold text-ink glass-panel-strong px-6 py-3 rounded-xl border border-white/30">準備してください！</p>
