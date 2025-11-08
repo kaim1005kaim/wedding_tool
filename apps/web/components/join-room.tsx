@@ -84,13 +84,11 @@ export default function JoinRoom({ code }: { code: string }) {
 
         // Verify token with server by making a test API request
         if (isCloudMode) {
-          fetch(`/api/rooms/${storedRoomId}/tap`, {
-            method: 'POST',
+          fetch(`/api/rooms/${storedRoomId}/verify`, {
+            method: 'GET',
             headers: {
-              'Content-Type': 'application/json',
               Authorization: `Bearer ${token}`
-            },
-            body: JSON.stringify({ delta: 0 }) // Send 0 delta as a validation ping
+            }
           }).then(response => {
             console.log('[JoinRoom] Token validation response:', response.status);
             if (response.status === 401) {
