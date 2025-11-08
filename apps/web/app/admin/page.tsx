@@ -86,20 +86,9 @@ export default function AdminEntryPage() {
       }
 
       const data = await response.json() as { roomId: string; code: string };
-      setRoomCode(data.code);
-      setSuccessMessage(`新しいルームを作成しました: ${data.code}`);
 
-      // Refresh room list
-      const listResponse = await fetch('/api/rooms/list');
-      if (listResponse.ok) {
-        const listData = await listResponse.json() as { rooms: Room[] };
-        setRooms(listData.rooms);
-      }
-
-      // Auto-navigate after 2 seconds
-      setTimeout(() => {
-        router.push(`/admin/${data.roomId}`);
-      }, 2000);
+      // 即座に管理画面へ遷移
+      router.push(`/admin/${data.roomId}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'エラーが発生しました');
     } finally {
@@ -199,7 +188,7 @@ export default function AdminEntryPage() {
           </button>
 
           <p className="text-center text-sm text-brand-blue-700/60">
-            新しいルームを作成すると、4桁のルームコードが自動生成されます（デフォルトPIN: 1234）
+            新しいルームを作成すると、4桁のルームコードが自動生成されます
           </p>
         </div>
 
