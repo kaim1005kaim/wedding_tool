@@ -124,9 +124,12 @@ export async function showRanking(roomId: string) {
   // modeとphaseを明示的に維持して、idleモードに戻らないようにする
   // leaderboardを明示的に保持して、upsertRoomSnapshotで古いデータで上書きされないようにする
   const isQuiz5Ranking = snapshot?.current_quiz?.ord === 5;
+  const currentMode = snapshot?.mode ?? 'quiz';
+  const isCountupMode = currentMode === 'countup';
+
   await upsertRoomSnapshot(roomId, {
-    mode: 'quiz',
-    phase: 'running',
+    mode: currentMode,  // 現在のモードを維持（quiz or countup）
+    phase: isCountupMode ? 'ended' : 'running',  // countupの場合はended、quizの場合はrunning
     show_ranking: true,
     show_celebration: false,
     quiz_result: null,
