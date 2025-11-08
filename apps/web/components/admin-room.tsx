@@ -45,8 +45,8 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
   const [manageTab, setManageTab] = useState<'quiz' | 'lottery' | 'representatives'>('quiz');
   const [manageMessage, setManageMessage] = useState<string | null>(null);
   const [manageLoading, setManageLoading] = useState(false);
-  const [representatives, setRepresentatives] = useState<Array<{ tableNo: string; name: string }>>([]);
-  const [representativeForm, setRepresentativeForm] = useState({ tableNo: '', name: '' });
+  const [representatives, setRepresentatives] = useState<Array<{ tableNo: string; name: string; furigana?: string }>>([]);
+  const [representativeForm, setRepresentativeForm] = useState({ tableNo: '', name: '', furigana: '' });
   const [modeSwitching, setModeSwitching] = useState(false);
   const [rankingLoading, setRankingLoading] = useState(false);
   const [lotteryCandidates, setLotteryCandidates] = useState<LotteryCandidateSummary[]>([]);
@@ -398,8 +398,12 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
       setManageMessage('このテーブル番号は既に登録されています');
       return;
     }
-    setRepresentatives([...representatives, { tableNo: representativeForm.tableNo.trim(), name: representativeForm.name.trim() }]);
-    setRepresentativeForm({ tableNo: '', name: '' });
+    setRepresentatives([...representatives, {
+      tableNo: representativeForm.tableNo.trim(),
+      name: representativeForm.name.trim(),
+      furigana: representativeForm.furigana.trim() || undefined
+    }]);
+    setRepresentativeForm({ tableNo: '', name: '', furigana: '' });
     setManageMessage(null);
   };
 
@@ -1305,7 +1309,7 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
               ) : manageTab === 'representatives' ? (
                 <div className="mt-6 space-y-6">
                   <div className="space-y-4">
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="grid grid-cols-3 gap-3">
                       <div className="space-y-2">
                         <label className="text-sm font-medium text-brand-blue-700">テーブル番号</label>
                         <input
@@ -1326,6 +1330,16 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
                           disabled={!isCloudMode}
                         />
                       </div>
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium text-brand-blue-700">ふりがな</label>
+                        <input
+                          className="w-full rounded-xl border border-brand-blue-200 bg-white px-4 py-3 text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-blue-400"
+                          value={representativeForm.furigana}
+                          onChange={(event) => setRepresentativeForm((prev) => ({ ...prev, furigana: event.target.value }))}
+                          placeholder="例：やまだたろう"
+                          disabled={!isCloudMode}
+                        />
+                      </div>
                     </div>
                     <PrimaryButton type="button" onClick={handleAddRepresentative} disabled={manageLoading || !isCloudMode}>
                       追加
@@ -1342,6 +1356,7 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
                           <li key={rep.tableNo} className="rounded-xl bg-white/85 px-4 py-3 text-sm shadow-brand flex items-center justify-between">
                             <div>
                               <p className="font-semibold text-brand-terra-600">{rep.tableNo}: {rep.name}さん</p>
+                              {rep.furigana && <p className="text-xs text-brand-blue-700/60">{rep.furigana}</p>}
                             </div>
                             <button
                               onClick={() => handleRemoveRepresentative(rep.tableNo)}
