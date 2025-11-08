@@ -509,6 +509,7 @@ export default function JoinRoom({ code }: { code: string }) {
           leaderboard={leaderboard}
           onTap={handleTap}
           registeredName={registeredName}
+          isPractice={mode === 'countup_practice'}
         />
       )}
 
@@ -664,9 +665,10 @@ type CountupOverlayProps = {
   leaderboard: LeaderboardEntry[];
   onTap: () => Promise<void> | void;
   registeredName: string;
+  isPractice?: boolean;
 };
 
-function CountupOverlay({ phase, countdownMs, leaderboard, onTap, registeredName }: CountupOverlayProps) {
+function CountupOverlay({ phase, countdownMs, leaderboard, onTap, registeredName, isPractice = false }: CountupOverlayProps) {
 
   const [localCountdown, setLocalCountdown] = useState<number | null>(null);
   const [flash, setFlash] = useState(false);
@@ -837,7 +839,7 @@ function CountupOverlay({ phase, countdownMs, leaderboard, onTap, registeredName
   return (
     <>
       {/* Waiting screen for idle phase */}
-      {!showPad && !isFinished && phase === 'idle' && (
+      {!isPractice && !showPad && !isFinished && phase === 'idle' && (
         <>
           {/* 紙吹雪エフェクト */}
           <div className="fixed inset-0 pointer-events-none z-0">
@@ -889,7 +891,7 @@ function CountupOverlay({ phase, countdownMs, leaderboard, onTap, registeredName
       )}
 
 
-      {phase === 'ended' && (
+      {!isPractice && phase === 'ended' && (
         <div className="mx-auto w-full max-w-3xl mt-8 space-y-6 relative z-10">
           <div className="flex flex-col items-center gap-6 bounce-in">
             <span className="text-[min(15vw,6rem)] font-bold uppercase tracking-wider text-terra-clay drop-shadow-lg">
