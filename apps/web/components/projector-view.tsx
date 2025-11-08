@@ -1011,14 +1011,14 @@ const QuizBoard = memo(function QuizBoard({ activeQuiz, quizResult, leaderboard,
         aria-label="クイズ待機中"
       >
         <div className="flex flex-col items-center justify-center space-y-12 w-full max-w-7xl">
-          {/* タイトル */}
+          {/* SVG Title */}
           <motion.div
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ duration: 0.8, ease: 'easeOut' }}
             className="flex justify-center"
           >
-            <h1 className="text-8xl font-black text-terra-clay text-center">チーム対抗！<br />クイズ大会！</h1>
+            <img src="/quiz-title.svg" alt="Quiz" className="w-[800px] max-w-[80vw] h-auto" />
           </motion.div>
 
           <motion.p
