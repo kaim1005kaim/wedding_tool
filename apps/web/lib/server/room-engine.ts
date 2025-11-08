@@ -106,15 +106,17 @@ export async function showRanking(roomId: string) {
 
   // 常にランキング表示をONにする（トグル動作を廃止）
   // quiz_resultをクリアすることでスマホ画面を待機画面に遷移させる
-  // current_quizは保持して、次のクイズの順番を維持する
+  // クイズ5のランキング表示時はcurrent_quizをクリアして早押しクイズボタンを有効化
+  // それ以外は次のクイズのためにcurrent_quizを保持
   // modeとphaseを明示的に維持して、idleモードに戻らないようにする
+  const isQuiz5Ranking = snapshot?.current_quiz?.ord === 5;
   await upsertRoomSnapshot(roomId, {
     mode: 'quiz',
     phase: 'running',
     show_ranking: true,
     show_celebration: false,
-    quiz_result: null
-    // current_quizは保持（削除しない）
+    quiz_result: null,
+    current_quiz: isQuiz5Ranking ? null : undefined  // クイズ5の場合のみクリア、それ以外は保持
   });
   await appendAuditLog(roomId, 'game:showRanking', {});
 
