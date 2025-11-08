@@ -1102,7 +1102,7 @@ function QuizOverlay({ phase, countdownMs, roomId, playerToken }: QuizOverlayPro
         </div>
       )}
 
-      <div className="flex-1 flex flex-col items-center justify-center p-6">
+      <div className="flex-1 flex flex-col items-center justify-start p-4 overflow-y-auto">
         {/* Answer Feedback Message */}
         {hasAnswered && (
           <motion.div
@@ -1131,49 +1131,49 @@ function QuizOverlay({ phase, countdownMs, roomId, playerToken }: QuizOverlayPro
         )}
 
         {/* Question */}
-        <div className="w-full max-w-2xl mb-8 space-y-4">
+        <div className="w-full max-w-2xl mb-4 space-y-3">
           {/* Quiz Number */}
           <div className="text-center">
-            <div className="inline-block glass-panel-strong px-6 py-2 rounded-2xl shadow-lg border border-white/30">
-              <p className="text-xl font-bold text-ink">
+            <div className="inline-block glass-panel-strong px-4 py-2 rounded-2xl shadow-lg border border-white/30">
+              <p className="text-lg font-bold text-ink">
                 {activeQuiz.ord === 6 ? '⚡ 最終問題 - 早押しクイズ' : `第${activeQuiz.ord}問`}
               </p>
             </div>
           </div>
 
-          <div className="glass-panel-strong rounded-3xl p-6 shadow-xl border border-white/30">
-            <p className="text-2xl font-bold text-ink leading-relaxed text-center">
+          <div className="glass-panel-strong rounded-3xl p-4 shadow-xl border border-white/30">
+            <p className="text-xl font-bold text-ink leading-relaxed text-center">
               {activeQuiz.question}
             </p>
           </div>
         </div>
 
         {/* Choices - 1 Column Vertical (for all quizzes including buzzer quiz) */}
-        <div className="w-full max-w-2xl flex flex-col gap-4">
+        <div className="w-full max-w-2xl flex flex-col gap-3">
             {activeQuiz.choices.map((choice, index) => {
               const isSelected = selectedChoice === index;
               const isCorrect = quizResult && index === correctIndex;
               const isWrong = quizResult && isSelected && index !== correctIndex;
               const count = quizResult?.perChoiceCounts?.[index] ?? 0;
 
-            let buttonClass = 'glass-panel rounded-2xl p-5 shadow-lg transition-all duration-200';
+            let buttonClass = 'glass-panel rounded-2xl p-4 shadow-lg transition-all duration-200';
 
             if (quizResult) {
               if (isCorrect) {
-                buttonClass = 'rounded-2xl p-5 shadow-xl bg-gradient-to-br from-red-500 to-red-600 border-2 border-red-700';
+                buttonClass = 'rounded-2xl p-4 shadow-xl bg-gradient-to-br from-red-500 to-red-600 border-2 border-red-700';
               } else if (isWrong) {
                 // 不正解時も青色に変更
-                buttonClass = 'rounded-2xl p-5 shadow-xl bg-gradient-denim border-2 border-denim-deep';
+                buttonClass = 'rounded-2xl p-4 shadow-xl bg-gradient-denim border-2 border-denim-deep';
               } else {
-                buttonClass = 'rounded-2xl p-5 shadow-md glass-panel';
+                buttonClass = 'rounded-2xl p-4 shadow-md glass-panel';
               }
             } else if (isSelected) {
               // 選択中は青色を維持
-              buttonClass = 'rounded-2xl p-5 shadow-xl bg-gradient-denim border-2 border-denim-deep scale-105';
+              buttonClass = 'rounded-2xl p-4 shadow-xl bg-gradient-denim border-2 border-denim-deep scale-105';
             } else if (hasAnswered) {
-              buttonClass = 'rounded-2xl p-5 shadow-md glass-panel opacity-70';
+              buttonClass = 'rounded-2xl p-4 shadow-md glass-panel opacity-70';
             } else {
-              buttonClass = 'glass-panel-strong rounded-2xl p-5 shadow-lg border border-white/30 hover:shadow-xl hover:scale-[1.02] active:scale-95';
+              buttonClass = 'glass-panel-strong rounded-2xl p-4 shadow-lg border border-white/30 hover:shadow-xl hover:scale-[1.02] active:scale-95';
             }
 
             return (
@@ -1217,10 +1217,10 @@ function QuizOverlay({ phase, countdownMs, roomId, playerToken }: QuizOverlayPro
                   </motion.div>
                 )}
 
-                <div className="flex flex-col gap-3">
+                <div className="flex items-center justify-between gap-3">
                   {/* Choice Label and Text */}
-                  <div className="flex items-center gap-2">
-                    <span className={`text-2xl font-black ${
+                  <div className="flex items-center gap-2 flex-1 min-w-0">
+                    <span className={`text-2xl font-black shrink-0 ${
                       quizResult
                         ? isCorrect || isWrong
                           ? 'text-white'
@@ -1250,7 +1250,7 @@ function QuizOverlay({ phase, countdownMs, roomId, playerToken }: QuizOverlayPro
                       initial={{ scale: 0, rotate: -180 }}
                       animate={{ scale: 1, rotate: 0 }}
                       transition={{ delay: 0.2 + index * 0.1, type: 'spring' }}
-                      className="self-end bg-yellow-400 rounded-full px-3 py-1 shadow-md border-2 border-yellow-500"
+                      className="shrink-0 bg-yellow-400 rounded-full px-3 py-1 shadow-md border-2 border-yellow-500"
                     >
                       <span className="text-sm font-black text-ink">回答数{count}</span>
                     </motion.div>

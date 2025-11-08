@@ -733,7 +733,7 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
               <AdminButton
                 icon={activeQuiz && !quizResult ? Eye : ListChecks}
                 variant={activeQuiz && !quizResult ? 'danger' : 'primary'}
-                disabled={mode !== 'quiz' || (activeQuiz !== null && activeQuiz.ord === 6)}
+                disabled={mode !== 'quiz' || (activeQuiz !== null && activeQuiz.ord === 6) || (activeQuiz === null && quizResult?.quizId === '00000000-0000-0000-0000-000000000005')}
                 onClick={async () => {
                   console.log('[Admin Quiz Button] Click:', {
                     activeQuiz: activeQuiz ? { ord: activeQuiz.ord, quizId: activeQuiz.quizId } : null,
