@@ -793,7 +793,7 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
 
               {/* 早押しクイズ（第6問）統合ボタン */}
               <AdminButton
-                variant={activeQuiz?.ord === 6 ? 'primary' : 'primary'}
+                variant={activeQuiz?.ord === 6 ? 'primary' : 'success'}
                 icon={activeQuiz?.ord === 6 ? Eye : Gauge}
                 disabled={mode !== 'quiz' || (activeQuiz !== null && activeQuiz.ord !== 6)}
                 onClick={async () => {
@@ -1400,7 +1400,7 @@ function AdminCard({ title, description, icon: Icon, children }: AdminCardProps)
 }
 
 type AdminButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
-  variant?: 'primary' | 'secondary' | 'danger';
+  variant?: 'primary' | 'secondary' | 'danger' | 'success';
   icon?: LucideIcon;
 };
 
@@ -1411,7 +1411,9 @@ function AdminButton({ variant = 'primary', icon: Icon, className = '', children
       ? 'bg-blue-500 text-white shadow-lg hover:bg-blue-600 hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] focus-visible:outline-blue-400'
       : variant === 'danger'
         ? 'bg-red-500 text-white shadow-lg hover:bg-red-600 hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] focus-visible:outline-red-400'
-        : 'bg-white text-slate-700 shadow-md hover:shadow-lg hover:glass-panel hover:text-blue-600 border-2 border-slate-200 hover:border-blue-300 focus-visible:outline-blue-400';
+        : variant === 'success'
+          ? 'bg-green-500 text-white shadow-lg hover:bg-green-600 hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] focus-visible:outline-green-400'
+          : 'bg-white text-slate-700 shadow-md hover:shadow-lg hover:glass-panel hover:text-blue-600 border-2 border-slate-200 hover:border-blue-300 focus-visible:outline-blue-400';
 
   return (
     <button type={type} className={`${base} ${variantClass} ${className}`} {...props}>
