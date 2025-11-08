@@ -101,8 +101,11 @@ export async function showRanking(roomId: string) {
     currentSnapshot: snapshot
   });
 
+  // まずleaderboardを最新データで更新
+  await recomputeLeaderboard(roomId);
+
   // 常にランキング表示をONにする（トグル動作を廃止）
-  // quiz_resultをクリアして正解エフェクトが再生されないようにする
+  // quiz_resultをクリアすることでスマホ画面を待機画面に遷移させる
   // current_quizは保持して、次のクイズの順番を維持する
   // modeとphaseを明示的に維持して、idleモードに戻らないようにする
   await upsertRoomSnapshot(roomId, {
@@ -115,11 +118,14 @@ export async function showRanking(roomId: string) {
   });
   await appendAuditLog(roomId, 'game:showRanking', {});
 
-  // Supabaseリアルタイムをトリガーするために、room_snapshotsのupdated_atを更新
-  await recomputeLeaderboard(roomId);
-
   // 更新後の状態を返す
   const updatedSnapshot = await fetchRoomSnapshot(roomId);
+  console.log('[showRanking] Updated snapshot:', {
+    leaderboardCount: updatedSnapshot?.leaderboard?.length ?? 0,
+    showRanking: updatedSnapshot?.show_ranking,
+    currentQuiz: updatedSnapshot?.current_quiz
+  });
+
   return {
     showRanking: true,
     mode: 'quiz',

@@ -881,6 +881,7 @@ const CHOICE_LABELS = ['A', 'B', 'C', 'D'];
 function QuizOverlay({ phase, countdownMs, roomId, playerToken }: QuizOverlayProps) {
   const activeQuiz = useRoomStore((state) => state.activeQuiz);
   const quizResult = useRoomStore((state) => state.quizResult);
+  const showRanking = useRoomStore((state) => state.showRanking);
   const leaderboard = useRoomStore((state) => state.leaderboard);
   const playerId = useRoomStore((state) => state.playerId);
   const [selectedChoice, setSelectedChoice] = useState<number | null>(null);
@@ -1019,8 +1020,8 @@ function QuizOverlay({ phase, countdownMs, roomId, playerToken }: QuizOverlayPro
     }
   };
 
-  // Show waiting screen if quiz hasn't started or player can't participate
-  if (!activeQuiz || !canParticipate) {
+  // Show waiting screen if quiz hasn't started, player can't participate, or ranking is being displayed
+  if (!activeQuiz || !canParticipate || showRanking) {
     return (
       <>
         {/* 紙吹雪エフェクト */}
