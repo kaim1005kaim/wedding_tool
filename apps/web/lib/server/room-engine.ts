@@ -59,7 +59,8 @@ export async function switchRoomMode(roomId: string, to: 'countup' | 'countup_pr
     quiz_result: null,
     lottery_result: null,
     show_ranking: false,
-    show_celebration: false
+    show_celebration: false,
+    show_representatives: false
   });
 
   await appendAuditLog(roomId, 'mode:switch', { to });

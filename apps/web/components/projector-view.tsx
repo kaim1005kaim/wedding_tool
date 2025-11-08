@@ -267,22 +267,38 @@ function RepresentativesView({ representatives }: { representatives: RoomStoreSt
       className="flex flex-col items-center justify-center h-screen w-full bg-gradient-earth p-8"
     >
       <h1 className="text-6xl font-black text-ink mb-12">各テーブルの回答代表者</h1>
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 max-w-7xl w-full">
-        {representatives.map((rep) => (
-          <motion.div
-            key={rep.tableNo}
-            initial={{ scale: 0.8, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ duration: 0.3 }}
-            className="glass-panel-strong rounded-2xl p-6 shadow-xl border-2 border-white/40"
-          >
-            <div className="text-center">
-              <p className="text-2xl font-black text-terra-clay mb-2">テーブル {rep.tableNo}</p>
-              {rep.furigana && <p className="text-sm text-ink/60 mb-1">{rep.furigana}</p>}
-              <p className="text-3xl font-black text-ink">{rep.name}</p>
+      <div className="grid grid-cols-6 gap-8 max-w-7xl w-full">
+        {representatives
+          .sort((a, b) => {
+            // Sort by table number (A, B, C, D, E, F, G, H, I, J, K, L)
+            return a.tableNo.localeCompare(b.tableNo);
+          })
+          .reduce<{ tableNo: string; name: string; furigana?: string }[][]>((acc, rep, index) => {
+            // Group into pairs: [A,B], [C,D], [E,F], [G,H], [I,J], [K,L]
+            const colIndex = Math.floor(index / 2);
+            if (!acc[colIndex]) acc[colIndex] = [];
+            acc[colIndex].push(rep);
+            return acc;
+          }, [])
+          .map((column, colIndex) => (
+            <div key={colIndex} className="flex flex-col gap-8">
+              {column.map((rep) => (
+                <motion.div
+                  key={rep.tableNo}
+                  initial={{ scale: 0.8, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ duration: 0.3, delay: colIndex * 0.1 }}
+                  className="glass-panel-strong rounded-2xl p-6 shadow-xl border-2 border-white/40"
+                >
+                  <div className="text-center">
+                    <p className="text-2xl font-black text-terra-clay mb-2">テーブル {rep.tableNo}</p>
+                    {rep.furigana && <p className="text-sm text-ink/60 mb-1">{rep.furigana}</p>}
+                    <p className="text-3xl font-black text-ink">{rep.name}</p>
+                  </div>
+                </motion.div>
+              ))}
             </div>
-          </motion.div>
-        ))}
+          ))}
       </div>
       {representatives.length === 0 && (
         <p className="text-2xl text-ink/60 mt-8">代表者が設定されていません</p>

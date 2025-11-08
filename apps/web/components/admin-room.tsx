@@ -75,6 +75,7 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
   const countdownMs = useRoomStore((state) => state.countdownMs);
   const activeQuiz = useRoomStore((state) => state.activeQuiz);
   const quizResult = useRoomStore((state) => state.quizResult);
+  const showRepresentatives = useRoomStore((state) => state.showRepresentatives);
   const isCloudMode = appConfig.mode === 'cloud';
   const storageKey = useMemo(() => `wedding_tool:${roomId}:admin`, [roomId]);
 
@@ -359,6 +360,23 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
     }
   };
 
+  const handleRepresentativesToggle = async (show: boolean) => {
+    if (!isCloudMode || !adminToken) return;
+    try {
+      const response = await fetch(`/api/admin/rooms/${roomId}/representatives/${show ? 'show' : 'hide'}`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${adminToken}`
+        }
+      });
+      if (!response.ok) {
+        throw new Error('Failed to toggle representatives');
+      }
+    } catch (err) {
+      console.error('Failed to toggle representatives:', err);
+      setError('代表者表示の切り替えに失敗しました');
+    }
+  };
 
   const handleAddCandidate = async () => {
     if (!isCloudMode || !adminToken) return;
@@ -623,17 +641,23 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
               </div>
             )}
             <div className="space-y-3">
-              {/* 代表者画面表示ボタン */}
+              {/* 代表者画面表示トグルボタン */}
               <AdminButton
                 icon={Eye}
-                variant="secondary"
+                variant={showRepresentatives ? 'danger' : 'secondary'}
                 disabled={mode !== 'quiz'}
-                onClick={() => {
-                  void send({ type: 'representatives:show', payload: undefined });
+                onClick={async () => {
+                  if (showRepresentatives) {
+                    // 非表示にする
+                    await handleRepresentativesToggle(false);
+                  } else {
+                    // 表示する
+                    void send({ type: 'representatives:show', payload: undefined });
+                  }
                 }}
                 className="w-full"
               >
-                代表者画面を表示
+                {showRepresentatives ? '代表者画面を非表示' : '代表者画面を表示'}
               </AdminButton>
               {/* 通常クイズ（第1-5問）統合ボタン */}
               <AdminButton
