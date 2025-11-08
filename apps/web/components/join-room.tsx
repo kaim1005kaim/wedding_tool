@@ -92,16 +92,10 @@ export default function JoinRoom({ code }: { code: string }) {
             },
             body: JSON.stringify({ delta: 0 }) // Send 0 delta as a validation ping
           }).then(response => {
-            if (response.ok || response.status !== 401) {
-              // Token is valid on server
-              setPlayerAuth({ playerId, token });
-              setRegistered(true);
-              setRegisteredTableNo(storedTableNo);
-              setRegisteredName(storedName);
-              setShowModal(false);
-              setRoomId(storedRoomId);
-            } else {
+            console.log('[JoinRoom] Token validation response:', response.status);
+            if (response.status === 401) {
               // Token is invalid (401) - clear auth
+              console.log('[JoinRoom] Token invalid, clearing auth and localStorage');
               clearPlayerAuth();
               setRegistered(false);
               setShowModal(true);
@@ -111,9 +105,18 @@ export default function JoinRoom({ code }: { code: string }) {
               window.localStorage.removeItem(`${storageKey}:name`);
               window.localStorage.removeItem(`${storageKey}:furigana`);
               window.localStorage.removeItem(`${storageKey}:room`);
+            } else {
+              // Token is valid on server
+              console.log('[JoinRoom] Token valid, restoring session');
+              setPlayerAuth({ playerId, token });
+              setRegistered(true);
+              setRegisteredTableNo(storedTableNo);
+              setRegisteredName(storedName);
+              setShowModal(false);
+              setRoomId(storedRoomId);
             }
             setIsValidatingToken(false);
-          }).catch(() => {
+          }).catch((err) => {
             // Network error - assume token is still valid to allow offline usage
             setPlayerAuth({ playerId, token });
             setRegistered(true);
