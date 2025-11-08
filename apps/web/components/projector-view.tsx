@@ -483,7 +483,7 @@ const CountupBoard = memo(function CountupBoard({
       )}
 
       {/* 表彰台スタイル表示 */}
-      {phase === 'ended' && showPodium && top3.length >= 3 && (
+      {phase === 'ended' && showPodium && top3.length > 0 && (
         <div className="flex-1 flex flex-col">
           {/* TOP3発表タイトル */}
           <motion.div
@@ -498,88 +498,94 @@ const CountupBoard = memo(function CountupBoard({
           {/* 表彰台 */}
           <div className="flex-1 flex items-end justify-center gap-8 pb-12">
           {/* 2位 - 左 */}
-          <motion.div
-            initial={{ y: 100, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.2, type: 'spring', bounce: 0.4 }}
-            className="flex flex-col items-center"
-          >
+          {top3[1] && (
             <motion.div
-              animate={{ rotate: [0, -10, 10, -10, 0] }}
-              transition={{ duration: 0.6, delay: 0.8 }}
-              className="mb-4 text-8xl"
+              initial={{ y: 100, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.2, type: 'spring', bounce: 0.4 }}
+              className="flex flex-col items-center"
             >
-              🥈
-            </motion.div>
-            <div className="rounded-2xl glass-panel-strong p-8 shadow-2xl border-4 border-gray-400 ring-4 ring-gray-300/50 bg-gradient-to-br from-gray-50/30 to-slate-50/30">
-              <p className="text-3xl font-black text-ink text-center mb-2">{top3[1].displayName}</p>
-              {top3[1].tableNo && <p className="text-lg text-ink/70 font-bold text-center mb-4">テーブル {top3[1].tableNo}</p>}
-              <div className="rounded-full glass-panel px-8 py-4 shadow-lg border-2 border-white/40 text-center">
-                <span className="text-4xl font-black text-terra-clay">{top3[1].totalPoints}</span>
-                <span className="ml-2 text-xl text-ink/80 font-bold">タップ</span>
+              <motion.div
+                animate={{ rotate: [0, -10, 10, -10, 0] }}
+                transition={{ duration: 0.6, delay: 0.8 }}
+                className="mb-4 text-8xl"
+              >
+                🥈
+              </motion.div>
+              <div className="rounded-2xl glass-panel-strong p-8 shadow-2xl border-4 border-gray-400 ring-4 ring-gray-300/50 bg-gradient-to-br from-gray-50/30 to-slate-50/30">
+                <p className="text-3xl font-black text-ink text-center mb-2">{top3[1].displayName}</p>
+                {top3[1].tableNo && <p className="text-lg text-ink/70 font-bold text-center mb-4">テーブル {top3[1].tableNo}</p>}
+                <div className="rounded-full glass-panel px-8 py-4 shadow-lg border-2 border-white/40 text-center">
+                  <span className="text-4xl font-black text-terra-clay">{top3[1].totalPoints}</span>
+                  <span className="ml-2 text-xl text-ink/80 font-bold">タップ</span>
+                </div>
               </div>
-            </div>
-            {/* 台座 */}
-            <div className="w-48 h-32 bg-gradient-to-b from-gray-300/80 to-gray-400/80 rounded-t-2xl shadow-xl mt-4 flex items-center justify-center border-4 border-gray-500">
-              <span className="text-6xl font-black text-white">2</span>
-            </div>
-          </motion.div>
+              {/* 台座 */}
+              <div className="w-48 h-32 bg-gradient-to-b from-gray-300/80 to-gray-400/80 rounded-t-2xl shadow-xl mt-4 flex items-center justify-center border-4 border-gray-500">
+                <span className="text-6xl font-black text-white">2</span>
+              </div>
+            </motion.div>
+          )}
 
           {/* 1位 - 中央（高い位置） */}
-          <motion.div
-            initial={{ y: 100, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.4, type: 'spring', bounce: 0.4 }}
-            className="flex flex-col items-center -translate-y-12"
-          >
+          {top3[0] && (
             <motion.div
-              animate={{ rotate: [0, -15, 15, -15, 0], scale: [1, 1.2, 1] }}
-              transition={{ duration: 0.8, delay: 1 }}
-              className="mb-4 text-9xl"
+              initial={{ y: 100, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.4, type: 'spring', bounce: 0.4 }}
+              className="flex flex-col items-center -translate-y-12"
             >
-              🥇
-            </motion.div>
-            <div className="rounded-2xl glass-panel-strong p-10 shadow-2xl border-4 border-yellow-400 ring-4 ring-yellow-300/50 bg-gradient-to-br from-yellow-50/40 to-orange-50/40">
-              <p className="text-4xl font-black text-ink text-center mb-2">{top3[0].displayName}</p>
-              {top3[0].tableNo && <p className="text-xl text-ink/70 font-bold text-center mb-4">テーブル {top3[0].tableNo}</p>}
-              <div className="rounded-full glass-panel px-10 py-5 shadow-lg border-2 border-white/40 text-center">
-                <span className="text-5xl font-black text-terra-clay">{top3[0].totalPoints}</span>
-                <span className="ml-2 text-2xl text-ink/80 font-bold">タップ</span>
+              <motion.div
+                animate={{ rotate: [0, -15, 15, -15, 0], scale: [1, 1.2, 1] }}
+                transition={{ duration: 0.8, delay: 1 }}
+                className="mb-4 text-9xl"
+              >
+                🥇
+              </motion.div>
+              <div className="rounded-2xl glass-panel-strong p-10 shadow-2xl border-4 border-yellow-400 ring-4 ring-yellow-300/50 bg-gradient-to-br from-yellow-50/40 to-orange-50/40">
+                <p className="text-4xl font-black text-ink text-center mb-2">{top3[0].displayName}</p>
+                {top3[0].tableNo && <p className="text-xl text-ink/70 font-bold text-center mb-4">テーブル {top3[0].tableNo}</p>}
+                <div className="rounded-full glass-panel px-10 py-5 shadow-lg border-2 border-white/40 text-center">
+                  <span className="text-5xl font-black text-terra-clay">{top3[0].totalPoints}</span>
+                  <span className="ml-2 text-2xl text-ink/80 font-bold">タップ</span>
+                </div>
               </div>
-            </div>
-            {/* 台座 */}
-            <div className="w-52 h-40 bg-gradient-to-b from-yellow-300/80 to-yellow-500/80 rounded-t-2xl shadow-2xl mt-4 flex items-center justify-center border-4 border-yellow-600">
-              <span className="text-7xl font-black text-white">1</span>
-            </div>
-          </motion.div>
+              {/* 台座 */}
+              <div className="w-52 h-40 bg-gradient-to-b from-yellow-300/80 to-yellow-500/80 rounded-t-2xl shadow-2xl mt-4 flex items-center justify-center border-4 border-yellow-600">
+                <span className="text-7xl font-black text-white">1</span>
+              </div>
+            </motion.div>
+          )}
 
           {/* 3位 - 右 */}
-          <motion.div
-            initial={{ y: 100, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0, type: 'spring', bounce: 0.4 }}
-            className="flex flex-col items-center"
-          >
+          {top3[2] && (
             <motion.div
-              animate={{ rotate: [0, -10, 10, -10, 0] }}
-              transition={{ duration: 0.6, delay: 0.6 }}
-              className="mb-4 text-8xl"
+              initial={{ y: 100, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0, type: 'spring', bounce: 0.4 }}
+              className="flex flex-col items-center"
             >
-              🥉
-            </motion.div>
-            <div className="rounded-2xl glass-panel-strong p-8 shadow-2xl border-4 border-amber-600 ring-4 ring-amber-400/50 bg-gradient-to-br from-amber-50/30 to-orange-50/30">
-              <p className="text-3xl font-black text-ink text-center mb-2">{top3[2].displayName}</p>
-              {top3[2].tableNo && <p className="text-lg text-ink/70 font-bold text-center mb-4">テーブル {top3[2].tableNo}</p>}
-              <div className="rounded-full glass-panel px-8 py-4 shadow-lg border-2 border-white/40 text-center">
-                <span className="text-4xl font-black text-terra-clay">{top3[2].totalPoints}</span>
-                <span className="ml-2 text-xl text-ink/80 font-bold">タップ</span>
+              <motion.div
+                animate={{ rotate: [0, -10, 10, -10, 0] }}
+                transition={{ duration: 0.6, delay: 0.6 }}
+                className="mb-4 text-8xl"
+              >
+                🥉
+              </motion.div>
+              <div className="rounded-2xl glass-panel-strong p-8 shadow-2xl border-4 border-amber-600 ring-4 ring-amber-400/50 bg-gradient-to-br from-amber-50/30 to-orange-50/30">
+                <p className="text-3xl font-black text-ink text-center mb-2">{top3[2].displayName}</p>
+                {top3[2].tableNo && <p className="text-lg text-ink/70 font-bold text-center mb-4">テーブル {top3[2].tableNo}</p>}
+                <div className="rounded-full glass-panel px-8 py-4 shadow-lg border-2 border-white/40 text-center">
+                  <span className="text-4xl font-black text-terra-clay">{top3[2].totalPoints}</span>
+                  <span className="ml-2 text-xl text-ink/80 font-bold">タップ</span>
+                </div>
               </div>
-            </div>
-            {/* 台座 */}
-            <div className="w-48 h-24 bg-gradient-to-b from-amber-500/80 to-amber-700/80 rounded-t-2xl shadow-xl mt-4 flex items-center justify-center border-4 border-amber-800">
-              <span className="text-6xl font-black text-white">3</span>
-            </div>
-          </motion.div>
+              {/* 台座 */}
+              <div className="w-48 h-24 bg-gradient-to-b from-amber-500/80 to-amber-700/80 rounded-t-2xl shadow-xl mt-4 flex items-center justify-center border-4 border-amber-800">
+                <span className="text-6xl font-black text-white">3</span>
+              </div>
+            </motion.div>
+          )}
           </div>
         </div>
       )}
