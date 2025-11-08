@@ -148,7 +148,9 @@ class SupabaseRealtimeClient implements RealtimeClient {
           displayName: entry.name,
           totalPoints: entry.points,
           rank: entry.rank ?? index + 1,
-          delta: 0
+          delta: 0,
+          quizPoints: entry.quizPoints ?? 0,
+          countupTapCount: entry.countupTapCount ?? 0
         }));
 
         this.dispatch('state:update', {
