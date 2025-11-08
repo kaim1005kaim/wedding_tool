@@ -181,6 +181,9 @@ export async function updateSnapshotLeaderboard(roomId: string, entries: Leaderb
 
 export async function recomputeLeaderboard(roomId: string, limit = 20) {
   const client = getSupabaseServiceRoleClient();
+
+  console.log('[recomputeLeaderboard] Starting query for roomId:', roomId);
+
   const { data, error } = await client
     .from('scores')
     .select('player_id, total_points, quiz_points, countup_tap_count, players:players(display_name, table_no)')
@@ -189,8 +192,15 @@ export async function recomputeLeaderboard(roomId: string, limit = 20) {
     .limit(limit);
 
   if (error) {
+    console.error('[recomputeLeaderboard] Database query error:', error);
     throw error;
   }
+
+  console.log('[recomputeLeaderboard] Raw database response:', {
+    roomId,
+    count: data?.length ?? 0,
+    rawData: JSON.stringify(data, null, 2)
+  });
 
   console.log('[recomputeLeaderboard] Scores data:', {
     roomId,
@@ -214,7 +224,20 @@ export async function recomputeLeaderboard(roomId: string, limit = 20) {
     rank: index + 1
   }));
 
+  console.log('[recomputeLeaderboard] Mapped leaderboard entries:', {
+    roomId,
+    count: entries.length,
+    entries: entries.map(e => ({
+      playerId: e.playerId,
+      name: e.name,
+      quizPoints: e.quizPoints,
+      totalPoints: e.points
+    }))
+  });
+
   await updateSnapshotLeaderboard(roomId, entries);
+
+  console.log('[recomputeLeaderboard] Leaderboard updated in snapshot');
 }
 
 export async function incrementPlayerScore(roomId: string, playerId: string, delta: number) {

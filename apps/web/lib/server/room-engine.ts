@@ -102,13 +102,27 @@ export async function showRanking(roomId: string) {
   });
 
   // まずleaderboardを最新データで更新
+  console.log('[showRanking] Calling recomputeLeaderboard before snapshot update');
   await recomputeLeaderboard(roomId);
+
+  // recomputeLeaderboard後の状態を確認
+  const afterRecompute = await fetchRoomSnapshot(roomId);
+  console.log('[showRanking] After recomputeLeaderboard:', {
+    leaderboardCount: afterRecompute?.leaderboard?.length ?? 0,
+    leaderboardEntries: afterRecompute?.leaderboard?.map(e => ({
+      playerId: e.playerId,
+      name: e.name,
+      quizPoints: e.quizPoints,
+      totalPoints: e.points
+    }))
+  });
 
   // 常にランキング表示をONにする（トグル動作を廃止）
   // quiz_resultをクリアすることでスマホ画面を待機画面に遷移させる
   // クイズ5のランキング表示時はcurrent_quizをクリアして早押しクイズボタンを有効化
   // それ以外は次のクイズのためにcurrent_quizを保持
   // modeとphaseを明示的に維持して、idleモードに戻らないようにする
+  // leaderboardを明示的に保持して、upsertRoomSnapshotで古いデータで上書きされないようにする
   const isQuiz5Ranking = snapshot?.current_quiz?.ord === 5;
   await upsertRoomSnapshot(roomId, {
     mode: 'quiz',
@@ -116,7 +130,8 @@ export async function showRanking(roomId: string) {
     show_ranking: true,
     show_celebration: false,
     quiz_result: null,
-    current_quiz: isQuiz5Ranking ? null : undefined  // クイズ5の場合のみクリア、それ以外は保持
+    current_quiz: isQuiz5Ranking ? null : undefined,  // クイズ5の場合のみクリア、それ以外は保持
+    leaderboard: afterRecompute?.leaderboard ?? []  // 最新のleaderboardを明示的に保持
   });
   await appendAuditLog(roomId, 'game:showRanking', {});
 
@@ -125,7 +140,13 @@ export async function showRanking(roomId: string) {
   console.log('[showRanking] Updated snapshot:', {
     leaderboardCount: updatedSnapshot?.leaderboard?.length ?? 0,
     showRanking: updatedSnapshot?.show_ranking,
-    currentQuiz: updatedSnapshot?.current_quiz
+    currentQuiz: updatedSnapshot?.current_quiz,
+    leaderboardEntries: updatedSnapshot?.leaderboard?.map(e => ({
+      playerId: e.playerId,
+      name: e.name,
+      quizPoints: e.quizPoints,
+      totalPoints: e.points
+    }))
   });
 
   return {
