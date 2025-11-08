@@ -1100,6 +1100,54 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
           </AdminCard>
           </div>
 
+          {/* ユーザーリセット */}
+          {isCloudMode && (
+            <div className="mt-6">
+              <AdminCard title="ユーザー管理" description="参加者データの管理" icon={ListChecks}>
+                <div className="space-y-3">
+                  <p className="text-sm text-gray-600">
+                    過去の検証データやテストユーザーを削除し、本番環境をクリーンな状態で開始できます。
+                  </p>
+                  <AdminButton
+                    onClick={() => {
+                      openConfirm({
+                        title: '全ユーザーをリセット',
+                        description: '全ての参加者データ（プレイヤー、スコア、回答履歴）が削除されます。この操作は取り消せません。本当によろしいですか？',
+                        variant: 'danger',
+                        onConfirm: async () => {
+                          if (!isCloudMode) return;
+                          if (!adminToken) {
+                            setError('管理トークンがありません');
+                            return;
+                          }
+                          try {
+                            const response = await fetch(`/api/admin/rooms/${roomId}/reset-users`, {
+                              method: 'POST',
+                              headers: {
+                                Authorization: `Bearer ${adminToken}`
+                              }
+                            });
+                            if (!response.ok) {
+                              const data = (await response.json().catch(() => ({}))) as { error?: string };
+                              throw new Error(data.error ?? response.statusText);
+                            }
+                            await loadLogs();
+                          } catch (err) {
+                            setError(err instanceof Error ? err.message : 'ユーザーリセットに失敗しました');
+                          }
+                        }
+                      });
+                    }}
+                    className="w-full"
+                    variant="danger"
+                  >
+                    全ユーザーをリセット
+                  </AdminButton>
+                </div>
+              </AdminCard>
+            </div>
+          )}
+
           {/* 3段目: ログ（全幅） */}
           {isCloudMode && (
             <div className="mt-6">
