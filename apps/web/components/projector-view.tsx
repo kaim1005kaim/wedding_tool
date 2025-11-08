@@ -288,12 +288,12 @@ function RepresentativesView({ representatives }: { representatives: RoomStoreSt
                   initial={{ scale: 0.8, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
                   transition={{ duration: 0.3, delay: colIndex * 0.1 }}
-                  className="glass-panel-strong rounded-2xl p-6 shadow-xl border-2 border-white/40"
+                  className="glass-panel-strong rounded-2xl p-6 shadow-xl border-2 border-white/40 w-48 h-40 flex items-center justify-center"
                 >
                   <div className="text-center">
-                    <p className="text-2xl font-black text-terra-clay mb-2">テーブル {rep.tableNo}</p>
-                    {rep.furigana && <p className="text-sm text-ink/60 mb-1">{rep.furigana}</p>}
-                    <p className="text-3xl font-black text-ink">{rep.name}</p>
+                    <p className="text-2xl font-black text-terra-clay mb-2 whitespace-nowrap">テーブル {rep.tableNo}</p>
+                    {rep.furigana && <p className="text-sm text-ink/60 mb-1 whitespace-nowrap">{rep.furigana}</p>}
+                    <p className="text-3xl font-black text-ink whitespace-nowrap">{rep.name}</p>
                   </div>
                 </motion.div>
               ))}
@@ -1141,34 +1141,6 @@ const QuizBoard = memo(function QuizBoard({ activeQuiz, quizResult, leaderboard,
           >
             開始まで少々お待ちください
           </motion.p>
-
-          {/* Representatives List */}
-          {representatives.length > 0 && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.5, duration: 0.5 }}
-              className="w-full"
-            >
-              <h3 className="text-4xl font-bold text-ink mb-8 text-center">各テーブルの回答代表者</h3>
-              <div className="grid grid-cols-3 gap-8 w-full">
-                {representatives.map((rep) => (
-                  <motion.div
-                    key={rep.tableNo}
-                    initial={{ scale: 0.8, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 1 }}
-                    transition={{ duration: 0.4 }}
-                    className="rounded-2xl glass-panel-strong p-6 border border-white/30 shadow-xl"
-                  >
-                    {rep.furigana && <p className="text-base text-ink/60 font-medium text-center">{rep.furigana}</p>}
-                    <p className="text-3xl font-black text-ink text-center">
-                      {rep.tableNo}: {rep.name}さん
-                    </p>
-                  </motion.div>
-                ))}
-              </div>
-            </motion.div>
-          )}
         </div>
       </motion.section>
     );
