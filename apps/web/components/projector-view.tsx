@@ -266,9 +266,17 @@ function renderSection(
 ) {
   switch (mode) {
     case 'countup':
-      return <CountupBoard key="countup" entries={leaderboard} phase={phase} countdownMs={countdownMs} showRanking={showRanking} isPractice={false} />;
+      // Sort by countupTapCount for tap challenge rankings
+      const sortedByTaps = [...leaderboard]
+        .sort((a, b) => (b.countupTapCount ?? 0) - (a.countupTapCount ?? 0))
+        .map((entry, index) => ({ ...entry, rank: index + 1 }));
+      return <CountupBoard key="countup" entries={sortedByTaps} phase={phase} countdownMs={countdownMs} showRanking={showRanking} isPractice={false} />;
     case 'countup_practice':
-      return <CountupBoard key="countup-practice" entries={leaderboard} phase={phase} countdownMs={countdownMs} showRanking={false} isPractice={true} />;
+      // Sort by countupTapCount for practice mode
+      const sortedPractice = [...leaderboard]
+        .sort((a, b) => (b.countupTapCount ?? 0) - (a.countupTapCount ?? 0))
+        .map((entry, index) => ({ ...entry, rank: index + 1 }));
+      return <CountupBoard key="countup-practice" entries={sortedPractice} phase={phase} countdownMs={countdownMs} showRanking={false} isPractice={true} />;
     case 'quiz':
       return <QuizBoard key={`quiz-${quizResult?.quizId ?? activeQuiz?.quizId ?? 'waiting'}`} activeQuiz={activeQuiz} quizResult={quizResult} leaderboard={leaderboard} phase={phase} representatives={representatives} showRanking={showRanking} mode={mode} />;
     /* 抽選モード非表示
@@ -472,7 +480,7 @@ const CountupBoard = memo(function CountupBoard({
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className="text-4xl font-black text-terra-clay">{entry.totalPoints}</p>
+                    <p className="text-4xl font-black text-terra-clay">{entry.countupTapCount ?? 0}</p>
                     <p className="text-base text-ink/80 font-bold">タップ</p>
                   </div>
                 </motion.div>
@@ -517,7 +525,7 @@ const CountupBoard = memo(function CountupBoard({
                 <p className="text-3xl font-black text-ink text-center mb-2">{top3[1].displayName}</p>
                 {top3[1].tableNo && <p className="text-lg text-ink/70 font-bold text-center mb-4">テーブル {top3[1].tableNo}</p>}
                 <div className="rounded-full glass-panel px-8 py-4 shadow-lg border-2 border-white/40 text-center">
-                  <span className="text-4xl font-black text-terra-clay">{top3[1].totalPoints}</span>
+                  <span className="text-4xl font-black text-terra-clay">{top3[1].countupTapCount ?? 0}</span>
                   <span className="ml-2 text-xl text-ink/80 font-bold">タップ</span>
                 </div>
               </div>
@@ -548,7 +556,7 @@ const CountupBoard = memo(function CountupBoard({
                 <p className="text-4xl font-black text-ink text-center mb-2">{top3[0].displayName}</p>
                 {top3[0].tableNo && <p className="text-xl text-ink/70 font-bold text-center mb-4">テーブル {top3[0].tableNo}</p>}
                 <div className="rounded-full glass-panel px-10 py-5 shadow-lg border-2 border-white/40 text-center">
-                  <span className="text-5xl font-black text-terra-clay">{top3[0].totalPoints}</span>
+                  <span className="text-5xl font-black text-terra-clay">{top3[0].countupTapCount ?? 0}</span>
                   <span className="ml-2 text-2xl text-ink/80 font-bold">タップ</span>
                 </div>
               </div>
@@ -579,7 +587,7 @@ const CountupBoard = memo(function CountupBoard({
                 <p className="text-3xl font-black text-ink text-center mb-2">{top3[2].displayName}</p>
                 {top3[2].tableNo && <p className="text-lg text-ink/70 font-bold text-center mb-4">テーブル {top3[2].tableNo}</p>}
                 <div className="rounded-full glass-panel px-8 py-4 shadow-lg border-2 border-white/40 text-center">
-                  <span className="text-4xl font-black text-terra-clay">{top3[2].totalPoints}</span>
+                  <span className="text-4xl font-black text-terra-clay">{top3[2].countupTapCount ?? 0}</span>
                   <span className="ml-2 text-xl text-ink/80 font-bold">タップ</span>
                 </div>
               </div>
