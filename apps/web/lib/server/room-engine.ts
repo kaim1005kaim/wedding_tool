@@ -73,8 +73,8 @@ export async function startGame(roomId: string, countdownMs = DEFAULT_COUNTDOWN_
     .eq('id', roomId);
 
   await ensureRoomSnapshot(roomId);
-  // 準備時間を追加（3-2-1カウントダウン用）
-  await upsertRoomSnapshot(roomId, { phase: 'running', countdown_ms: countdownMs + PREPARATION_TIME_MS });
+  // countdownMsにはすでに準備時間が含まれている（管理パネルから計算済み）
+  await upsertRoomSnapshot(roomId, { phase: 'running', countdown_ms: countdownMs });
   await appendAuditLog(roomId, 'game:start', { countdownMs });
 }
 
