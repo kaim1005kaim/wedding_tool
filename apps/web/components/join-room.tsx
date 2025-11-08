@@ -410,7 +410,7 @@ export default function JoinRoom({ code }: { code: string }) {
       </div>
 
       {/* 抽選モード非表示 */}
-      {registered && mode !== 'countup' && mode !== 'quiz' && mode !== 'lottery' && (
+      {registered && mode !== 'countup' && mode !== 'countup_practice' && mode !== 'quiz' && mode !== 'lottery' && (
         <>
           {/* 紙吹雪エフェクト */}
           <div className="fixed inset-0 pointer-events-none z-0">
@@ -839,7 +839,7 @@ function CountupOverlay({ phase, countdownMs, leaderboard, onTap, registeredName
   return (
     <>
       {/* Waiting screen for idle phase */}
-      {!isPractice && !showPad && !isFinished && phase === 'idle' && (
+      {!showPad && !isFinished && phase === 'idle' && (
         <>
           {/* 紙吹雪エフェクト */}
           <div className="fixed inset-0 pointer-events-none z-0">
@@ -891,13 +891,13 @@ function CountupOverlay({ phase, countdownMs, leaderboard, onTap, registeredName
       )}
 
 
-      {!isPractice && phase === 'ended' && (
+      {phase === 'ended' && (
         <div className="mx-auto w-full max-w-3xl mt-8 space-y-6 relative z-10">
           <div className="flex flex-col items-center gap-6 bounce-in">
             <span className="text-[min(15vw,6rem)] font-bold uppercase tracking-wider text-terra-clay drop-shadow-lg">
               TIME UP!
             </span>
-            <p className="text-2xl font-bold text-ink px-6 py-3">結果発表まで少々お待ちください</p>
+            <p className="text-2xl font-bold text-ink px-6 py-3">{isPractice ? '練習終了' : '結果発表まで少々お待ちください'}</p>
           </div>
         </div>
       )}
