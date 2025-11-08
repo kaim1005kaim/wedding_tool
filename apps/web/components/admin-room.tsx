@@ -55,7 +55,6 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
     groupTag: 'all' as 'all' | 'groom' | 'bride'
   });
   const [quizSettings, setQuizSettings] = useState({
-    representativeByTable: true,
     quizDurationSeconds: 30,
     enableTimeLimit: true
   });
@@ -292,6 +291,8 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
         return `/api/admin/rooms/${roomId}/quiz/reveal`;
       case 'lottery:draw':
         return `/api/admin/rooms/${roomId}/lottery/draw`;
+      case 'representatives:show':
+        return `/api/admin/rooms/${roomId}/representatives/show`;
       default:
         throw new Error(`Unsupported admin event: ${event.type}`);
     }
@@ -307,7 +308,7 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
         return payload;
       case 'quiz:next':
         return {
-          representativeByTable: quizSettings.representativeByTable,
+          representativeByTable: true,
           ...payload
         };
       case 'quiz:reveal': {
@@ -658,15 +659,6 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
                 {modeSwitching && mode !== 'quiz' ? '切替中...' : 'クイズ'}
               </AdminButton>
               <AdminButton
-                variant={mode === 'countup' ? 'primary' : 'secondary'}
-                icon={Shuffle}
-                onClick={() => send({ type: 'mode:switch', payload: { to: 'countup' } })}
-                disabled={modeSwitching}
-                className="flex-1"
-              >
-                {modeSwitching && mode !== 'countup' ? '切替中...' : 'タップ(本番)'}
-              </AdminButton>
-              <AdminButton
                 variant={mode === 'countup_practice' ? 'primary' : 'secondary'}
                 icon={Shuffle}
                 onClick={() => send({ type: 'mode:switch', payload: { to: 'countup_practice' } })}
@@ -674,6 +666,15 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
                 className="flex-1"
               >
                 {modeSwitching && mode !== 'countup_practice' ? '切替中...' : 'タップ(練習)'}
+              </AdminButton>
+              <AdminButton
+                variant={mode === 'countup' ? 'primary' : 'secondary'}
+                icon={Shuffle}
+                onClick={() => send({ type: 'mode:switch', payload: { to: 'countup' } })}
+                disabled={modeSwitching}
+                className="flex-1"
+              >
+                {modeSwitching && mode !== 'countup' ? '切替中...' : 'タップ(本番)'}
               </AdminButton>
               {/* 抽選モード非表示
               <AdminButton
@@ -697,21 +698,19 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
                 <p className="text-sm font-bold text-yellow-800">⚠️ クイズモードに切り替えてください</p>
               </div>
             )}
-            <div className="mb-4 space-y-3">
-              <div className="flex items-center gap-3 rounded-lg bg-blue-50 p-3 border border-blue-200">
-                <label className="flex cursor-pointer items-center gap-2 text-sm text-slate-700">
-                  <input
-                    type="checkbox"
-                    checked={quizSettings.representativeByTable}
-                    onChange={(e) => setQuizSettings({ ...quizSettings, representativeByTable: e.target.checked })}
-                    className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-2 focus:ring-blue-400"
-                    disabled={mode !== 'quiz'}
-                  />
-                  <span className="font-medium">代表者制（各テーブル1回答まで）</span>
-                </label>
-              </div>
-            </div>
             <div className="space-y-3">
+              {/* 代表者画面表示ボタン */}
+              <AdminButton
+                icon={Eye}
+                variant="secondary"
+                disabled={mode !== 'quiz'}
+                onClick={() => {
+                  void send({ type: 'representatives:show', payload: {} });
+                }}
+                className="w-full"
+              >
+                代表者画面を表示
+              </AdminButton>
               {/* 通常クイズ（第1-5問）統合ボタン */}
               <AdminButton
                 icon={activeQuiz && !quizResult ? Eye : ListChecks}
@@ -760,7 +759,7 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
                   const deadlineMs = quizSettings.enableTimeLimit ? quizSettings.quizDurationSeconds * 1000 : undefined;
                   void send({ type: 'quiz:next', payload: undefined }, {
                     deadlineMs,
-                    representativeByTable: quizSettings.representativeByTable
+                    representativeByTable: true
                   });
                 }}
                 className="w-full"
@@ -791,7 +790,7 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
                   const deadlineMs = 10_000; // 10秒
                   void send({ type: 'quiz:next', payload: undefined }, {
                     deadlineMs,
-                    representativeByTable: quizSettings.representativeByTable,
+                    representativeByTable: true,
                     buzzerMode: true
                   });
                 }}
@@ -866,9 +865,7 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
                 <p className="text-sm font-bold text-gray-600">クイズ待機中 - 「クイズ表示」ボタンで表示します</p>
               </div>
             )}
-            {quizSettings.representativeByTable && (
-              <p className="mt-2 text-sm text-blue-600">各テーブル1名のみ回答が有効です</p>
-            )}
+            <p className="mt-2 text-sm text-blue-600">各テーブル1名のみ回答が有効です</p>
           </AdminCard>
           </div>
 
@@ -1367,7 +1364,7 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
                   <div className="rounded-xl bg-blue-50 p-4 border border-blue-200">
                     <p className="text-sm text-blue-800 font-medium">💡 代表者設定について</p>
                     <p className="text-xs text-blue-700 mt-2">
-                      保存すると、投影画面に「各テーブルの回答代表者」として表示されます。代表者制度をONにしている場合、ここで設定した代表者のみがクイズに回答できます。
+                      保存すると、投影画面に「各テーブルの回答代表者」として表示されます。ここで設定した代表者のみがクイズに回答できます。
                     </p>
                   </div>
                 </div>

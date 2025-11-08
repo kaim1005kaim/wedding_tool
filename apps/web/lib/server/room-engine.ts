@@ -569,6 +569,18 @@ export async function drawLottery(roomId: string, kind: 'all' | 'groom' | 'bride
   }
 }
 
+export async function showRepresentatives(roomId: string) {
+  await ensureRoomSnapshot(roomId);
+  await upsertRoomSnapshot(roomId, { show_representatives: true });
+  await appendAuditLog(roomId, 'representatives:show', {});
+}
+
+export async function hideRepresentatives(roomId: string) {
+  await ensureRoomSnapshot(roomId);
+  await upsertRoomSnapshot(roomId, { show_representatives: false });
+  await appendAuditLog(roomId, 'representatives:hide', {});
+}
+
 export async function refreshLeaderboardSnapshot(roomId: string, limit = 20) {
   const client = getSupabaseServiceRoleClient();
   const { data, error } = await client

@@ -21,6 +21,7 @@ export default function ProjectorView({ roomId: _roomId }: { roomId: string }) {
   const representatives = useRoomStore((state) => state.representatives);
   const showRanking = useRoomStore((state) => state.showRanking);
   const showCelebration = useRoomStore((state) => state.showCelebration);
+  const showRepresentatives = useRoomStore((state) => state.showRepresentatives);
 
   // Debug: Log state changes
   useEffect(() => {
@@ -191,7 +192,13 @@ export default function ProjectorView({ roomId: _roomId }: { roomId: string }) {
     >
       <div className="relative w-full h-screen flex flex-col z-10" role="region" aria-label="ゲーム表示エリア">
         <div className="flex-1 overflow-hidden">
-          <AnimatePresence mode="wait">{renderSection(mode, phase, localCountdownMs, topTen, activeQuiz, quizResult, lotteryResult, isSpinning, lotteryKey, representatives, showRanking, showCelebration)}</AnimatePresence>
+          <AnimatePresence mode="wait">
+            {showRepresentatives ? (
+              <RepresentativesView representatives={representatives} />
+            ) : (
+              renderSection(mode, phase, localCountdownMs, topTen, activeQuiz, quizResult, lotteryResult, isSpinning, lotteryKey, representatives, showRanking, showCelebration)
+            )}
+          </AnimatePresence>
         </div>
       </div>
 
@@ -247,6 +254,40 @@ export default function ProjectorView({ roomId: _roomId }: { roomId: string }) {
       )}
       <ParticleEffect trigger={particleTrigger} />
     </main>
+  );
+}
+
+function RepresentativesView({ representatives }: { representatives: RoomStoreState['representatives'] }) {
+  return (
+    <motion.div
+      key="representatives"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="flex flex-col items-center justify-center h-screen w-full bg-gradient-earth p-8"
+    >
+      <h1 className="text-6xl font-black text-ink mb-12">各テーブルの回答代表者</h1>
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 max-w-7xl w-full">
+        {representatives.map((rep) => (
+          <motion.div
+            key={rep.tableNo}
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ duration: 0.3 }}
+            className="glass-panel-strong rounded-2xl p-6 shadow-xl border-2 border-white/40"
+          >
+            <div className="text-center">
+              <p className="text-2xl font-black text-terra-clay mb-2">テーブル {rep.tableNo}</p>
+              {rep.furigana && <p className="text-sm text-ink/60 mb-1">{rep.furigana}</p>}
+              <p className="text-3xl font-black text-ink">{rep.name}</p>
+            </div>
+          </motion.div>
+        ))}
+      </div>
+      {representatives.length === 0 && (
+        <p className="text-2xl text-ink/60 mt-8">代表者が設定されていません</p>
+      )}
+    </motion.div>
   );
 }
 

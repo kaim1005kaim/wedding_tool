@@ -39,6 +39,7 @@ export type RoomStoreState = {
   representatives: TableRepresentative[];
   showRanking: boolean;
   showCelebration: boolean;
+  showRepresentatives: boolean;
   playerId: string | null;
   playerToken: string | null;
 };
@@ -67,6 +68,7 @@ const initialState: RoomStoreState = {
   representatives: [],
   showRanking: false,
   showCelebration: false,
+  showRepresentatives: false,
   playerId: null,
   playerToken: null
 };
@@ -95,7 +97,8 @@ export const useRoomStore = create<RoomStoreState & RoomStoreActions>((set) => (
       lotteryResult: payload.lotteryResult ?? null,
       representatives: payload.representatives ?? [],
       showRanking: payload.showRanking ?? false,
-      showCelebration: payload.showCelebration ?? false
+      showCelebration: payload.showCelebration ?? false,
+      showRepresentatives: payload.showRepresentatives ?? false
     }),
   setActiveQuiz: (payload) => set({ activeQuiz: payload, quizResult: null }),
   setQuizResult: (payload) => {

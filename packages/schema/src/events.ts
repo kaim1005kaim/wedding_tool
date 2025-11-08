@@ -101,7 +101,8 @@ export const stateUpdateBroadcastSchema = z.object({
     })
   ).optional(),
   showRanking: z.boolean().optional(),
-  showCelebration: z.boolean().optional()
+  showCelebration: z.boolean().optional(),
+  showRepresentatives: z.boolean().optional()
 });
 
 export const realtimePayloads = {
