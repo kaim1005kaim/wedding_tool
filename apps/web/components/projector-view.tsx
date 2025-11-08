@@ -605,17 +605,55 @@ const CountupBoard = memo(function CountupBoard({
 });
 
 const IdleBoard = memo(function IdleBoard({ leaderboard }: { leaderboard: LeaderboardEntry[] }) {
+  const participantCount = leaderboard.length;
+
   return (
     <motion.section
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.95 }}
       transition={{ duration: 0.5, ease: 'easeOut' }}
-      className="flex h-full items-center justify-center"
+      className="flex h-full items-center justify-center relative"
     >
       <div className="text-center">
         <h2 className="text-6xl font-bold text-ink mb-8">まもなくゲームが始まります</h2>
         <p className="text-4xl text-ink/80 font-bold">スマホの画面を確認してください。</p>
+      </div>
+
+      {/* Participant Count - Bottom Right */}
+      <div className="absolute bottom-8 right-8 flex items-center gap-4 glass-panel-strong px-8 py-6 rounded-2xl shadow-xl border border-white/30">
+        {/* Connection Animation */}
+        <div className="relative flex items-center justify-center">
+          <motion.div
+            className="absolute w-8 h-8 rounded-full bg-sky-400/30"
+            animate={{
+              scale: [1, 1.5, 1],
+              opacity: [0.5, 0, 0.5]
+            }}
+            transition={{
+              duration: 2,
+              repeat: Infinity,
+              ease: 'easeInOut'
+            }}
+          />
+          <motion.div
+            className="w-4 h-4 rounded-full bg-sky-400"
+            animate={{
+              scale: [1, 0.8, 1]
+            }}
+            transition={{
+              duration: 2,
+              repeat: Infinity,
+              ease: 'easeInOut'
+            }}
+          />
+        </div>
+
+        <div className="flex items-baseline gap-2">
+          <span className="text-2xl font-bold text-ink">接続状況：現在</span>
+          <span className="text-5xl font-black text-sky-400">{participantCount}</span>
+          <span className="text-2xl font-bold text-ink">人のゲストが参加しています</span>
+        </div>
       </div>
     </motion.section>
   );
@@ -1089,18 +1127,6 @@ const QuizBoard = memo(function QuizBoard({ activeQuiz, quizResult, leaderboard,
       role="region"
       aria-label="クイズ表示"
     >
-      {/* Timer - Top Right */}
-      {timeLeft !== null && !quizResult && (
-        <motion.div
-          initial={{ scale: 0.8, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          className="absolute top-8 right-8 glass-panel-strong px-6 py-4 rounded-2xl shadow-xl border-2 border-white/30"
-        >
-          <p className={`text-5xl font-black ${timeLeft <= 5 ? 'text-red-500' : 'text-terra-clay'}`}>
-            {timeLeft}秒
-          </p>
-        </motion.div>
-      )}
 
       {/* Quiz Number - Always show */}
       {activeQuiz?.ord && (

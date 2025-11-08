@@ -1199,14 +1199,6 @@ function QuizOverlay({ phase, countdownMs, roomId, playerToken, clearAuthAndStor
         backgroundRepeat: 'no-repeat'
       }}
     >
-      {/* Countdown Timer - Top Right */}
-      {timeLeftSeconds !== null && timeLeftSeconds > 0 && !quizResult && (
-        <div className="absolute top-4 right-4 z-10">
-          <div className="rounded-2xl glass-panel-strong px-5 py-3 shadow-xl border border-white/30">
-            <span className="text-4xl font-bold text-terra-clay drop-shadow">{timeLeftSeconds}</span>
-          </div>
-        </div>
-      )}
 
       <div className="flex-1 flex flex-col items-center justify-start p-4 overflow-y-auto">
         {/* Answer Feedback Message */}
