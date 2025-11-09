@@ -194,9 +194,9 @@ export default function ProjectorView({ roomId: _roomId }: { roomId: string }) {
         <div className="flex-1 overflow-hidden">
           <AnimatePresence mode="wait">
             {showRepresentatives ? (
-              <RepresentativesView representatives={representatives} />
+              <RepresentativesView representatives={representatives} participantCount={leaderboard.length} />
             ) : (
-              renderSection(mode, phase, localCountdownMs, topTen, activeQuiz, quizResult, lotteryResult, isSpinning, lotteryKey, representatives, showRanking, showCelebration)
+              renderSection(mode, phase, localCountdownMs, topTen, activeQuiz, quizResult, lotteryResult, isSpinning, lotteryKey, representatives, showRanking, showCelebration, leaderboard.length)
             )}
           </AnimatePresence>
         </div>
@@ -257,14 +257,14 @@ export default function ProjectorView({ roomId: _roomId }: { roomId: string }) {
   );
 }
 
-function RepresentativesView({ representatives }: { representatives: RoomStoreState['representatives'] }) {
+function RepresentativesView({ representatives, participantCount }: { representatives: RoomStoreState['representatives']; participantCount: number }) {
   return (
     <motion.div
       key="representatives"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="flex flex-col items-center justify-center h-screen w-full bg-gradient-earth p-8"
+      className="flex flex-col items-center justify-center h-screen w-full bg-gradient-earth p-8 relative"
     >
       <h1 className="text-6xl font-black text-ink mb-12">各テーブルの回答代表者</h1>
       <div className="grid grid-cols-6 gap-8 max-w-7xl w-full">
@@ -303,6 +303,7 @@ function RepresentativesView({ representatives }: { representatives: RoomStoreSt
       {representatives.length === 0 && (
         <p className="text-2xl text-ink/60 mt-8">代表者が設定されていません</p>
       )}
+      <ConnectionStatus participantCount={participantCount} />
     </motion.div>
   );
 }
@@ -319,7 +320,8 @@ function renderSection(
   lotteryKey: number,
   representatives: RoomStoreState['representatives'],
   showRanking: boolean,
-  showCelebration: boolean
+  showCelebration: boolean,
+  participantCount: number
 ) {
   switch (mode) {
     case 'countup':
@@ -327,15 +329,15 @@ function renderSection(
       const sortedByTaps = [...leaderboard]
         .sort((a, b) => (b.countupTapCount ?? 0) - (a.countupTapCount ?? 0))
         .map((entry, index) => ({ ...entry, rank: index + 1 }));
-      return <CountupBoard key="countup" entries={sortedByTaps} phase={phase} countdownMs={countdownMs} showRanking={showRanking} isPractice={false} />;
+      return <CountupBoard key="countup" entries={sortedByTaps} phase={phase} countdownMs={countdownMs} showRanking={showRanking} isPractice={false} participantCount={participantCount} />;
     case 'countup_practice':
       // Sort by countupTapCount for practice mode
       const sortedPractice = [...leaderboard]
         .sort((a, b) => (b.countupTapCount ?? 0) - (a.countupTapCount ?? 0))
         .map((entry, index) => ({ ...entry, rank: index + 1 }));
-      return <CountupBoard key="countup-practice" entries={sortedPractice} phase={phase} countdownMs={countdownMs} showRanking={false} isPractice={true} />;
+      return <CountupBoard key="countup-practice" entries={sortedPractice} phase={phase} countdownMs={countdownMs} showRanking={false} isPractice={true} participantCount={participantCount} />;
     case 'quiz':
-      return <QuizBoard key={`quiz-${quizResult?.quizId ?? activeQuiz?.quizId ?? 'waiting'}`} activeQuiz={activeQuiz} quizResult={quizResult} leaderboard={leaderboard} phase={phase} representatives={representatives} showRanking={showRanking} mode={mode} />;
+      return <QuizBoard key={`quiz-${quizResult?.quizId ?? activeQuiz?.quizId ?? 'waiting'}`} activeQuiz={activeQuiz} quizResult={quizResult} leaderboard={leaderboard} phase={phase} representatives={representatives} showRanking={showRanking} mode={mode} participantCount={participantCount} />;
     /* 抽選モード非表示
     case 'lottery':
       return <LotteryBoard key={lotteryKey} lotteryResult={lotteryResult} isSpinning={isSpinning} leaderboard={leaderboard} />;
@@ -350,13 +352,15 @@ const CountupBoard = memo(function CountupBoard({
   phase,
   countdownMs,
   showRanking,
-  isPractice = false
+  isPractice = false,
+  participantCount
 }: {
   entries: LeaderboardEntry[];
   phase: 'idle' | 'running' | 'ended';
   countdownMs: number;
   showRanking: boolean;
   isPractice?: boolean;
+  participantCount: number;
 }) {
   // Top 3 highlighted, rest in compact grid
   const top3 = entries.slice(0, 3);
@@ -400,13 +404,13 @@ const CountupBoard = memo(function CountupBoard({
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -30 }}
       transition={{ duration: 0.5, ease: 'easeOut' }}
-      className="flex h-full flex-col gap-5"
+      className="flex h-full flex-col gap-5 relative"
       role="region"
       aria-label="タップチャレンジランキング"
     >
       {/* Phase Status */}
       {phase === 'idle' && (
-        <div className="flex flex-col items-center justify-center h-full space-y-12">
+        <div className="flex flex-col items-center justify-center h-full space-y-12 relative">
           {/* SVG Title */}
           <motion.div
             initial={{ scale: 0.9, opacity: 0 }}
@@ -425,6 +429,7 @@ const CountupBoard = memo(function CountupBoard({
           >
             開始まで少々お待ちください
           </motion.p>
+          <ConnectionStatus participantCount={participantCount} />
         </div>
       )}
 
@@ -661,6 +666,46 @@ const CountupBoard = memo(function CountupBoard({
   );
 });
 
+// Connection Status Component
+const ConnectionStatus = memo(function ConnectionStatus({ participantCount }: { participantCount: number }) {
+  return (
+    <div className="absolute bottom-12 right-12 flex items-center gap-6">
+      <div className="flex items-baseline gap-3">
+        <span className="text-4xl font-bold text-ink">接続状況：現在</span>
+        <span className="text-8xl font-black text-sky-400">{participantCount}</span>
+        <span className="text-4xl font-bold text-ink">人のゲストが参加しています</span>
+      </div>
+
+      {/* Connection Animation */}
+      <div className="relative flex items-center justify-center self-end mb-4">
+        <motion.div
+          className="absolute w-12 h-12 rounded-full bg-sky-400/30"
+          animate={{
+            scale: [1, 1.5, 1],
+            opacity: [0.5, 0, 0.5]
+          }}
+          transition={{
+            duration: 2,
+            repeat: Infinity,
+            ease: 'easeInOut'
+          }}
+        />
+        <motion.div
+          className="w-6 h-6 rounded-full bg-sky-400"
+          animate={{
+            scale: [1, 0.8, 1]
+          }}
+          transition={{
+            duration: 2,
+            repeat: Infinity,
+            ease: 'easeInOut'
+          }}
+        />
+      </div>
+    </div>
+  );
+});
+
 const IdleBoard = memo(function IdleBoard({ leaderboard }: { leaderboard: LeaderboardEntry[] }) {
   const participantCount = leaderboard.length;
 
@@ -677,41 +722,7 @@ const IdleBoard = memo(function IdleBoard({ leaderboard }: { leaderboard: Leader
         <p className="text-4xl text-ink/80 font-bold">スマホの画面を確認してください。</p>
       </div>
 
-      {/* Participant Count - Bottom Right */}
-      <div className="absolute bottom-12 right-12 flex items-center gap-6">
-        <div className="flex items-baseline gap-3">
-          <span className="text-4xl font-bold text-ink">接続状況：現在</span>
-          <span className="text-8xl font-black text-sky-400">{participantCount}</span>
-          <span className="text-4xl font-bold text-ink">人のゲストが参加しています</span>
-        </div>
-
-        {/* Connection Animation */}
-        <div className="relative flex items-center justify-center self-end mb-4">
-          <motion.div
-            className="absolute w-12 h-12 rounded-full bg-sky-400/30"
-            animate={{
-              scale: [1, 1.5, 1],
-              opacity: [0.5, 0, 0.5]
-            }}
-            transition={{
-              duration: 2,
-              repeat: Infinity,
-              ease: 'easeInOut'
-            }}
-          />
-          <motion.div
-            className="w-6 h-6 rounded-full bg-sky-400"
-            animate={{
-              scale: [1, 0.8, 1]
-            }}
-            transition={{
-              duration: 2,
-              repeat: Infinity,
-              ease: 'easeInOut'
-            }}
-          />
-        </div>
-      </div>
+      <ConnectionStatus participantCount={participantCount} />
     </motion.section>
   );
 });
@@ -803,9 +814,10 @@ type QuizPanelProps = {
   representatives: RoomStoreState['representatives'];
   showRanking: boolean;
   mode: 'idle' | 'countup' | 'quiz' | 'buzzer' | 'lottery';
+  participantCount: number;
 };
 
-const QuizBoard = memo(function QuizBoard({ activeQuiz, quizResult, leaderboard, phase, representatives, showRanking, mode }: QuizPanelProps) {
+const QuizBoard = memo(function QuizBoard({ activeQuiz, quizResult, leaderboard, phase, representatives, showRanking, mode, participantCount }: QuizPanelProps) {
   const counts = quizResult?.perChoiceCounts ?? [0, 0, 0, 0];
   const correctIndex = quizResult?.correctIndex ?? -1;
 
@@ -1118,11 +1130,11 @@ const QuizBoard = memo(function QuizBoard({ activeQuiz, quizResult, leaderboard,
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: -30 }}
         transition={{ duration: 0.5, ease: 'easeOut' }}
-        className="flex h-full items-center justify-center px-12"
+        className="flex h-full items-center justify-center px-12 relative"
         role="region"
         aria-label="クイズ待機中"
       >
-        <div className="flex flex-col items-center justify-center space-y-12 w-full max-w-7xl">
+        <div className="flex flex-col items-center justify-center space-y-12 w-full max-w-7xl relative">
           {/* SVG Title */}
           <motion.div
             initial={{ scale: 0.9, opacity: 0 }}
@@ -1141,6 +1153,7 @@ const QuizBoard = memo(function QuizBoard({ activeQuiz, quizResult, leaderboard,
           >
             開始まで少々お待ちください
           </motion.p>
+          <ConnectionStatus participantCount={participantCount} />
         </div>
       </motion.section>
     );
