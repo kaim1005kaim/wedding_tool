@@ -410,27 +410,29 @@ const CountupBoard = memo(function CountupBoard({
     >
       {/* Phase Status */}
       {phase === 'idle' && (
-        <div className="flex flex-col items-center justify-center h-full space-y-12 relative">
-          {/* SVG Title */}
-          <motion.div
-            initial={{ scale: 0.9, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ duration: 0.8, ease: 'easeOut' }}
-            className="flex justify-center"
-          >
-            <img src="/tap-title.svg" alt="Tap Challenge" className="w-[800px] max-w-[80vw] h-auto" />
-          </motion.div>
+        <>
+          <div className="flex flex-col items-center justify-center h-full space-y-12">
+            {/* SVG Title */}
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ duration: 0.8, ease: 'easeOut' }}
+              className="flex justify-center"
+            >
+              <img src="/tap-title.svg" alt="Tap Challenge" className="w-[800px] max-w-[80vw] h-auto" />
+            </motion.div>
 
-          <motion.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.3, duration: 0.5 }}
-            className="text-3xl font-bold text-ink/80"
-          >
-            開始まで少々お待ちください
-          </motion.p>
+            <motion.p
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.3, duration: 0.5 }}
+              className="text-3xl font-bold text-ink/80"
+            >
+              開始まで少々お待ちください
+            </motion.p>
+          </div>
           <ConnectionStatus participantCount={participantCount} />
-        </div>
+        </>
       )}
 
       {phase === 'running' && (
@@ -1134,7 +1136,7 @@ const QuizBoard = memo(function QuizBoard({ activeQuiz, quizResult, leaderboard,
         role="region"
         aria-label="クイズ待機中"
       >
-        <div className="flex flex-col items-center justify-center space-y-12 w-full max-w-7xl relative">
+        <div className="flex flex-col items-center justify-center space-y-12 w-full max-w-7xl">
           {/* SVG Title */}
           <motion.div
             initial={{ scale: 0.9, opacity: 0 }}
@@ -1153,8 +1155,8 @@ const QuizBoard = memo(function QuizBoard({ activeQuiz, quizResult, leaderboard,
           >
             開始まで少々お待ちください
           </motion.p>
-          <ConnectionStatus participantCount={participantCount} />
         </div>
+        <ConnectionStatus participantCount={participantCount} />
       </motion.section>
     );
   }
