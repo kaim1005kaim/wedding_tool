@@ -32,22 +32,42 @@ export async function GET(req: NextRequest, props: { params: Promise<{ roomId: s
   try {
     const client = getSupabaseServiceRoleClient();
 
-    // Get total number of players in the room
-    const { count: totalPlayers } = await client
-      .from('players')
-      .select('*', { count: 'exact', head: true })
-      .eq('room_id', roomId);
-
-    // Get number of players who answered this quiz
-    const { count: answeredPlayers } = await client
+    // Quiz is always representative mode (one per table)
+    // Get number of unique tables that have answered
+    const { data: answeredTables } = await client
       .from('answers')
-      .select('*', { count: 'exact', head: true })
+      .select('player_id')
       .eq('room_id', roomId)
       .eq('quiz_id', quizId);
 
+    // Get unique table numbers from players who answered
+    let uniqueTablesAnswered = 0;
+    if (answeredTables && answeredTables.length > 0) {
+      const playerIds = answeredTables.map(a => a.player_id);
+      const { data: players } = await client
+        .from('players')
+        .select('table_no')
+        .in('id', playerIds);
+
+      if (players) {
+        const uniqueTables = new Set(players.map(p => p.table_no).filter(t => t !== null));
+        uniqueTablesAnswered = uniqueTables.size;
+      }
+    }
+
+    // Get total number of unique tables in the room
+    const { data: allPlayers } = await client
+      .from('players')
+      .select('table_no')
+      .eq('room_id', roomId);
+
+    const totalTables = allPlayers
+      ? new Set(allPlayers.map(p => p.table_no).filter(t => t !== null)).size
+      : 0;
+
     return NextResponse.json({
-      answered: answeredPlayers ?? 0,
-      total: totalPlayers ?? 0
+      answered: uniqueTablesAnswered,
+      total: totalTables
     });
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : 'Unknown error';
