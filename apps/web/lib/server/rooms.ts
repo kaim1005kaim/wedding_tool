@@ -187,7 +187,7 @@ export async function updateSnapshotLeaderboard(roomId: string, entries: Leaderb
 export async function recomputeLeaderboard(roomId: string, limit = 100) {
   const client = getSupabaseServiceRoleClient();
 
-  console.log('[recomputeLeaderboard] Starting query for roomId:', roomId);
+  console.log('[recomputeLeaderboard] Starting query for roomId:', roomId, 'with limit:', limit);
 
   const { data, error } = await client
     .from('scores')
