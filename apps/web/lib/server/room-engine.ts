@@ -35,7 +35,8 @@ export async function resetQuizProgress(roomId: string) {
 
   // Refresh leaderboard snapshot
   await client.rpc('refresh_room_leaderboard', {
-    p_room_id: roomId
+    p_room_id: roomId,
+    p_limit: 100
   });
 
   // Clear quiz state in snapshot
@@ -87,6 +88,12 @@ export async function stopGame(roomId: string) {
     .from('rooms')
     .update({ phase: 'ended', ended_at: now })
     .eq('id', roomId);
+
+  // Force refresh leaderboard to capture final state (in case of throttling)
+  await client.rpc('refresh_room_leaderboard', {
+    p_room_id: roomId,
+    p_limit: 100
+  });
 
   await ensureRoomSnapshot(roomId);
   await upsertRoomSnapshot(roomId, { phase: 'ended', countdown_ms: 0, show_ranking: false, show_celebration: false });
@@ -287,7 +294,8 @@ export async function showQuiz(
     },
     quiz_result: null,
     show_ranking: false,
-    show_celebration: false
+    show_celebration: false,
+    show_representatives: false
   });
 
   await appendAuditLog(roomId, 'quiz:show', { quizId, deadlineTs, representativeByTable, suddenDeath });
@@ -454,10 +462,10 @@ export async function revealQuiz(roomId: string, quizId: string, awardedPoints =
   // Get player IDs to fetch details for
   const playerIdsToFetch = answers
     ? (isBuzzerQuiz
-        ? answers.map((a) => a.player_id) // All answerers for buzzer quiz
-        : answers
-            .filter((a) => a.choice_index === quiz.answerIndex) // Only correct for normal quiz
-            .map((a) => a.player_id))
+      ? answers.map((a) => a.player_id) // All answerers for buzzer quiz
+      : answers
+        .filter((a) => a.choice_index === quiz.answerIndex) // Only correct for normal quiz
+        .map((a) => a.player_id))
     : [];
 
   // Fetch player details for awarded players
