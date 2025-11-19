@@ -194,6 +194,7 @@ export async function recomputeLeaderboard(roomId: string, limit = 100) {
     .select('player_id, total_points, quiz_points, countup_tap_count, players:players(display_name, furigana, table_no)')
     .eq('room_id', roomId)
     .order('total_points', { ascending: false })
+    .order('player_id', { ascending: true }) // Stable tiebreaker for same scores
     .limit(limit);
 
   if (error) {

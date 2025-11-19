@@ -28,7 +28,8 @@ export default function ProjectorView({ roomId: _roomId }: { roomId: string }) {
     console.log('[Projector] State update:', { mode, phase, showRanking, showCelebration });
   }, [mode, phase, showRanking, showCelebration]);
 
-  const topTen = useMemo(() => leaderboard.slice(0, 10), [leaderboard]);
+  // Display all participants, not just top 10
+  const displayLeaderboard = useMemo(() => leaderboard, [leaderboard]);
   const [lotteryKey, setLotteryKey] = useState(0);
   const [isSpinning, setIsSpinning] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -196,7 +197,7 @@ export default function ProjectorView({ roomId: _roomId }: { roomId: string }) {
             {showRepresentatives ? (
               <RepresentativesView representatives={representatives} participantCount={leaderboard.length} />
             ) : (
-              renderSection(mode, phase, localCountdownMs, topTen, activeQuiz, quizResult, lotteryResult, isSpinning, lotteryKey, representatives, showRanking, showCelebration, leaderboard.length)
+              renderSection(mode, phase, localCountdownMs, displayLeaderboard, activeQuiz, quizResult, lotteryResult, isSpinning, lotteryKey, representatives, showRanking, showCelebration, leaderboard.length)
             )}
           </AnimatePresence>
         </div>
