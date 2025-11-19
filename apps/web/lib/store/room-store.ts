@@ -85,6 +85,7 @@ export const useRoomStore = create<RoomStoreState & RoomStoreActions>((set) => (
       leaderboard: payload.leaderboard.map((entry) => ({
         playerId: entry.playerId,
         displayName: entry.displayName,
+        furigana: entry.furigana,
         tableNo: entry.tableNo ?? null,
         totalPoints: entry.totalPoints,
         rank: entry.rank,
