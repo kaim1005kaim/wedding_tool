@@ -893,45 +893,74 @@ function CountupOverlay({ phase, countdownMs, leaderboard, onTap, registeredName
 
       {phase === 'ended' && (
         <div className="mx-auto w-full max-w-3xl mt-8 space-y-6 relative z-10">
-          <div className="flex flex-col items-center gap-6 bounce-in">
-            <span className="text-[min(15vw,6rem)] font-bold uppercase tracking-wider text-terra-clay drop-shadow-lg">
+          <motion.div
+            initial={{ scale: 0.5, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ duration: 0.5, ease: 'easeOut' }}
+            className="flex flex-col items-center gap-6"
+          >
+            <span className="font-black text-terra-clay leading-none" style={{ fontSize: 'min(30vw, 12rem)' }}>
               TIME UP!
             </span>
             <p className="text-2xl font-bold text-ink px-6 py-3">{isPractice ? '練習終了' : '結果発表まで少々お待ちください'}</p>
-          </div>
+          </motion.div>
         </div>
       )}
 
       {showPad && (
         <div className="fixed inset-0 flex items-center justify-center z-10">
           {timeLeftSeconds > 11 ? (
-            // 準備カウントダウン: 3-2-1
-            <div className="flex flex-col items-center gap-6 bounce-in">
-              <span className="text-[min(40vw,18rem)] font-bold leading-none text-terra-clay">
+            // 準備カウントダウン: 3-2-1 (投影画面と同様のスタイル)
+            <motion.div
+              key={timeLeftSeconds - 11}
+              initial={{ scale: 0.5, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 1.5, opacity: 0 }}
+              transition={{ duration: 0.3, ease: 'easeOut' }}
+              className="flex flex-col items-center"
+            >
+              <span className="font-black text-ink leading-none" style={{ fontSize: 'min(50vw, 20rem)' }}>
                 {timeLeftSeconds - 11}
               </span>
-              <p className="text-3xl font-bold text-ink">準備してください！</p>
-            </div>
+            </motion.div>
           ) : timeLeftSeconds === 11 ? (
-            // START!表示
-            <div className="flex flex-col items-center gap-6 bounce-in">
-              <span className="text-[min(20vw,8rem)] font-bold uppercase tracking-wider text-terra-clay">
+            // START!表示 (投影画面と同様のスタイル)
+            <motion.div
+              initial={{ scale: 0.5, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 1.2, opacity: 0 }}
+              transition={{ duration: 0.3, ease: 'easeOut' }}
+              className="flex items-center justify-center"
+            >
+              <span className="font-black text-terra-clay leading-none" style={{ fontSize: 'min(50vw, 20rem)' }}>
                 START!
               </span>
-            </div>
+            </motion.div>
           ) : timeLeftSeconds > 0 ? (
-            // タップ時間: 画面全体がタップ可能
+            // タップ時間: 画面全体がタップ可能 + カウントダウン表示 + TAP!表示
             <div className="relative w-full h-full">
               <button
                 type="button"
                 onPointerDown={handleTap}
                 disabled={disabled}
-                className="w-full h-full flex flex-col items-center justify-center transition-all duration-100 active:opacity-80 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full h-full flex flex-col items-center justify-center gap-8 transition-all duration-100 active:opacity-80 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <div className="text-[min(25vw,10rem)] font-bold uppercase text-terra-clay animate-pulse drop-shadow-lg">
-                  TAP!
+                {/* 10秒カウントダウン */}
+                <motion.div
+                  className="font-black text-ink leading-none"
+                  style={{ fontSize: 'min(35vw, 16rem)' }}
+                  animate={{ scale: timeLeftSeconds <= 5 ? [1, 1.05, 1] : 1 }}
+                  transition={{ duration: 0.5, repeat: timeLeftSeconds <= 5 ? Infinity : 0 }}
+                >
+                  {timeLeftSeconds}
+                </motion.div>
+                {/* TAP! 表示 */}
+                <div className="flex flex-col items-center gap-3">
+                  <div className="text-[min(20vw,8rem)] font-black uppercase text-terra-clay animate-pulse drop-shadow-lg">
+                    TAP!
+                  </div>
+                  <p className="text-xl font-bold text-ink drop-shadow">画面どこでもタップでポイント獲得！</p>
                 </div>
-                <p className="mt-3 text-2xl font-bold text-ink drop-shadow">画面どこでもタップでポイント獲得！</p>
               </button>
               {flash && (
                 <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
@@ -942,12 +971,17 @@ function CountupOverlay({ phase, countdownMs, leaderboard, onTap, registeredName
               )}
             </div>
           ) : (
-            // STOP!表示
-            <div className="flex flex-col items-center gap-6 bounce-in">
-              <span className="text-[min(20vw,8rem)] font-bold uppercase tracking-wider text-terra-clay">
+            // STOP!表示 (投影画面と同様のスタイル)
+            <motion.div
+              initial={{ scale: 0.5, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ duration: 0.3, ease: 'easeOut' }}
+              className="flex items-center justify-center"
+            >
+              <span className="font-black text-terra-clay leading-none" style={{ fontSize: 'min(50vw, 20rem)' }}>
                 STOP!
               </span>
-            </div>
+            </motion.div>
           )}
         </div>
       )}

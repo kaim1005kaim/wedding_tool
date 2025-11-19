@@ -1088,6 +1088,11 @@ const QuizBoard = memo(function QuizBoard({ activeQuiz, quizResult, leaderboard,
                             {entry.tableNo}チーム
                           </p>
                         )}
+                        {entry.furigana && (
+                          <p className="text-lg text-ink/60 font-medium mb-1">
+                            {entry.furigana}
+                          </p>
+                        )}
                         <p className="text-4xl font-black text-terra-clay truncate">
                           {entry.displayName}さん
                         </p>

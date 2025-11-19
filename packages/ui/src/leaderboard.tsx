@@ -4,6 +4,7 @@ import clsx from 'clsx';
 export type LeaderboardEntry = {
   rank: number;
   name: string;
+  furigana?: string;
   totalPoints: number;
   delta?: number;
   meta?: ReactNode;
@@ -27,7 +28,12 @@ export function Leaderboard({ entries }: LeaderboardProps) {
         >
           <div className="flex items-center gap-4">
             <span className="text-3xl font-black text-brand">{entry.rank}</span>
-            <span className="text-xl font-semibold">{entry.name}</span>
+            <div className="flex flex-col">
+              {entry.furigana && (
+                <span className="text-sm text-ink/60 font-medium">{entry.furigana}</span>
+              )}
+              <span className="text-xl font-semibold">{entry.name}</span>
+            </div>
           </div>
           <div className="flex items-center gap-6 text-right">
             {typeof entry.delta === 'number' && (
