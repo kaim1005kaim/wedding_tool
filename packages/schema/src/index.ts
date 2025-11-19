@@ -21,7 +21,7 @@ export type Player = z.infer<typeof playerSchema>;
 export const leaderboardEntrySchema = z.object({
   playerId: z.string().uuid(),
   name: z.string(),
-  furigana: z.string().optional(),
+  furigana: z.string().nullable().optional(),
   tableNo: z.string().nullable().optional(),
   points: z.number().int().nonnegative(),
   quizPoints: z.number().int().nonnegative().optional().default(0),

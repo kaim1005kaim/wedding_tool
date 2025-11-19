@@ -184,7 +184,7 @@ export async function updateSnapshotLeaderboard(roomId: string, entries: Leaderb
   });
 }
 
-export async function recomputeLeaderboard(roomId: string, limit = 20) {
+export async function recomputeLeaderboard(roomId: string, limit = 100) {
   const client = getSupabaseServiceRoleClient();
 
   console.log('[recomputeLeaderboard] Starting query for roomId:', roomId);
