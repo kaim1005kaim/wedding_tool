@@ -374,7 +374,6 @@ const CountupBoard = memo(function CountupBoard({
   // showRankingフラグでランキング表示を制御
   useEffect(() => {
     console.log('[CountupBoard] Ranking effect triggered:', { showRanking, phase, entriesLength: entries.length });
-    console.log('[CountupBoard] First 3 entries furigana check:', entries.slice(0, 3).map(e => ({ name: e.displayName, furigana: e.furigana })));
     if (showRanking && phase === 'ended' && entries.length > 0) {
       console.log('[CountupBoard] Starting ranking animation sequence');
       // まず全員スクロール表示
