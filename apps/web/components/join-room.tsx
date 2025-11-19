@@ -899,7 +899,7 @@ function CountupOverlay({ phase, countdownMs, leaderboard, onTap, registeredName
             transition={{ duration: 0.5, ease: 'easeOut' }}
             className="flex flex-col items-center gap-6"
           >
-            <span className="font-black text-terra-clay leading-none" style={{ fontSize: 'min(30vw, 12rem)' }}>
+            <span className="text-[min(15vw,6rem)] font-black uppercase tracking-wider text-terra-clay drop-shadow-lg">
               TIME UP!
             </span>
             <p className="text-2xl font-bold text-ink px-6 py-3">{isPractice ? '練習終了' : '結果発表まで少々お待ちください'}</p>
@@ -924,7 +924,7 @@ function CountupOverlay({ phase, countdownMs, leaderboard, onTap, registeredName
               </span>
             </motion.div>
           ) : timeLeftSeconds === 11 ? (
-            // START!表示 (投影画面と同様のスタイル)
+            // START!表示
             <motion.div
               initial={{ scale: 0.5, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
@@ -932,7 +932,7 @@ function CountupOverlay({ phase, countdownMs, leaderboard, onTap, registeredName
               transition={{ duration: 0.3, ease: 'easeOut' }}
               className="flex items-center justify-center"
             >
-              <span className="font-black text-terra-clay leading-none" style={{ fontSize: 'min(50vw, 20rem)' }}>
+              <span className="text-[min(20vw,8rem)] font-black uppercase tracking-wider text-terra-clay">
                 START!
               </span>
             </motion.div>
@@ -971,14 +971,14 @@ function CountupOverlay({ phase, countdownMs, leaderboard, onTap, registeredName
               )}
             </div>
           ) : (
-            // STOP!表示 (投影画面と同様のスタイル)
+            // STOP!表示
             <motion.div
               initial={{ scale: 0.5, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               transition={{ duration: 0.3, ease: 'easeOut' }}
               className="flex items-center justify-center"
             >
-              <span className="font-black text-terra-clay leading-none" style={{ fontSize: 'min(50vw, 20rem)' }}>
+              <span className="text-[min(20vw,8rem)] font-black uppercase tracking-wider text-terra-clay">
                 STOP!
               </span>
             </motion.div>
