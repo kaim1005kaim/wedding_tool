@@ -586,13 +586,14 @@ export async function hideRepresentatives(roomId: string) {
   await appendAuditLog(roomId, 'representatives:hide', {});
 }
 
-export async function refreshLeaderboardSnapshot(roomId: string, limit = 20) {
+export async function refreshLeaderboardSnapshot(roomId: string, limit = 100) {
   const client = getSupabaseServiceRoleClient();
   const { data, error } = await client
     .from('scores')
     .select('player_id, total_points, quiz_points, countup_tap_count, players:players(display_name, furigana)')
     .eq('room_id', roomId)
     .order('total_points', { ascending: false })
+    .order('player_id', { ascending: true }) // Stable tiebreaker
     .limit(limit);
 
   if (error) {
