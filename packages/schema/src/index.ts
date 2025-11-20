@@ -63,6 +63,7 @@ export const roomSnapshotSchema = z.object({
           playerId: z.string().uuid(),
           delta: z.number().int(),
           displayName: z.string().optional(),
+          furigana: z.string().optional(),
           tableNo: z.string().nullable().optional(),
           latencyMs: z.number().int().nullable().optional(), // Remove nonnegative() to handle legacy data
           choiceIndex: z.number().int().min(0).max(3).optional(), // For buzzer quiz: which choice was selected
