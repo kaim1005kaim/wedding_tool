@@ -841,26 +841,36 @@ const QuizBoard = memo(function QuizBoard({ activeQuiz, quizResult, leaderboard,
   // For buzzer quiz (quiz 6), show ranking based on answer time from quiz result
   // Include ALL answerers (both correct and incorrect), sorted by correctness first, then by time
   const buzzerRanking = isBuzzerQuiz && quizResult?.awarded
-    ? quizResult.awarded
-        .filter(a => a.latencyMs != null && a.latencyMs >= 0)
-        .sort((a, b) => {
-          // Sort by correctness first (correct answers first)
-          const aCorrect = a.isCorrect ?? false;
-          const bCorrect = b.isCorrect ?? false;
-          if (aCorrect !== bCorrect) return bCorrect ? 1 : -1;
-          // Then sort by latency (faster first)
-          return (a.latencyMs ?? Infinity) - (b.latencyMs ?? Infinity);
-        })
-        .map((entry, index) => ({
-          playerId: entry.playerId,
-          displayName: entry.displayName ?? '???',
-          furigana: entry.furigana,
-          tableNo: entry.tableNo ?? null,
-          latencyMs: entry.latencyMs,
-          choiceIndex: entry.choiceIndex,
-          isCorrect: entry.isCorrect ?? false,
-          rank: index + 1
-        }))
+    ? (() => {
+        console.log('[Projector] Buzzer quiz result awarded:', {
+          count: quizResult.awarded.length,
+          entries: quizResult.awarded.slice(0, 3).map(a => ({
+            displayName: a.displayName,
+            furigana: a.furigana,
+            hasFurigana: !!a.furigana
+          }))
+        });
+        return quizResult.awarded
+          .filter(a => a.latencyMs != null && a.latencyMs >= 0)
+          .sort((a, b) => {
+            // Sort by correctness first (correct answers first)
+            const aCorrect = a.isCorrect ?? false;
+            const bCorrect = b.isCorrect ?? false;
+            if (aCorrect !== bCorrect) return bCorrect ? 1 : -1;
+            // Then sort by latency (faster first)
+            return (a.latencyMs ?? Infinity) - (b.latencyMs ?? Infinity);
+          })
+          .map((entry, index) => ({
+            playerId: entry.playerId,
+            displayName: entry.displayName ?? '???',
+            furigana: entry.furigana,
+            tableNo: entry.tableNo ?? null,
+            latencyMs: entry.latencyMs,
+            choiceIndex: entry.choiceIndex,
+            isCorrect: entry.isCorrect ?? false,
+            rank: index + 1
+          }));
+      })()
     : [];
 
   // Get quiz leaderboard sorted by correct answer count (quizPoints / 10)

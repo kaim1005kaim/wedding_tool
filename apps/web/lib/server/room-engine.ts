@@ -524,6 +524,8 @@ export async function revealQuiz(roomId: string, quizId: string, awardedPoints =
     isBuzzerQuiz,
     awardedPlayers: awardedPlayers.map(p => ({
       playerId: p.playerId,
+      displayName: p.displayName,
+      furigana: p.furigana,
       choiceIndex: p.choiceIndex,
       isCorrect: p.isCorrect,
       latencyMs: p.latencyMs
