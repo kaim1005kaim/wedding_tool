@@ -50,7 +50,8 @@ export async function POST(request: Request, props: { params: Promise<{ roomId: 
 
     // Refresh the leaderboard snapshot
     const { error: refreshError } = await client.rpc('refresh_room_leaderboard', {
-      p_room_id: roomId
+      p_room_id: roomId,
+      p_limit: 100
     });
 
     if (refreshError) {

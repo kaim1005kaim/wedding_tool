@@ -144,15 +144,33 @@ class SupabaseRealtimeClient implements RealtimeClient {
         }
 
         const snapshot = parsed.data;
+        console.log('[Realtime] Room snapshot leaderboard (first 3):',
+          snapshot.leaderboard?.slice(0, 3).map(e => ({
+            name: e.name,
+            furigana: e.furigana,
+            furiganaType: typeof e.furigana
+          }))
+        );
+
         const leaderboard = (snapshot.leaderboard ?? []).map((entry, index) => ({
           playerId: entry.playerId,
           displayName: entry.name,
+          furigana: entry.furigana ?? undefined,
+          tableNo: entry.tableNo,
           totalPoints: entry.points,
           rank: entry.rank ?? index + 1,
           delta: 0,
           quizPoints: entry.quizPoints ?? 0,
           countupTapCount: entry.countupTapCount ?? 0
         }));
+
+        console.log('[Realtime] Mapped leaderboard (first 3):',
+          leaderboard.slice(0, 3).map(e => ({
+            displayName: e.displayName,
+            furigana: e.furigana,
+            furiganaType: typeof e.furigana
+          }))
+        );
 
         this.dispatch('state:update', {
           mode: (snapshot.mode as BroadcastMap['state:update']['mode']) ?? 'idle',
@@ -162,32 +180,32 @@ class SupabaseRealtimeClient implements RealtimeClient {
           leaderboard,
           activeQuiz: snapshot.current_quiz
             ? {
-                quizId: snapshot.current_quiz.quizId,
-                question: snapshot.current_quiz.question,
-                choices: snapshot.current_quiz.choices ?? [],
-                deadlineTs: snapshot.current_quiz.deadlineTs,
-                ord: snapshot.current_quiz.ord ?? null,
-                imageUrl: snapshot.current_quiz.imageUrl ?? null
-              }
+              quizId: snapshot.current_quiz.quizId,
+              question: snapshot.current_quiz.question,
+              choices: snapshot.current_quiz.choices ?? [],
+              deadlineTs: snapshot.current_quiz.deadlineTs,
+              ord: snapshot.current_quiz.ord ?? null,
+              imageUrl: snapshot.current_quiz.imageUrl ?? null
+            }
             : null,
           quizResult: snapshot.quiz_result
             ? {
-                quizId: snapshot.quiz_result.quizId,
-                correctIndex: snapshot.quiz_result.correctIndex,
-                perChoiceCounts: snapshot.quiz_result.perChoiceCounts,
-                awarded: snapshot.quiz_result.awarded
-              }
+              quizId: snapshot.quiz_result.quizId,
+              correctIndex: snapshot.quiz_result.correctIndex,
+              perChoiceCounts: snapshot.quiz_result.perChoiceCounts,
+              awarded: snapshot.quiz_result.awarded
+            }
             : null,
           lotteryResult: snapshot.lottery_result && snapshot.lottery_result.player
             ? {
-                kind: snapshot.lottery_result.kind,
-                player: {
-                  id: snapshot.lottery_result.player.id,
-                  name: snapshot.lottery_result.player.name,
-                  table_no: snapshot.lottery_result.player.table_no ?? null,
-                  seat_no: snapshot.lottery_result.player.seat_no ?? null
-                }
+              kind: snapshot.lottery_result.kind,
+              player: {
+                id: snapshot.lottery_result.player.id,
+                name: snapshot.lottery_result.player.name,
+                table_no: snapshot.lottery_result.player.table_no ?? null,
+                seat_no: snapshot.lottery_result.player.seat_no ?? null
               }
+            }
             : null,
           representatives: snapshot.representatives ?? [],
           showRanking: snapshot.show_ranking ?? false,
@@ -258,7 +276,7 @@ class SocketRealtimeClient implements RealtimeClient {
   private socket: Socket | null = null;
   private handlers = new Map<keyof BroadcastMap, Set<Handler<keyof BroadcastMap>>>();
 
-  constructor(private readonly options: SocketRealtimeOptions) {}
+  constructor(private readonly options: SocketRealtimeOptions) { }
 
   async join(roomId: string) {
     if (this.socket) {

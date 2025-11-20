@@ -27,13 +27,17 @@
     "seed": "node infra/supabase/seed.mjs",
     "test": "vitest",
     "e2e": "playwright test",
-    "load": "artillery run infra/load/countup-70.yml"
+    "load": "artillery run infra/load/countup-70.yml",
+    "simulate:64": "node scripts/simulate-64-clients.mjs",
+    "simulate:64:cloud": "node scripts/simulate-64-clients-cloud.mjs"
   },
   "devDependencies": {
     "@playwright/test": "1.44.0",
+    "@supabase/supabase-js": "2.42.5",
     "artillery": "2.0.0-33",
     "cross-env": "7.0.3",
     "node-fetch": "^3.3.2",
+    "socket.io-client": "^4.8.1",
     "vitest": "1.6.0"
   }
 }

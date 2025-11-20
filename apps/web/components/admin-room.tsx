@@ -1075,6 +1075,10 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
                               throw new Error(data.error ?? response.statusText);
                             }
                             await loadLogs();
+                            // Switch to idle mode
+                            send({ type: 'mode:switch', payload: { to: 'idle' } });
+                            // Reload the page after a short delay to allow mode switch
+                            setTimeout(() => window.location.reload(), 500);
                           } catch (err) {
                             setError(err instanceof Error ? err.message : 'ユーザーリセットに失敗しました');
                           }
