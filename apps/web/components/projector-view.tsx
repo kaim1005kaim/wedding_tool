@@ -854,6 +854,7 @@ const QuizBoard = memo(function QuizBoard({ activeQuiz, quizResult, leaderboard,
         .map((entry, index) => ({
           playerId: entry.playerId,
           displayName: entry.displayName ?? '???',
+          furigana: entry.furigana,
           tableNo: entry.tableNo ?? null,
           latencyMs: entry.latencyMs,
           choiceIndex: entry.choiceIndex,

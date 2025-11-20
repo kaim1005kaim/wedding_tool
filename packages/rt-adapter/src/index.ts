@@ -144,14 +144,6 @@ class SupabaseRealtimeClient implements RealtimeClient {
         }
 
         const snapshot = parsed.data;
-        console.log('[Realtime] Room snapshot leaderboard (first 3):',
-          snapshot.leaderboard?.slice(0, 3).map(e => ({
-            name: e.name,
-            furigana: e.furigana,
-            furiganaType: typeof e.furigana
-          }))
-        );
-
         const leaderboard = (snapshot.leaderboard ?? []).map((entry, index) => ({
           playerId: entry.playerId,
           displayName: entry.name,
@@ -163,14 +155,6 @@ class SupabaseRealtimeClient implements RealtimeClient {
           quizPoints: entry.quizPoints ?? 0,
           countupTapCount: entry.countupTapCount ?? 0
         }));
-
-        console.log('[Realtime] Mapped leaderboard (first 3):',
-          leaderboard.slice(0, 3).map(e => ({
-            displayName: e.displayName,
-            furigana: e.furigana,
-            furiganaType: typeof e.furigana
-          }))
-        );
 
         this.dispatch('state:update', {
           mode: (snapshot.mode as BroadcastMap['state:update']['mode']) ?? 'idle',
