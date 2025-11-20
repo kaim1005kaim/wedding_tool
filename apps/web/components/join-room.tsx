@@ -902,7 +902,15 @@ function CountupOverlay({ phase, countdownMs, leaderboard, onTap, registeredName
             <span className="text-[min(15vw,6rem)] font-black uppercase tracking-wider text-terra-clay drop-shadow-lg">
               TIME UP!
             </span>
-            <p className="text-2xl font-bold text-ink px-6 py-3">{isPractice ? '練習終了' : '結果発表まで少々お待ちください'}</p>
+            <p className="text-2xl font-bold text-ink px-6 py-3 text-center">
+              {isPractice ? '練習終了' : (
+                <>
+                  結果発表まで
+                  <br />
+                  少々お待ちください
+                </>
+              )}
+            </p>
           </motion.div>
         </div>
       )}
