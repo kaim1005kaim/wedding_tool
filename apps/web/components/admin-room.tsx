@@ -33,7 +33,7 @@ type LotteryCandidateSummary = {
 
 export default function AdminRoom({ roomId }: { roomId: string }) {
   const [pin, setPin] = useState('');
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(true); // PIN認証を無効化
   const [error, setError] = useState<string | null>(null);
   const [roomCode, setRoomCode] = useState<string>('');
   const [copied, setCopied] = useState(false);
