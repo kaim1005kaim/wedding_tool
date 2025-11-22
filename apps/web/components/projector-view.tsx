@@ -42,6 +42,15 @@ export default function ProjectorView({ roomId: _roomId }: { roomId: string }) {
   const initialCountdownRef = useRef<number>(0);
   const hasPromptedRef = useRef(false);
 
+  // Get table numbers that have answered the buzzer quiz (quiz 6)
+  const answeredTableNos = useMemo(() => {
+    const isBuzzerQuiz = activeQuiz?.ord === 6;
+    if (isBuzzerQuiz && quizResult?.awarded) {
+      return new Set(quizResult.awarded.map(a => a.tableNo).filter(Boolean) as string[]);
+    }
+    return new Set<string>();
+  }, [activeQuiz, quizResult]);
+
   // クライアント側でカウントダウンを管理
   useEffect(() => {
     if (phase === 'running' && (mode === 'countup' || mode === 'countup_practice')) {
@@ -195,7 +204,7 @@ export default function ProjectorView({ roomId: _roomId }: { roomId: string }) {
         <div className="flex-1 overflow-hidden">
           <AnimatePresence mode="wait">
             {showRepresentatives ? (
-              <RepresentativesView representatives={representatives} participantCount={leaderboard.length} />
+              <RepresentativesView representatives={representatives} participantCount={leaderboard.length} answeredTableNos={answeredTableNos} />
             ) : (
               renderSection(mode, phase, localCountdownMs, displayLeaderboard, activeQuiz, quizResult, lotteryResult, isSpinning, lotteryKey, representatives, showRanking, showCelebration, leaderboard.length)
             )}
@@ -258,7 +267,7 @@ export default function ProjectorView({ roomId: _roomId }: { roomId: string }) {
   );
 }
 
-function RepresentativesView({ representatives, participantCount }: { representatives: RoomStoreState['representatives']; participantCount: number }) {
+function RepresentativesView({ representatives, participantCount, answeredTableNos = new Set() }: { representatives: RoomStoreState['representatives']; participantCount: number; answeredTableNos?: Set<string> }) {
   return (
     <motion.div
       key="representatives"
@@ -270,6 +279,7 @@ function RepresentativesView({ representatives, participantCount }: { representa
       <h1 className="text-6xl font-black text-ink mb-12">各テーブルの回答代表者</h1>
       <div className="grid grid-cols-6 gap-8 max-w-7xl w-full">
         {representatives
+          .filter(rep => !answeredTableNos.has(rep.tableNo)) // Exclude answered tables
           .sort((a, b) => {
             // Sort by table number (A, B, C, D, E, F, G, H, I, J, K, L)
             return a.tableNo.localeCompare(b.tableNo);
@@ -885,8 +895,16 @@ const QuizBoard = memo(function QuizBoard({ activeQuiz, quizResult, leaderboard,
   });
 
   const quizLeaderboard = leaderboard
-    .filter(entry => entry.quizPoints && entry.quizPoints > 0)
-    .sort((a, b) => b.quizPoints - a.quizPoints)
+    .sort((a, b) => {
+      // まずクイズポイントで降順ソート
+      if (b.quizPoints !== a.quizPoints) {
+        return b.quizPoints - a.quizPoints;
+      }
+      // 同点の場合はテーブルナンバー順（A→L）
+      const tableA = a.tableNo || 'Z';
+      const tableB = b.tableNo || 'Z';
+      return tableA.localeCompare(tableB);
+    })
     .map((entry, index) => ({
       ...entry,
       rank: index + 1,
@@ -903,14 +921,14 @@ const QuizBoard = memo(function QuizBoard({ activeQuiz, quizResult, leaderboard,
     }))
   });
 
-  // 同率順位を計算したランキング（最大12位まで）
+  // 同率順位を計算したランキング（全12テーブル表示）
   const calculateRankingsWithTies = (entries: typeof quizLeaderboard | typeof buzzerRanking): any[] => {
     if (entries.length === 0) return [];
 
     const rankedEntries = [];
     let currentRank = 1;
 
-    for (let i = 0; i < Math.min(entries.length, 12); i++) {
+    for (let i = 0; i < entries.length; i++) {
       const entry = entries[i];
       // 前のエントリと同じスコアなら同じ順位
       if (i > 0) {
@@ -1061,7 +1079,7 @@ const QuizBoard = memo(function QuizBoard({ activeQuiz, quizResult, leaderboard,
         </motion.div>
 
         <div className="flex-1 overflow-y-auto">
-          <div className="space-y-4 max-w-6xl mx-auto">
+          <div className="space-y-2 max-w-6xl mx-auto">
             {rankedLeaderboard.map((entry, index) => {
               const style = getRankStyle(entry.displayRank);
               const icon = getRankIcon(entry.displayRank);
@@ -1071,61 +1089,63 @@ const QuizBoard = memo(function QuizBoard({ activeQuiz, quizResult, leaderboard,
                   key={`${entry.playerId}-${index}`}
                   initial={{ opacity: 0, x: -50 }}
                   animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: index * 0.1, type: 'spring', bounce: 0.3 }}
-                  className={`glass-panel-strong rounded-2xl p-6 shadow-xl border-4 ${style.border} ${style.ring ? `ring-4 ${style.ring}` : ''} ${style.bg}`}
+                  transition={{ delay: index * 0.05, type: 'spring', bounce: 0.3 }}
+                  className={`glass-panel-strong rounded-xl p-3 shadow-lg border-2 ${style.border} ${style.ring ? `ring-2 ${style.ring}` : ''} ${style.bg}`}
                 >
-                  <div className="flex items-center justify-between gap-6">
-                    <div className="flex items-center gap-6 flex-1 min-w-0">
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="flex items-center gap-4 flex-1 min-w-0">
                       {/* 順位とアイコン */}
-                      <div className="flex flex-col items-center shrink-0">
+                      <div className="flex items-center gap-2 shrink-0">
                         {icon && (
                           <motion.div
                             animate={entry.displayRank === 1 ? { rotate: [0, -15, 15, -15, 0], scale: [1, 1.2, 1] } : {}}
                             transition={{ duration: 0.8, delay: 0.5 }}
-                            className="text-6xl mb-2"
+                            className="text-3xl"
                           >
                             {icon}
                           </motion.div>
                         )}
-                        <span className={`text-5xl font-black ${style.textColor}`}>
+                        <span className={`text-3xl font-black ${style.textColor}`}>
                           {entry.displayRank}位
                         </span>
                       </div>
 
                       {/* 名前とテーブル */}
-                      <div className="flex-1 min-w-0">
+                      <div className="flex-1 min-w-0 flex items-center gap-3">
                         {entry.tableNo && (
-                          <p className="text-3xl font-black text-ink mb-1">
-                            {entry.tableNo}チーム
+                          <p className="text-2xl font-black text-ink">
+                            {entry.tableNo}
                           </p>
                         )}
-                        {entry.furigana && (
-                          <p className="text-lg text-ink/60 font-medium mb-1">
-                            {entry.furigana}
+                        <div>
+                          {entry.furigana && (
+                            <p className="text-xs text-ink/60 font-medium leading-tight">
+                              {entry.furigana}
+                            </p>
+                          )}
+                          <p className="text-2xl font-black text-terra-clay truncate leading-tight">
+                            {entry.displayName}さん
                           </p>
-                        )}
-                        <p className="text-4xl font-black text-terra-clay truncate">
-                          {entry.displayName}さん
-                        </p>
+                        </div>
                       </div>
                     </div>
 
                     {/* スコア */}
-                    <div className="shrink-0 flex items-center gap-4">
+                    <div className="shrink-0 flex items-center gap-2">
                       {isBuzzerQuiz && 'isCorrect' in entry ? (
                         <>
-                          <span className="text-6xl">
+                          <span className="text-3xl">
                             {entry.isCorrect ? '⭕' : '❌'}
                           </span>
-                          <div className="rounded-full glass-panel px-8 py-4 shadow-lg border-2 border-white/40">
-                            <span className="text-4xl font-black text-terra-clay whitespace-nowrap">
+                          <div className="rounded-full glass-panel px-4 py-2 shadow-lg border border-white/40">
+                            <span className="text-2xl font-black text-terra-clay whitespace-nowrap">
                               {((entry.latencyMs ?? 0) / 1000).toFixed(2)}秒
                             </span>
                           </div>
                         </>
                       ) : (
-                        <div className="rounded-full glass-panel px-8 py-4 shadow-lg border-2 border-white/40">
-                          <span className="text-4xl font-black text-terra-clay whitespace-nowrap">
+                        <div className="rounded-full glass-panel px-4 py-2 shadow-lg border border-white/40">
+                          <span className="text-2xl font-black text-terra-clay whitespace-nowrap">
                             正解数{'correctCount' in entry ? entry.correctCount : 0}/5
                           </span>
                         </div>

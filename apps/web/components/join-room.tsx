@@ -1046,10 +1046,26 @@ function QuizOverlay({ phase, countdownMs, roomId, playerToken, clearAuthAndStor
   const [phaseEndTime, setPhaseEndTime] = useState<number | null>(null);
   const [particleTrigger, setParticleTrigger] = useState<ParticleConfig | null>(null);
 
-  // Check if player can participate (for sudden death mode)
+  // Check if player can participate (for sudden death mode and buzzer quiz)
   const canParticipate = useMemo(() => {
-    if (!activeQuiz?.suddenDeath?.enabled) return true;
     if (!playerId) return false;
+
+    // For buzzer quiz (quiz 6), only allow 1st place tables
+    const isBuzzerQuiz = activeQuiz?.ord === 6;
+    if (isBuzzerQuiz) {
+      // Find player's table and rank by quiz points
+      const playerEntry = leaderboard.find(entry => entry.playerId === playerId);
+      if (!playerEntry) return false;
+
+      // Sort by quiz points to find 1st place
+      const sortedByQuizPoints = [...leaderboard].sort((a, b) => (b.quizPoints ?? 0) - (a.quizPoints ?? 0));
+      const topQuizPoints = sortedByQuizPoints[0]?.quizPoints ?? 0;
+
+      // Allow participation if player's team has the same quiz points as 1st place
+      return (playerEntry.quizPoints ?? 0) === topQuizPoints;
+    }
+
+    if (!activeQuiz?.suddenDeath?.enabled) return true;
 
     const suddenDeath = activeQuiz.suddenDeath;
 
@@ -1230,7 +1246,7 @@ function QuizOverlay({ phase, countdownMs, roomId, playerToken, clearAuthAndStor
             <p className="text-lg font-bold text-ink leading-relaxed whitespace-pre-line">
               {!activeQuiz
                 ? 'クイズ開始まで少々お待ちください'
-                : '早押しクイズは上位者のみ参加できます\n結果発表をお待ちください'}
+                : 'プロジェクターにご注目ください'}
             </p>
           </div>
         </div>

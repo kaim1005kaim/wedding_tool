@@ -501,7 +501,7 @@ export async function revealQuiz(roomId: string, quizId: string, awardedPoints =
         // Use latency_ms from answers table if available, otherwise null
         const latencyMs = answer?.latency_ms ?? null;
         const choiceIndex = answer?.choice_index;
-        const isCorrect = choiceIndex === quiz.answerIndex;
+        const isCorrect = choiceIndex !== undefined && choiceIndex === quiz.answerIndex;
 
         awardedPlayers.push({
           playerId: player.id,
