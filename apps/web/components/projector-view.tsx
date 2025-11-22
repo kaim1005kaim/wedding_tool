@@ -196,7 +196,7 @@ export default function ProjectorView({ roomId: _roomId }: { roomId: string }) {
   return (
     <main
       ref={containerRef}
-      className="flex min-h-screen items-center justify-center relative overflow-hidden bg-gradient-earth"
+      className="flex min-h-screen items-center justify-center relative overflow-hidden bg-gradient-earth cursor-none"
       role="main"
       aria-label="投影画面"
     >
