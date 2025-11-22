@@ -1322,8 +1322,8 @@ const QuizBoard = memo(function QuizBoard({ activeQuiz, quizResult, leaderboard,
             })}
           </div>
 
-          {/* Quiz Participants List */}
-          {quizParticipants.length > 0 && (
+          {/* Quiz Participants List - Hidden per user request */}
+          {false && quizParticipants.length > 0 && (
             <div className="mt-4">
               <div className="glass-panel-strong rounded-2xl px-6 py-4 border border-white/30">
                 <h3 className="text-lg font-bold text-ink mb-3">参加テーブル</h3>
