@@ -1096,15 +1096,17 @@ const QuizBoard = memo(function QuizBoard({ activeQuiz, quizResult, leaderboard,
                     <div className="flex items-center gap-4 flex-1 min-w-0">
                       {/* 順位とアイコン */}
                       <div className="flex items-center gap-2 shrink-0">
-                        {icon && (
-                          <motion.div
-                            animate={entry.displayRank === 1 ? { rotate: [0, -15, 15, -15, 0], scale: [1, 1.2, 1] } : {}}
-                            transition={{ duration: 0.8, delay: 0.5 }}
-                            className="text-3xl"
-                          >
-                            {icon}
-                          </motion.div>
-                        )}
+                        <div className="w-[2.5rem]">
+                          {icon && (
+                            <motion.div
+                              animate={entry.displayRank === 1 ? { rotate: [0, -15, 15, -15, 0], scale: [1, 1.2, 1] } : {}}
+                              transition={{ duration: 0.8, delay: 0.5 }}
+                              className="text-3xl"
+                            >
+                              {icon}
+                            </motion.div>
+                          )}
+                        </div>
                         <span className={`text-3xl font-black ${style.textColor}`}>
                           {entry.displayRank}位
                         </span>
