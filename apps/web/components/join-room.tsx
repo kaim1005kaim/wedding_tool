@@ -595,10 +595,22 @@ function JoinModal({ visible, tableNo, displayName, furigana, onTableNoChange, o
               id="table-no"
               className="input-terra w-full text-base py-3"
               value={tableNo}
-              onChange={(event) => onTableNoChange(event.target.value.toUpperCase())}
+              onInput={(event) => {
+                const target = event.target as HTMLInputElement;
+                const cursorPosition = target.selectionStart;
+                const upperValue = target.value.toUpperCase();
+                onTableNoChange(upperValue);
+                // Restore cursor position after state update
+                requestAnimationFrame(() => {
+                  if (cursorPosition !== null) {
+                    target.setSelectionRange(cursorPosition, cursorPosition);
+                  }
+                });
+              }}
               placeholder="例：A"
               maxLength={8}
               required
+              autoCapitalize="characters"
             />
           </div>
           <div className="space-y-1">
