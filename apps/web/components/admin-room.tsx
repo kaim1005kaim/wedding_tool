@@ -33,7 +33,7 @@ type LotteryCandidateSummary = {
 
 export default function AdminRoom({ roomId }: { roomId: string }) {
   const [pin, setPin] = useState('');
-  const [isAuthenticated, setIsAuthenticated] = useState(true); // PIN認証を無効化
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [roomCode, setRoomCode] = useState<string>('');
   const [copied, setCopied] = useState(false);
@@ -81,6 +81,8 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
 
   useEffect(() => {
     if (!isCloudMode || typeof window === 'undefined') return;
+
+    // Check for stored token first
     const stored = window.localStorage.getItem(storageKey);
     if (stored) {
       try {
@@ -88,6 +90,7 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
         if (expiresAt > Date.now()) {
           setAdminToken(token);
           setIsAuthenticated(true);
+          return;
         } else {
           window.localStorage.removeItem(storageKey);
         }
@@ -95,7 +98,32 @@ export default function AdminRoom({ roomId }: { roomId: string }) {
         window.localStorage.removeItem(storageKey);
       }
     }
-  }, [isCloudMode, storageKey]);
+
+    // Auto-login with hardcoded PIN (bypass PIN entry screen)
+    const autoLogin = async () => {
+      try {
+        const response = await fetch('/api/admin/login', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ roomId, pin: '1234' })
+        });
+
+        if (response.ok) {
+          const { token, expiresAt } = (await response.json()) as { token: string; expiresAt: number };
+          setAdminToken(token);
+          window.localStorage.setItem(storageKey, JSON.stringify({ token, expiresAt }));
+          setIsAuthenticated(true);
+        }
+      } catch (err) {
+        console.error('Auto-login failed:', err);
+        // Silently fail and show login screen
+      }
+    };
+
+    void autoLogin();
+  }, [isCloudMode, storageKey, roomId]);
 
   const setAdminToken = (token: string | null) => {
     setAdminTokenState(token);
